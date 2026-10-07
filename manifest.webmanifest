@@ -1,0 +1,1 @@
+{"name":"직접대화 | 1:1 P2P 메신저","short_name":"직접대화","description":"서버에 대화를 저장하지 않는 실시간 P2P 메신저 파일럿","start_url":"./","scope":"./","display":"standalone","background_color":"#f4f6f9","theme_color":"#10233f","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
