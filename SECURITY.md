@@ -20,7 +20,7 @@ Classified information, regulated medical/financial/legal data, credentials, rec
 
 - No independent security audit.
 - No authenticated account directory.
-- No TURN service, offline queue, multi-device sync, recovery, or group messaging.
+- No deployed TURN service, offline queue, multi-device sync, recovery, or group messaging. The repository contains an undeployed NCP/coturn scaffold, but the public client has no TURN credentials or TURN integration.
 - Browser-delivered code integrity depends on the HTTPS hosting account and supply chain.
 - Metadata minimization and traffic analysis protections are not provided.
 - A compromised endpoint can read messages before encryption or after decryption.

@@ -1,0 +1,8 @@
+# NCP deployment values and generated secrets
+infra/ncp/.env
+infra/ncp/secrets/*
+!infra/ncp/secrets/.gitkeep
+
+# Local dependency and test output
+node_modules/
+*.log
