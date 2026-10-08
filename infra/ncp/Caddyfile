@@ -1,0 +1,24 @@
+{
+	email {$ACME_EMAIL}
+	admin off
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$SIGNAL_HOST} {
+	@peer path /peerjs /peerjs/*
+	reverse_proxy @peer peerjs:9000
+
+	respond /healthz "ok" 200
+	respond "not found" 404
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Access logging is intentionally disabled to minimize connection metadata.
+}

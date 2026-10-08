@@ -1,0 +1,120 @@
+name: secure-messenger-infra
+
+services:
+  caddy:
+    image: caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+    restart: unless-stopped
+    depends_on:
+      peerjs:
+        condition: service_healthy
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
+      SIGNAL_HOST: ${SIGNAL_HOST:?Set SIGNAL_HOST in .env}
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  peerjs:
+    image: peerjs/peerjs-server:1.0.2@sha256:77194fb7803430832a39b84f1b1a7a413fe0e438ff39a7de3b2b62be0c184c02
+    restart: unless-stopped
+    command:
+      - --port
+      - "9000"
+      - --path
+      - /peerjs
+      - --key
+      - peerjs
+      - --proxied
+      - --concurrent_limit
+      - "100"
+      - --alive_timeout
+      - "60000"
+      - --expire_timeout
+      - "5000"
+    expose:
+      - "9000"
+    networks:
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "const net=require('net');const s=net.connect(9000,'127.0.0.1',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),3000)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    mem_limit: 192m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  coturn:
+    image: coturn/coturn:4.18.0-alpine@sha256:c29135c08565810d37053f384584392b7c24b69570fc81a721b878d6fe63e04e
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUBLIC_IP: ${PUBLIC_IP:?Set PUBLIC_IP in .env}
+      RELAY_IP: ${RELAY_IP:?Set RELAY_IP in .env}
+      TURN_REALM: ${TURN_REALM:?Set TURN_REALM in .env}
+      TURN_MIN_PORT: ${TURN_MIN_PORT:-49160}
+      TURN_MAX_PORT: ${TURN_MAX_PORT:-49200}
+    entrypoint: ["/bin/sh", "/opt/start-coturn.sh"]
+    volumes:
+      - ./turn/start-coturn.sh:/opt/start-coturn.sh:ro
+    secrets:
+      - turn_shared_secret
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+      - /var/lib/coturn:rw,noexec,nosuid,size=16m,uid=65534,gid=65534,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "turnutils_stunclient -p 3478 \"${RELAY_IP}\" >/dev/null 2>&1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  edge:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+secrets:
+  turn_shared_secret:
+    file: ./secrets/turn_shared_secret
