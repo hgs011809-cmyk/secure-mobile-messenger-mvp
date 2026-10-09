@@ -18,17 +18,21 @@ jobs:
       HOST: 211.233.206.144
       HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKiObKSadOxA5nKuXgToCGhNiyhVhAjY
       SSH_KEY: ${{ secrets.NCP_SSH_KEY }}
+      SSH_PASSWORD: ${{ secrets.NCP_BOOTSTRAP_PASSWORD }}
+      SSH_PUBLIC_KEY: ${{ secrets.NCP_SSH_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Prepare verified SSH connection
         run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
+          printf '%s\n' "$SSH_PUBLIC_KEY" > /tmp/ncp.pub
           chmod 600 ~/.ssh/ncp_key
           ssh-keyscan -T 10 -t ed25519 "$HOST" > ~/.ssh/known_hosts
           actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
-          echo "actual=$actual"
           test "$actual" = "$HOST_FINGERPRINT"
 
       - name: Prepare deployment configuration
@@ -47,14 +51,15 @@ jobs:
           ENV
           chmod 600 /tmp/ncp.env
 
-      - name: Transfer deployment files
+      - name: Bootstrap SSH key and transfer deployment files
         run: |
-          scp -i ~/.ssh/ncp_key /tmp/ncp.tar.gz /tmp/ncp.env root@$HOST:/root/
-          ssh -i ~/.ssh/ncp_key root@$HOST 'mkdir -p /opt/secure-mobile-messenger-mvp/infra && tar -xzf /root/ncp.tar.gz -C /opt/secure-mobile-messenger-mvp/infra && install -m 600 /root/ncp.env /opt/secure-mobile-messenger-mvp/infra/ncp/.env && rm -f /root/ncp.tar.gz /root/ncp.env'
+          export SSHPASS="$SSH_PASSWORD"
+          sshpass -e scp -o PreferredAuthentications=password -o PubkeyAuthentication=no -o NumberOfPasswordPrompts=1 /tmp/ncp.tar.gz /tmp/ncp.env /tmp/ncp.pub root@$HOST:/root/
+          sshpass -e ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o NumberOfPasswordPrompts=1 root@$HOST 'install -d -m 700 /root/.ssh && install -m 600 /root/ncp.pub /root/.ssh/authorized_keys && mkdir -p /opt/secure-mobile-messenger-mvp/infra && tar -xzf /root/ncp.tar.gz -C /opt/secure-mobile-messenger-mvp/infra && install -m 600 /root/ncp.env /opt/secure-mobile-messenger-mvp/infra/ncp/.env && rm -f /root/ncp.tar.gz /root/ncp.env /root/ncp.pub'
 
       - name: Deploy authenticated signaling and TURN stack
         run: |
-          ssh -i ~/.ssh/ncp_key root@$HOST 'bash -se' <<'REMOTE'
+          ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'bash -se' <<'REMOTE'
           set -euo pipefail
           cd /opt/secure-mobile-messenger-mvp/infra/ncp
           chmod +x turn/start-coturn.sh scripts/*.sh
@@ -74,5 +79,8 @@ jobs:
           ufw allow 3478/udp
           ufw allow 49160:49200/udp
           ufw --force enable
+          printf 'PasswordAuthentication no\nPermitRootLogin prohibit-password\n' > /etc/ssh/sshd_config.d/99-hardening.conf
+          sshd -t
+          systemctl reload ssh
           docker compose ps
           REMOTE
