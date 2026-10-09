@@ -6,19 +6,37 @@
 	}
 }
 
-{$SIGNAL_HOST} {
-	@peer path /peerjs /peerjs/*
-	reverse_proxy @peer peerjs:9000
-
-	respond /healthz "ok" 200
-	respond "not found" 404
-
+(common_headers) {
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
 		-Server
 	}
+}
 
-	# Access logging is intentionally disabled to minimize connection metadata.
+{$SIGNAL_HOST} {
+	import common_headers
+	route {
+		respond /healthz "ok" 200
+		@peer path /peerjs /peerjs/*
+		forward_auth @peer auth:8080 {
+			uri /internal/verify-signal?
+		}
+		reverse_proxy @peer peerjs:9000
+		respond "not found" 404
+	}
+
+	# Access logging is intentionally disabled because the PeerJS token is in the URL query.
+}
+
+{$API_HOST} {
+	import common_headers
+	route {
+		@api path /v1/*
+		reverse_proxy @api auth:8080
+		respond "not found" 404
+	}
+
+	# Access logging is intentionally disabled to minimize authentication metadata.
 }

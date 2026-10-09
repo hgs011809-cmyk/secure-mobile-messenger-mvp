@@ -7,9 +7,12 @@ services:
     depends_on:
       peerjs:
         condition: service_healthy
+      auth:
+        condition: service_healthy
     environment:
       ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
       SIGNAL_HOST: ${SIGNAL_HOST:?Set SIGNAL_HOST in .env}
+      API_HOST: ${API_HOST:?Set API_HOST in .env}
     ports:
       - "80:80/tcp"
       - "443:443/tcp"
@@ -24,6 +27,58 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+    mem_limit: 192m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  auth:
+    build:
+      context: ./auth
+    image: secure-messenger-auth:1.0.0
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      DATA_DIR: /data
+      ADMIN_SECRET_FILE: /run/secrets/admin_secret
+      TURN_SECRET_FILE: /run/secrets/turn_shared_secret
+      ALLOWED_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN in .env}
+      SIGNAL_HOST: ${SIGNAL_HOST:?Set SIGNAL_HOST in .env}
+      SIGNAL_PORT: "443"
+      SIGNAL_PATH: /peerjs
+      SIGNAL_SECURE: "true"
+      TURN_HOST: ${TURN_REALM:?Set TURN_REALM in .env}
+      TURN_TTL_SECONDS: "600"
+      SIGNAL_TOKEN_TTL_SECONDS: "120"
+      CHALLENGE_TTL_SECONDS: "120"
+      INVITE_TTL_SECONDS: "604800"
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_MAX: "30"
+    expose:
+      - "8080"
+    volumes:
+      - auth_data:/data
+    secrets:
+      - admin_secret
+      - turn_shared_secret
+    networks:
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    mem_limit: 128m
     logging:
       driver: json-file
       options:
@@ -114,7 +169,10 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  auth_data:
 
 secrets:
+  admin_secret:
+    file: ./secrets/admin_secret
   turn_shared_secret:
     file: ./secrets/turn_shared_secret

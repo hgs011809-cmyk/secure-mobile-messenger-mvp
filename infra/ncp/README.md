@@ -1,16 +1,19 @@
 # NCP 파일럿 인프라
 
-이 폴더는 `thevault73.com`의 하위 도메인으로 자체 PeerServer와 coturn을 배포하기 위한 준비물입니다. 현재는 **배포 전 스캐폴드**이며 NCP 자원을 생성하지 않았습니다.
+이 폴더는 `thevault73.com`의 하위 도메인으로 인증 API, 자체 PeerServer, coturn을 배포하기 위한 준비물입니다. 구현과 로컬 정적 검토까지 완료한 **배포 전 스캐폴드**이며 NCP 자원은 생성하지 않았습니다.
 
 ## 확정된 범위
 
-- `signal.thevault73.com`: Caddy HTTPS/WSS → PeerServer
+- `signal.thevault73.com`: Caddy `forward_auth` HTTPS/WSS → PeerServer
+- `api.thevault73.com`: 일회용 초대 등록, 기기 서명 검증, 단기 자격증명 API
 - `turn.thevault73.com`: coturn TURN/STUN
 - NCP 한국 리전, 별도 전용 VPC와 Public Subnet
 - 정적 GitHub Pages에 TURN 공유 비밀키를 넣지 않음
 - TURN은 시간 제한 자격증명만 사용하도록 `use-auth-secret` 구성
 - 연결 메타데이터 최소화를 위해 Caddy access log와 coturn session log 비활성화
-- 인증 API와 앱의 TURN 연결은 보류
+- 인증 API는 Node 22 기본 모듈만 사용하고, 기기 공개키 외 장기 클라이언트 비밀값을 저장하지 않음
+- 앱에는 장기 TURN 비밀키 대신 기기 서명 후 발급되는 10분 자격증명만 전달
+- PeerJS 입장 토큰은 짧은 수명, peerId 고정, 1회 사용으로 Caddy에서 검증
 - Caddy, PeerServer, coturn 이미지는 검토한 Docker digest에 고정
 - IPv6는 초기 파일럿에서 비활성화하고 예약·사설 IPv4 relay 대상은 차단
 
@@ -55,9 +58,10 @@ SSH는 전 세계에 개방하지 않습니다. 호스트 UFW에도 같은 규�
 
 ## DNS
 
-공인 IP가 발급된 뒤 도메인 DNS에서 두 A 레코드를 같은 IP로 연결합니다.
+공인 IP가 발급된 뒤 도메인 DNS에서 세 A 레코드를 같은 IP로 연결합니다.
 
 - `signal.thevault73.com`
+- `api.thevault73.com`
 - `turn.thevault73.com`
 
 초기 TTL은 300초를 권장합니다. Caddy가 `signal` 인증서를 자동 발급하므로 80/TCP와 443/TCP가 먼저 열려 있어야 합니다. 현재 TURN은 3478 TCP/UDP만 사용하며 TURN TLS/DTLS는 후속 단계입니다. TURN 제어 트래픽과 접속 메타데이터는 네트워크 관찰자에게 노출될 수 있지만, TURN을 통과하는 WebRTC DataChannel 본문은 DTLS로 계속 암호화됩니다. 적대적 네트워크까지 운영 범위로 넓히기 전에는 5349 기반 TURN TLS도 추가해야 합니다.
@@ -71,23 +75,23 @@ cp .env.example .env
 # .env에서 운영 이메일, 공인 IP, 사설 IP를 교체
 chmod 600 .env
 
-mkdir -p secrets
-umask 077
-openssl rand -hex 32 > secrets/turn_shared_secret
-chmod 600 secrets/turn_shared_secret
+sh scripts/generate-secrets.sh
 
 chmod +x turn/start-coturn.sh scripts/*.sh
 ./scripts/preflight.sh
 docker compose pull
+docker compose build --pull auth
 docker compose up -d
 docker compose ps
 ```
 
-`docker compose ps`에서 PeerServer와 coturn이 모두 healthy인지 확인합니다. 그 다음 서버와 다른 외부 네트워크에서 아래 항목을 검증합니다.
+`docker compose ps`에서 auth, PeerServer, coturn이 모두 healthy인지 확인합니다. 그 다음 서버와 다른 외부 네트워크에서 아래 항목을 검증합니다.
 
 ```sh
 curl -fsS https://signal.thevault73.com/healthz
-curl -fsS https://signal.thevault73.com/peerjs
+curl -i https://signal.thevault73.com/peerjs/peerjs  # 인증 토큰이 없으므로 401이 정상
+curl -i -X OPTIONS https://api.thevault73.com/v1/challenge \
+  -H 'Origin: https://hgs011809-cmyk.github.io'
 turnutils_stunclient -p 3478 turn.thevault73.com
 ```
 
@@ -101,14 +105,25 @@ turnutils_stunclient -p 3478 turn.thevault73.com
 
 이 명령의 결과와 공유 비밀키는 커밋하거나 정적 웹 앱에 넣지 않습니다.
 
+## 초대와 폐기 운영
+
+서버 안에서만 관리 CLI를 실행합니다.
+
+```sh
+docker compose exec auth node src/cli.js create-invite
+docker compose exec auth node src/cli.js list-devices
+docker compose exec auth node src/cli.js revoke-device DEVICE_ID
+```
+
+초대 코드는 한 번만 표시하고 별도 신뢰 채널로 전달합니다. 기기를 잃어버렸거나 IndexedDB 키가 바뀌면 기존 deviceId를 폐기한 뒤 새 초대를 발급합니다.
+
 ## 앱 연결 전 남은 작업
 
 1. 보스의 유료 자원 생성 승인
 2. NCP 전용 VPC, Subnet, ACG, Micro 서버, 공인 IP 생성
-3. DNS A 레코드 연결과 인프라 검증
-4. 기기 인증 또는 일회용 초대 기반 TURN 자격증명 API 설계
-5. 인증 API에 속도 제한, 폐기, 감사 정책 적용
-6. 그 뒤에만 앱의 PeerJS host와 `iceServers`를 운영 인프라로 전환
-7. Android 두 대, Wi-Fi↔모바일망, TURN 강제 환경 회귀 시험
+3. DNS A 레코드 3개 연결과 인프라 검증
+4. 서버에서 백엔드 테스트와 Compose/Caddy 검증
+5. GitHub Pages `config.js`의 `mode`를 `private`로 전환
+6. Android 두 대, Wi-Fi↔모바일망, TURN 강제 환경 회귀 시험
 
-인증 API가 없으므로 현재 앱에는 TURN 자격증명을 배포하지 않습니다. coturn을 먼저 띄우더라도 관리자 시험 외에는 사용하지 않습니다. PeerServer의 `peerjs` key는 비밀키나 사용자 인증이 아니며, 동시 접속 제한만으로 공개 서비스 남용을 막을 수 없습니다. 인증과 서버 측 속도 제한이 준비될 때까지 이 스캐폴드는 외부 운영 배포 대상으로 승인하지 않습니다.
+PeerServer의 `peerjs` key는 인증 수단이 아닙니다. 현재 구성은 Caddy가 모든 PeerJS 경로를 인증 API로 먼저 검사하고, PeerServer 포트는 Docker 내부에만 노출합니다. 이 우회 방지 조건과 서버 측 속도 제한이 유지되어야 합니다.
