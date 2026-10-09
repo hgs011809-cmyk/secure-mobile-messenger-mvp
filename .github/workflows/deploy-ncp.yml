@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 30
     env:
       HOST: 211.233.206.144
-      HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKi0bkSadOXA5nKuXgToCGhNiyhVhAjY
+      HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKiObKSadOxA5nKuXgToCGhNiyhVhAjY
       SSH_KEY: ${{ secrets.NCP_SSH_KEY }}
     steps:
       - uses: actions/checkout@v7
