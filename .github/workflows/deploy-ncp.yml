@@ -1,0 +1,77 @@
+name: Deploy NCP pilot
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-ncp-pilot
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HOST: 211.233.206.144
+      HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKi0bkSadOXA5nKuXgToCGhNiyhVhAjY
+      SSH_KEY: ${{ secrets.NCP_SSH_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Prepare verified SSH connection
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
+          chmod 600 ~/.ssh/ncp_key
+          ssh-keyscan -T 10 -t ed25519 "$HOST" > ~/.ssh/known_hosts
+          actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
+          test "$actual" = "$HOST_FINGERPRINT"
+
+      - name: Prepare deployment configuration
+        run: |
+          tar -C infra -czf /tmp/ncp.tar.gz ncp
+          cat > /tmp/ncp.env <<'ENV'
+          SIGNAL_HOST=signal.thevault73.com
+          API_HOST=api.thevault73.com
+          TURN_REALM=turn.thevault73.com
+          APP_ORIGIN=https://hgs011809-cmyk.github.io
+          ACME_EMAIL=hgs011809-cmyk@users.noreply.github.com
+          PUBLIC_IP=211.233.206.144
+          RELAY_IP=10.20.0.6
+          TURN_MIN_PORT=49160
+          TURN_MAX_PORT=49200
+          ENV
+          chmod 600 /tmp/ncp.env
+
+      - name: Transfer deployment files
+        run: |
+          scp -i ~/.ssh/ncp_key /tmp/ncp.tar.gz /tmp/ncp.env root@$HOST:/root/
+          ssh -i ~/.ssh/ncp_key root@$HOST 'mkdir -p /opt/secure-mobile-messenger-mvp/infra && tar -xzf /root/ncp.tar.gz -C /opt/secure-mobile-messenger-mvp/infra && install -m 600 /root/ncp.env /opt/secure-mobile-messenger-mvp/infra/ncp/.env && rm -f /root/ncp.tar.gz /root/ncp.env'
+
+      - name: Deploy authenticated signaling and TURN stack
+        run: |
+          ssh -i ~/.ssh/ncp_key root@$HOST 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/secure-mobile-messenger-mvp/infra/ncp
+          chmod +x turn/start-coturn.sh scripts/*.sh
+          if [ ! -f secrets/turn_shared_secret ] && [ ! -f secrets/admin_secret ]; then
+            ./scripts/generate-secrets.sh
+          fi
+          ./scripts/preflight.sh
+          timeout 10m docker compose pull
+          timeout 10m docker compose build --pull auth
+          docker compose up -d
+          ufw default deny incoming
+          ufw default allow outgoing
+          ufw allow 22/tcp
+          ufw allow 80/tcp
+          ufw allow 443/tcp
+          ufw allow 3478/tcp
+          ufw allow 3478/udp
+          ufw allow 49160:49200/udp
+          ufw --force enable
+          docker compose ps
+          REMOTE
