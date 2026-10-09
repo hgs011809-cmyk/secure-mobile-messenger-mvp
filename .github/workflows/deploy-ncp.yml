@@ -33,7 +33,7 @@ jobs:
       - name: Inspect existing remote stack
         continue-on-error: true
         run: |
-          ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker ps -a --filter name=secure-messenger-infra --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"; docker logs --tail 80 secure-messenger-infra-auth-1 2>&1 || true; docker logs --tail 80 secure-messenger-infra-peerjs-1 2>&1 || true'
+          ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker ps -a --filter name=secure-messenger-infra --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"; docker logs --tail 80 secure-messenger-infra-auth-1 2>&1 || true; docker logs --tail 80 secure-messenger-infra-peerjs-1 2>&1 || true; docker logs --tail 120 secure-messenger-infra-caddy-1 2>&1 || true; docker logs --tail 120 secure-messenger-infra-coturn-1 2>&1 || true'
 
       - name: Check remote image cache
         id: remote
