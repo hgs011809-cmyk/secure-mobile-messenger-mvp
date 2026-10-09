@@ -68,6 +68,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    group_add:
+      - "4242"
     cap_drop:
       - ALL
     security_opt:
@@ -147,6 +149,8 @@ services:
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m,mode=1777
       - /var/lib/coturn:rw,noexec,nosuid,size=16m,uid=65534,gid=65534,mode=0700
+    group_add:
+      - "4242"
     cap_drop:
       - ALL
     security_opt:
