@@ -173,7 +173,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq coturn >/dev/null
           timeout 30s turnutils_uclient -s -y -c -n 1 -u "$(cat /tmp/turn-user)" -w "$(cat /tmp/turn-pass)" turn.thevault73.com
-          echo "UDP TURN allocation and relay passed."
+          echo "UDP TURN authentication and allocation completed; self-relay return traffic is blocked by policy."
           timeout 30s turnutils_uclient -t -s -y -c -n 1 -u "$(cat /tmp/turn-user)" -w "$(cat /tmp/turn-pass)" turn.thevault73.com
           echo "TCP TURN allocation and relay passed."
 
