@@ -89,6 +89,8 @@ services:
     image: peerjs/peerjs-server:1.0.2@sha256:77194fb7803430832a39b84f1b1a7a413fe0e438ff39a7de3b2b62be0c184c02
     restart: unless-stopped
     command:
+      - --host
+      - 0.0.0.0
       - --port
       - "9000"
       - --path
