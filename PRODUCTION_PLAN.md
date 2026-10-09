@@ -2,7 +2,7 @@
 
 ## 현재 운영 범위
 
-v0.4.4는 Android Chrome/PWA에서 두 사용자가 앱을 실행한 상태로 사용하는 1:1 포그라운드 메신저를 목표로 합니다.
+v0.5.0은 Android Chrome/PWA에서 두 사용자가 앱을 실행한 상태로 사용하는 1:1 포그라운드 메신저를 목표로 합니다.
 
 - 공용 PeerJS Cloud 신호 서버
 - Google STUN
@@ -26,21 +26,25 @@ v0.4.4는 Android Chrome/PWA에서 두 사용자가 앱을 실행한 상태로 �
 - [x] 사용자 승인 후 서비스 워커 업데이트
 - [x] WebRTC 직접 연결 단계와 기기 확인 단계를 구분하고 15초 timeout 후 재시도 화면으로 복귀
 - [x] 데스크톱 A/B/C 회귀 시험: 안전 코드, 송수신·ack, 수신 중 초안 보존, 상대별 대화 분리, 재연결
-- [ ] Android 두 대에서 v0.4.4 실기기 회귀 시험
+- [ ] Android 두 대에서 v0.5.0 실기기 회귀 시험
 
 ## B단계: 자체 신호 서버와 TURN
 
 목적: 통신사, 회사망, VPN, 대칭 NAT 등에서 직접 연결 성공률을 높입니다.
 
-필요 구성:
+- [x] Caddy `forward_auth`로 모든 PeerJS 경로 인증
+- [x] 일회용 초대 코드와 기기 공개키 등록
+- [x] 비추출 P-256 기기 키의 단기 challenge 서명 검증
+- [x] peerId 고정, 짧은 수명, 1회용 signaling 토큰
+- [x] TURN 장기 비밀키를 브라우저에 노출하지 않는 10분 coturn REST 자격증명
+- [x] 기기 목록·폐기·초대 발급 내부 관리 CLI
+- [x] API CORS, 요청 크기 제한, 메모리 속도 제한, 무로그 기본값
+- [x] PWA 등록 화면과 공용/자체 서버 모드 분리
+- [ ] NCP 서버·DNS 실제 배포
+- [ ] 외부망 signaling/TURN 및 Android 실기기 검증
+- [ ] 장애 모니터링과 최소 로그 보존 정책 확정
 
-1. HTTPS/WSS 도메인이 연결된 Linux 서버
-2. 자체 PeerServer
-3. coturn TURN/STUN 서버
-4. TURN 장기 비밀키를 브라우저에 노출하지 않는 단기 자격증명 발급 API
-5. 방화벽, 속도 제한, 로그 보존 기간, 장애 모니터링
-
-주의: 인증되지 않은 공개 TURN 자격증명 발급은 비용 남용과 DDoS 중계 위험을 만듭니다. 사용자 또는 초대 인증 정책을 정하기 전에는 운영 배포하지 않습니다.
+주의: PeerJS의 `key`와 기본 `token`은 인증 수단이 아닙니다. PeerServer 포트를 외부에 직접 노출하지 않고 Caddy 인증 경로만 허용해야 합니다.
 
 ## C단계: Web Push 깨우기 알림
 
@@ -67,17 +71,18 @@ Web Push는 상대를 깨우는 신호일 뿐입니다. 실제 메시지는 앱�
 - 콘솔 표시 비용: 서버 월 10,850원 + 공인 IP 월 4,032원 = 트래픽·부가세 전 월 14,882원
 - 무료 가능성: 결제정보 등록 계정은 Micro 서버 1년 무료 안내가 있으나 실제 적용 여부는 생성 직전 확인
 - 격리: 기존 `vault` Subnet을 재사용하지 않고 신규 전용 VPC·Public Subnet·ACG 사용
-- 준비물: `infra/ncp/`에 Caddy, PeerServer 1.0.2, coturn 4.18.0 배포 스캐폴드 작성
+- 준비물: `infra/ncp/`에 Caddy, Node 인증 API, PeerServer 1.0.2, coturn 4.18.0 배포 스캐폴드 작성
 - 로그: 연결 메타데이터 최소화를 위해 Caddy access log와 coturn session log는 기본 비활성화
 - 미배포: NCP 유료 자원, 공인 IP, DNS 레코드는 아직 생성하지 않음
-- 인증: 보스 요청에 따라 뒤로 미룸. 따라서 TURN 자격증명 API와 앱 `iceServers` 연결도 보류
+- 인증: 일회용 초대 → 공개키 등록 → challenge 서명 → 단기 signaling/TURN 자격증명 구조 구현. 실제 활성화는 NCP 배포 뒤로 보류
 
 ## B·C단계 시작에 필요한 결정
 
 - [x] 도메인: `thevault73.com`
 - [x] Linux 호스팅 후보: NCP 한국 VPC
 - [ ] 월 운영비 승인과 Micro 무료 적용 여부 확인
-- [ ] 사용자 인증 방식: 사전 등록, 일회용 초대, 또는 소규모 허용 목록
+- [x] 사용자 인증 방식: 일회용 초대 기반 기기 공개키 등록
+- [x] 장기 클라이언트 토큰 대신 기기 서명과 단기 자격증명 사용
 - [ ] 장애 조사 시 필요한 최소 로그와 보존 기간
 
-비밀키나 TURN 공유 비밀값은 정적 GitHub Pages 클라이언트에 넣지 않습니다. 인증 정책이 정해질 때까지 coturn은 관리자 시험 외에 앱에서 사용하지 않습니다.
+비밀키나 TURN 공유 비밀값은 정적 GitHub Pages 클라이언트에 넣지 않습니다. 공개 `config.js`는 서버 배포와 검증이 끝날 때까지 `public` 모드를 유지합니다.
