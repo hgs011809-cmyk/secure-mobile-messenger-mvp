@@ -28,6 +28,7 @@ jobs:
           chmod 600 ~/.ssh/ncp_key
           ssh-keyscan -T 10 -t ed25519 "$HOST" > ~/.ssh/known_hosts
           actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
+          echo "actual=$actual"
           test "$actual" = "$HOST_FINGERPRINT"
 
       - name: Prepare deployment configuration
