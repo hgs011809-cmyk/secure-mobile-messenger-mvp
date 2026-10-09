@@ -146,136 +146,38 @@ jobs:
           docker compose ps
           REMOTE
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      - name: Smoke-test authenticated API, signaling, and TURN
+        env:
+          API_BASE: https://api.thevault73.com
+          SIGNAL_HOST: signal.thevault73.com
+        run: |
+          set -euo pipefail
+          invite_json="$(printf '%s' 'Y29uc3QgZnM9cHJvY2Vzcy5nZXRCdWlsdGluTW9kdWxlKCdmcycpOwpjb25zdCBzZWNyZXQ9ZnMucmVhZEZpbGVTeW5jKCcvcnVuL3NlY3JldHMvYWRtaW5fc2VjcmV0JywndXRmOCcpLnRyaW0oKTsKZmV0Y2goJ2h0dHA6Ly8xMjcuMC4wLjE6ODA4MC9pbnRlcm5hbC9hZG1pbi9pbnZpdGVzJyx7bWV0aG9kOidQT1NUJyxoZWFkZXJzOnsneC1hZG1pbi1zZWNyZXQnOnNlY3JldCwnY29udGVudC10eXBlJzonYXBwbGljYXRpb24vanNvbid9LGJvZHk6SlNPTi5zdHJpbmdpZnkoe3R0bFNlY29uZHM6NjAwfSl9KS50aGVuKGFzeW5jIHI9Pntjb25zdCB0PWF3YWl0IHIudGV4dCgpO2lmKCFyLm9rKXRocm93IG5ldyBFcnJvcih0KTtwcm9jZXNzLnN0ZG91dC53cml0ZSh0KX0pLmNhdGNoKGU9Pntjb25zb2xlLmVycm9yKGUubWVzc2FnZSk7cHJvY2Vzcy5leGl0KDEpfSk7Cg==' | base64 -d | ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker exec -i secure-messenger-infra-auth-1 node -')"
+          printf '%s' "$invite_json" > /tmp/invite.json
+
+          revoke_device() {
+            [ -f /tmp/device-id ] || return 0
+            device_id="$(cat /tmp/device-id)"
+            printf '%s' 'Y29uc3QgZnM9cHJvY2Vzcy5nZXRCdWlsdGluTW9kdWxlKCdmcycpOwpjb25zdCBzZWNyZXQ9ZnMucmVhZEZpbGVTeW5jKCcvcnVuL3NlY3JldHMvYWRtaW5fc2VjcmV0JywndXRmOCcpLnRyaW0oKTsKY29uc3QgZGV2aWNlSWQ9cHJvY2Vzcy5lbnYuREVWSUNFX0lEfHwnJzsKZmV0Y2goJ2h0dHA6Ly8xMjcuMC4wLjE6ODA4MC9pbnRlcm5hbC9hZG1pbi9kZXZpY2VzL3Jldm9rZScse21ldGhvZDonUE9TVCcsaGVhZGVyczp7J3gtYWRtaW4tc2VjcmV0JzpzZWNyZXQsJ2NvbnRlbnQtdHlwZSc6J2FwcGxpY2F0aW9uL2pzb24nfSxib2R5OkpTT04uc3RyaW5naWZ5KHtkZXZpY2VJZH0pfSkudGhlbihhc3luYyByPT57Y29uc3QgdD1hd2FpdCByLnRleHQoKTtpZighci5vayl0aHJvdyBuZXcgRXJyb3IodCk7Y29uc3QgZGF0YT1KU09OLnBhcnNlKHQpO2lmKCFkYXRhLnJldm9rZWQpdGhyb3cgbmV3IEVycm9yKCdkZXZpY2Vfbm90X3Jldm9rZWQnKX0pLmNhdGNoKGU9Pntjb25zb2xlLmVycm9yKGUubWVzc2FnZSk7cHJvY2Vzcy5leGl0KDEpfSk7Cg==' | base64 -d | ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST "docker exec -i -e DEVICE_ID='$device_id' secure-messenger-infra-auth-1 node -"
+          }
+          cleanup() {
+            revoke_device >/dev/null 2>&1 || true
+            rm -f /tmp/invite.json /tmp/turn-user /tmp/turn-pass /tmp/device-id /tmp/peer-id
+          }
+          trap cleanup EXIT
+
+          node infra/ncp/scripts/smoke-test.mjs auth
+          echo "::add-mask::$(cat /tmp/turn-user)"
+          echo "::add-mask::$(cat /tmp/turn-pass)"
+
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq coturn >/dev/null
+          timeout 30s turnutils_uclient -y -c -n 1 -u "$(cat /tmp/turn-user)" -w "$(cat /tmp/turn-pass)" turn.thevault73.com
+          echo "UDP TURN allocation and relay passed."
+          timeout 30s turnutils_uclient -t -y -c -n 1 -u "$(cat /tmp/turn-user)" -w "$(cat /tmp/turn-pass)" turn.thevault73.com
+          echo "TCP TURN allocation and relay passed."
+
+          revoke_device
+          node infra/ncp/scripts/smoke-test.mjs revoked
+          trap - EXIT
+          rm -f /tmp/invite.json /tmp/turn-user /tmp/turn-pass /tmp/device-id /tmp/peer-id
