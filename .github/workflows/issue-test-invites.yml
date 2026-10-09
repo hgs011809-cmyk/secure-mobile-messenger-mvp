@@ -46,8 +46,8 @@ jobs:
           container=secure-messenger-infra-auth-1
           invite_a_json="$(docker exec "$container" node src/cli.js create-invite 1800)"
           invite_b_json="$(docker exec "$container" node src/cli.js create-invite 1800)"
-          invite_a="$(printf '%s\n' "$invite_a_json" | sed -n 's/^[[:space:]]*"code":[[:space:]]*"\([^"]*\)".*/\1/p')"
-          invite_b="$(printf '%s\n' "$invite_b_json" | sed -n 's/^[[:space:]]*"code":[[:space:]]*"\([^"]*\)".*/\1/p')"
+          invite_a="$(printf '%s\n' "$invite_a_json" | sed -n 's/^[[:space:]]*"inviteCode":[[:space:]]*"\([^"]*\)".*/\1/p')"
+          invite_b="$(printf '%s\n' "$invite_b_json" | sed -n 's/^[[:space:]]*"inviteCode":[[:space:]]*"\([^"]*\)".*/\1/p')"
           test -n "$invite_a"
           test -n "$invite_b"
           {
