@@ -25,26 +25,27 @@ if grep -Eq 'example\.com|203\.0\.113\.10|192\.0\.2\.10' .env; then
   echo '.env still contains example values' >&2
   exit 1
 fi
-secret_file=secrets/turn_shared_secret
-if [ ! -f "$secret_file" ] || [ -L "$secret_file" ] || [ ! -r "$secret_file" ]; then
-  echo 'Generate a regular secrets/turn_shared_secret file before deployment' >&2
-  exit 1
-fi
-if [ "$(stat -c '%a' "$secret_file")" != '600' ]; then
-  echo 'TURN shared secret permissions must be 0600' >&2
-  exit 1
-fi
-secret_owner=$(stat -c '%u' "$secret_file")
 current_user=$(id -u)
-if [ "$secret_owner" != "$current_user" ] && [ "$secret_owner" != '0' ]; then
-  echo 'TURN shared secret must be owned by the deploy user or root' >&2
-  exit 1
-fi
-secret=$(tr -d '\r\n' < "$secret_file")
-if ! printf '%s' "$secret" | grep -Eq '^[A-Fa-f0-9]{64,}$'; then
-  echo 'TURN shared secret must be at least 32 random bytes encoded as hexadecimal' >&2
-  exit 1
-fi
+for secret_file in secrets/turn_shared_secret secrets/admin_secret; do
+  if [ ! -f "$secret_file" ] || [ -L "$secret_file" ] || [ ! -r "$secret_file" ]; then
+    echo "Generate a regular $secret_file file before deployment" >&2
+    exit 1
+  fi
+  if [ "$(stat -c '%a' "$secret_file")" != '600' ]; then
+    echo "$secret_file permissions must be 0600" >&2
+    exit 1
+  fi
+  secret_owner=$(stat -c '%u' "$secret_file")
+  if [ "$secret_owner" != "$current_user" ] && [ "$secret_owner" != '0' ]; then
+    echo "$secret_file must be owned by the deploy user or root" >&2
+    exit 1
+  fi
+  secret=$(tr -d '\r\n' < "$secret_file")
+  if ! printf '%s' "$secret" | grep -Eq '^[A-Za-z0-9_-]{43,}$|^[A-Fa-f0-9]{64,}$'; then
+    echo "$secret_file must contain at least 32 random bytes in base64url or hexadecimal" >&2
+    exit 1
+  fi
+done
 
 docker compose config --quiet
 echo 'Preflight checks passed.'
