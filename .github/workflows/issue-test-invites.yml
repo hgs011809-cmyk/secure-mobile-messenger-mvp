@@ -50,13 +50,17 @@ jobs:
           invite_b="$(printf '%s\n' "$invite_b_json" | sed -n 's/^[[:space:]]*"inviteCode":[[:space:]]*"\([^"]*\)".*/\1/p')"
           test -n "$invite_a"
           test -n "$invite_b"
+          output_file="$(mktemp)"
+          chmod 600 "$output_file"
           {
             printf '\033c'
             printf '\nDIRECT CHAT ANDROID TEST\n\n'
             printf 'PHONE A: %s\n\n' "$invite_a"
             printf 'PHONE B: %s\n\n' "$invite_b"
             printf 'Expires in 30 minutes. Each code works once.\n'
-          } > /dev/tty1
+          } > "$output_file"
+          timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$output_file" || true
+          rm -f "$output_file"
           unset invite_a invite_b invite_a_json invite_b_json
           REMOTE
           echo "Invite codes were delivered only to the authenticated NCP server console."
