@@ -1,0 +1,62 @@
+name: Issue Android test invites
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: issue-android-test-invites
+  cancel-in-progress: false
+
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      HOST: 211.233.206.144
+      HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKiObKSadOxA5nKuXgToCGhNiyhVhAjY
+      SSH_KEY: ${{ secrets.NCP_SSH_KEY }}
+    steps:
+      - name: Wait for temporary runner IP allowlist
+        run: |
+          set -euo pipefail
+          runner_ip="$(curl -fsS https://api.ipify.org)"
+          echo "::notice::Temporarily allow TCP 22 from $runner_ip/32 in secure-msg-acg."
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
+          chmod 600 ~/.ssh/ncp_key
+          : > ~/.ssh/known_hosts
+          for attempt in $(seq 1 48); do
+            if ssh-keyscan -T 5 -t ed25519 "$HOST" > ~/.ssh/known_hosts 2>/dev/null; then
+              break
+            fi
+            sleep 10
+          done
+          test -s ~/.ssh/known_hosts
+          actual="$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')"
+          test "$actual" = "$HOST_FINGERPRINT"
+
+      - name: Issue two short-lived invites to the NCP console only
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i ~/.ssh/ncp_key root@$HOST 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          container=secure-messenger-infra-auth-1
+          invite_a_json="$(docker exec "$container" node src/cli.js create-invite 1800)"
+          invite_b_json="$(docker exec "$container" node src/cli.js create-invite 1800)"
+          invite_a="$(printf '%s\n' "$invite_a_json" | sed -n 's/^[[:space:]]*"code":[[:space:]]*"\([^"]*\)".*/\1/p')"
+          invite_b="$(printf '%s\n' "$invite_b_json" | sed -n 's/^[[:space:]]*"code":[[:space:]]*"\([^"]*\)".*/\1/p')"
+          test -n "$invite_a"
+          test -n "$invite_b"
+          {
+            printf '\033c'
+            printf '\nDIRECT CHAT ANDROID TEST\n\n'
+            printf 'PHONE A: %s\n\n' "$invite_a"
+            printf 'PHONE B: %s\n\n' "$invite_b"
+            printf 'Expires in 30 minutes. Each code works once.\n'
+          } > /dev/tty1
+          unset invite_a invite_b invite_a_json invite_b_json
+          REMOTE
+          echo "Invite codes were delivered only to the authenticated NCP server console."
