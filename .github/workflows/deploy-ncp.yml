@@ -85,7 +85,22 @@ jobs:
             ./scripts/generate-secrets.sh
           fi
           ./scripts/preflight.sh
-          docker compose up -d --no-build
+          cat > /tmp/compose.offline.yaml <<'COMPOSE'
+          services:
+            caddy:
+              image: caddy:2.11.7-alpine
+              pull_policy: never
+            auth:
+              image: secure-msg-auth:local
+              pull_policy: never
+            peerjs:
+              image: peerjs/peerjs-server:1.0.2
+              pull_policy: never
+            coturn:
+              image: coturn/coturn:4.18.0-alpine
+              pull_policy: never
+          COMPOSE
+          docker compose -f compose.yaml -f /tmp/compose.offline.yaml up -d --no-build --pull never
           ufw default deny incoming
           ufw default allow outgoing
           ufw allow 22/tcp
