@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check browser JavaScript syntax
+        run: node --check app.js && node --check config.js && node --check sw.js
+      - name: Test authentication service
+        working-directory: infra/ncp/auth
+        env:
+          TEST_TMP_DIR: /tmp/secure-messenger-auth-tests
+        run: node --test test/unit.test.js test/integration.test.js
+      - name: Prepare non-secret validation fixtures
+        working-directory: infra/ncp
+        run: |
+          cat > .env <<'EOF'
+          SIGNAL_HOST=signal.thevault73.com
+          API_HOST=api.thevault73.com
+          TURN_REALM=turn.thevault73.com
+          APP_ORIGIN=https://hgs011809-cmyk.github.io
+          ACME_EMAIL=ops@thevault73.com
+          PUBLIC_IP=198.51.100.10
+          RELAY_IP=10.20.0.10
+          TURN_MIN_PORT=49160
+          TURN_MAX_PORT=49200
+          EOF
+          mkdir -p secrets
+          printf '%064d\n' 0 > secrets/turn_shared_secret
+          printf '%064d\n' 1 > secrets/admin_secret
+          chmod 600 .env secrets/turn_shared_secret secrets/admin_secret
+      - name: Validate Compose and secret checks
+        working-directory: infra/ncp
+        run: sh scripts/preflight.sh
+      - name: Validate Caddy configuration
+        working-directory: infra/ncp
+        run: docker compose run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile
+      - name: Build authentication image
+        working-directory: infra/ncp
+        run: docker compose build auth
