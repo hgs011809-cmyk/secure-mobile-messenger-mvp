@@ -30,6 +30,13 @@ jobs:
           actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
           test "$actual" = "$HOST_FINGERPRINT"
 
+      - name: Use legacy Docker image store
+        run: |
+          sudo install -d -m 755 /etc/docker
+          printf '{"features":{"containerd-snapshotter":false}}\n' | sudo tee /etc/docker/daemon.json >/dev/null
+          sudo systemctl restart docker
+          docker info --format '{{.Driver}}'
+
       - name: Prepare pinned container images
         run: |
           docker pull caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
