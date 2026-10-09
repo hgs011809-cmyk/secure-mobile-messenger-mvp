@@ -105,7 +105,11 @@ jobs:
           if [ ! -f secrets/turn_shared_secret ] && [ ! -f secrets/admin_secret ]; then
             ./scripts/generate-secrets.sh
           fi
+          chown root:root secrets/admin_secret secrets/turn_shared_secret
+          chmod 0600 secrets/admin_secret secrets/turn_shared_secret
           ./scripts/preflight.sh
+          chgrp 4242 secrets/admin_secret secrets/turn_shared_secret
+          chmod 0640 secrets/admin_secret secrets/turn_shared_secret
           cat > /tmp/compose.offline.yaml <<'COMPOSE'
           services:
             caddy:
