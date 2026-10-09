@@ -40,8 +40,9 @@ v0.5.0은 Android Chrome/PWA에서 두 사용자가 앱을 실행한 상태로 �
 - [x] 기기 목록·폐기·초대 발급 내부 관리 CLI
 - [x] API CORS, 요청 크기 제한, 메모리 속도 제한, 무로그 기본값
 - [x] PWA 등록 화면과 공용/자체 서버 모드 분리
-- [ ] NCP 서버·DNS 실제 배포
-- [ ] 외부망 signaling/TURN 및 Android 실기기 검증
+- [x] NCP 서버·DNS 실제 배포
+- [x] 외부망 API·인증 signaling·STUN·TURN 자격증명/할당 검증
+- [ ] Android 두 대에서 자체 서버 모드 연결 및 모바일망↔Wi-Fi TURN 경로 검증
 - [ ] 장애 모니터링과 최소 로그 보존 정책 확정
 
 주의: PeerJS의 `key`와 기본 `token`은 인증 수단이 아닙니다. PeerServer 포트를 외부에 직접 노출하지 않고 Caddy 인증 경로만 허용해야 합니다.
@@ -64,17 +65,18 @@ Web Push는 상대를 깨우는 신호일 뿐입니다. 실제 메시지는 앱�
 
 상대가 완전히 오프라인인 동안 메시지를 임시 보관하려면 별도 앱 계층 암호화 프로토콜, 키 교체, 재전송, 중복 제거, 만료·삭제 정책, 독립 보안 검토가 필요합니다. 검증된 E2EE SDK 또는 프로토콜을 우선 검토합니다.
 
-## 2026-10-09 NCP 준비 결정
+## 2026-10-10 NCP 배포 및 검증 결과
 
-- 도메인: 보유 중인 `thevault73.com`의 `signal`·`turn` 하위 도메인 사용
-- 호스팅 후보: NCP 한국 VPC의 Micro(g3), 1 vCPU·1GB
-- 콘솔 표시 비용: 서버 월 10,850원 + 공인 IP 월 4,032원 = 트래픽·부가세 전 월 14,882원
-- 무료 가능성: 결제정보 등록 계정은 Micro 서버 1년 무료 안내가 있으나 실제 적용 여부는 생성 직전 확인
-- 격리: 기존 `vault` Subnet을 재사용하지 않고 신규 전용 VPC·Public Subnet·ACG 사용
-- 준비물: `infra/ncp/`에 Caddy, Node 인증 API, PeerServer 1.0.2, coturn 4.18.0 배포 스캐폴드 작성
-- 로그: 연결 메타데이터 최소화를 위해 Caddy access log와 coturn session log는 기본 비활성화
-- 미배포: NCP 유료 자원, 공인 IP, DNS 레코드는 아직 생성하지 않음
-- 인증: 일회용 초대 → 공개키 등록 → challenge 서명 → 단기 signaling/TURN 자격증명 구조 구현. 실제 활성화는 NCP 배포 뒤로 보류
+- 도메인: `api`·`signal`·`turn.thevault73.com`을 공인 IP `211.233.206.144`에 연결하고 HTTPS 인증서를 발급함
+- 운영 스택: NCP 한국 VPC의 Micro(g3)에 Caddy, Node 인증 API, PeerServer 1.0.2, coturn 4.18.0 배포
+- 인증 검증: 일회용 초대 재사용 거부, P-256 challenge 재사용 거부, 1회용 WSS 토큰 재사용 거부, 기기 폐기 후 재인증 거부 자동화
+- TURN 검증: 10분 coturn REST 자격증명으로 UDP 인증·할당과 TCP 릴레이 성공. 서버 정책이 동일 클라이언트 자기 릴레이를 차단하므로 Android 두 대의 UDP 릴레이는 실기기 단계에서 확인
+- 배포 검증: GitHub Actions `Deploy NCP pilot #17` 성공, 최신 CI와 Pages 배포도 성공
+- 네트워크 정책: SSH 22는 관리자 IP /32만 허용. 공개 80/443, TURN 3478 TCP·UDP와 49160-49200 UDP만 인바운드 허용
+- 최소 아웃바운드: DNS 53 TCP·UDP, HTTP 80, HTTPS 443, NTP 123 UDP, TURN peer relay 1024-65535 UDP만 허용
+- 비밀값: 서버의 Docker secret으로만 보관하고 GitHub Pages에는 포함하지 않음
+- 로그: 연결 메타데이터 최소화를 위해 Caddy access log와 coturn session log는 비활성화
+- 클라이언트 전환: 자체 서버 모드는 구현됐지만 `config.js`는 Android 두 대 검증 전까지 `public` 모드 유지
 
 ## B·C단계 시작에 필요한 결정
 
@@ -85,4 +87,4 @@ Web Push는 상대를 깨우는 신호일 뿐입니다. 실제 메시지는 앱�
 - [x] 장기 클라이언트 토큰 대신 기기 서명과 단기 자격증명 사용
 - [ ] 장애 조사 시 필요한 최소 로그와 보존 기간
 
-비밀키나 TURN 공유 비밀값은 정적 GitHub Pages 클라이언트에 넣지 않습니다. 공개 `config.js`는 서버 배포와 검증이 끝날 때까지 `public` 모드를 유지합니다.
+비밀키나 TURN 공유 비밀값은 정적 GitHub Pages 클라이언트에 넣지 않습니다. 공개 `config.js`는 Android 실기기 검증과 단계적 전환이 끝날 때까지 `public` 모드를 유지합니다.
