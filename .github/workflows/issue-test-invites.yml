@@ -50,17 +50,39 @@ jobs:
           invite_b="$(printf '%s\n' "$invite_b_json" | sed -n 's/^[[:space:]]*"inviteCode":[[:space:]]*"\([^"]*\)".*/\1/p')"
           test -n "$invite_a"
           test -n "$invite_b"
-          output_file="$(mktemp)"
-          chmod 600 "$output_file"
+          display_dir="$(mktemp -d)"
+          chmod 700 "$display_dir"
+          docker exec "$container" npx --yes qrcode-terminal@0.12.0 "$invite_a" > "$display_dir/a.qr"
+          docker exec "$container" npx --yes qrcode-terminal@0.12.0 "$invite_b" > "$display_dir/b.qr"
           {
             printf '\033c'
-            printf '\nDIRECT CHAT ANDROID TEST\n\n'
-            printf 'PHONE A: %s\n\n' "$invite_a"
-            printf 'PHONE B: %s\n\n' "$invite_b"
-            printf 'Expires in 30 minutes. Each code works once.\n'
-          } > "$output_file"
-          timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$output_file" || true
-          rm -f "$output_file"
+            printf '\nPHONE A - SCAN THIS QR WITH PHONE A\n\n'
+            cat "$display_dir/a.qr"
+            printf '\nCopy the scanned text into the app. PHONE B appears in 10 seconds.\n'
+          } > "$display_dir/a.txt"
+          {
+            printf '\033c'
+            printf '\nPHONE B - SCAN THIS QR WITH PHONE B\n\n'
+            cat "$display_dir/b.qr"
+            printf '\nCopy the scanned text into the app. PHONE A appears in 10 seconds.\n'
+          } > "$display_dir/b.txt"
+          chmod 600 "$display_dir"/*
+          cat > "$display_dir/show.sh" <<'SHOW'
+          #!/bin/sh
+          dir="$1"
+          i=0
+          while [ "$i" -lt 45 ]; do
+            timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/a.txt" || true
+            sleep 10
+            timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/b.txt" || true
+            sleep 10
+            i=$((i + 1))
+          done
+          rm -rf "$dir"
+          SHOW
+          chmod 700 "$display_dir/show.sh"
+          timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$display_dir/a.txt" || true
+          nohup "$display_dir/show.sh" "$display_dir" </dev/null >/dev/null 2>&1 &
           unset invite_a invite_b invite_a_json invite_b_json
           REMOTE
           echo "Invite codes were delivered only to the authenticated NCP server console."
