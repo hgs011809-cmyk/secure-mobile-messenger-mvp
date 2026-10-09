@@ -130,6 +130,7 @@ jobs:
             docker compose -f compose.yaml -f /tmp/compose.offline.yaml logs --no-color --tail 100 || true
             exit 1
           fi
+          docker compose -f compose.yaml -f /tmp/compose.offline.yaml restart caddy
           ufw default deny incoming
           ufw default allow outgoing
           ufw allow 22/tcp
