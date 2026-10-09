@@ -30,7 +30,22 @@ jobs:
           actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
           test "$actual" = "$HOST_FINGERPRINT"
 
+      - name: Inspect existing remote stack
+        continue-on-error: true
+        run: |
+          ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker ps -a --filter name=secure-messenger-infra --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"; docker logs --tail 80 secure-messenger-infra-auth-1 2>&1 || true; docker logs --tail 80 secure-messenger-infra-peerjs-1 2>&1 || true'
+
+      - name: Check remote image cache
+        id: remote
+        run: |
+          if ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker image inspect caddy:2.11.7-alpine peerjs/peerjs-server:1.0.2 coturn/coturn:4.18.0-alpine secure-msg-auth:local >/dev/null 2>&1'; then
+            echo "images=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "images=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Use legacy Docker image store
+        if: steps.remote.outputs.images != 'true'
         run: |
           sudo install -d -m 755 /etc/docker
           printf '{"features":{"containerd-snapshotter":false}}\n' | sudo tee /etc/docker/daemon.json >/dev/null
@@ -38,6 +53,7 @@ jobs:
           docker info --format '{{.Driver}}'
 
       - name: Prepare pinned container images
+        if: steps.remote.outputs.images != 'true'
         run: |
           docker pull caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
           docker pull peerjs/peerjs-server:1.0.2@sha256:77194fb7803430832a39b84f1b1a7a413fe0e438ff39a7de3b2b62be0c184c02
@@ -70,15 +86,20 @@ jobs:
 
       - name: Transfer deployment files and images
         run: |
-          scp -o BatchMode=yes -i ~/.ssh/ncp_key /tmp/ncp.tar.gz /tmp/ncp.env /tmp/ncp-images.tar.gz root@$HOST:/root/
+          scp -o BatchMode=yes -i ~/.ssh/ncp_key /tmp/ncp.tar.gz /tmp/ncp.env root@$HOST:/root/
+          if [ "${{ steps.remote.outputs.images }}" != "true" ]; then
+            scp -o BatchMode=yes -i ~/.ssh/ncp_key /tmp/ncp-images.tar.gz root@$HOST:/root/
+          fi
           ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'mkdir -p /opt/secure-mobile-messenger-mvp/infra && tar -xzf /root/ncp.tar.gz -C /opt/secure-mobile-messenger-mvp/infra && install -m 600 /root/ncp.env /opt/secure-mobile-messenger-mvp/infra/ncp/.env && rm -f /root/ncp.tar.gz /root/ncp.env'
 
       - name: Deploy authenticated signaling and TURN stack
         run: |
           ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'bash -se' <<'REMOTE'
           set -euo pipefail
-          gunzip -c /root/ncp-images.tar.gz | docker load
-          rm -f /root/ncp-images.tar.gz
+          if [ -f /root/ncp-images.tar.gz ]; then
+            gunzip -c /root/ncp-images.tar.gz | docker load
+            rm -f /root/ncp-images.tar.gz
+          fi
           cd /opt/secure-mobile-messenger-mvp/infra/ncp
           chmod +x turn/start-coturn.sh scripts/*.sh
           if [ ! -f secrets/turn_shared_secret ] && [ ! -f secrets/admin_secret ]; then
@@ -100,7 +121,11 @@ jobs:
               image: coturn/coturn:4.18.0-alpine
               pull_policy: never
           COMPOSE
-          docker compose -f compose.yaml -f /tmp/compose.offline.yaml up -d --no-build --pull never
+          if ! docker compose -f compose.yaml -f /tmp/compose.offline.yaml up -d --no-build --pull never; then
+            docker compose -f compose.yaml -f /tmp/compose.offline.yaml ps -a || true
+            docker compose -f compose.yaml -f /tmp/compose.offline.yaml logs --no-color --tail 100 || true
+            exit 1
+          fi
           ufw default deny incoming
           ufw default allow outgoing
           ufw allow 22/tcp
