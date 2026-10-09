@@ -22,7 +22,7 @@ jobs:
       - name: Wait for temporary runner IP allowlist
         run: |
           set -euo pipefail
-          runner_ip="$(curl -fsS https://api.ipify.org)"
+          runner_ip="$(curl --max-time 8 -fsS https://api.ipify.org || curl --max-time 8 -fsS https://checkip.amazonaws.com)"
           echo "::notice::Temporarily allow TCP 22 from $runner_ip/32 in secure-msg-acg."
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
