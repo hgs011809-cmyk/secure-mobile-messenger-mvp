@@ -13,27 +13,30 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       HOST: 211.233.206.144
       HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKiObKSadOxA5nKuXgToCGhNiyhVhAjY
       SSH_KEY: ${{ secrets.NCP_SSH_KEY }}
-      SSH_PASSWORD: ${{ secrets.NCP_BOOTSTRAP_PASSWORD }}
-      SSH_PUBLIC_KEY: ${{ secrets.NCP_SSH_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Prepare verified SSH connection
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
-          printf '%s\n' "$SSH_PUBLIC_KEY" > /tmp/ncp.pub
           chmod 600 ~/.ssh/ncp_key
           ssh-keyscan -T 10 -t ed25519 "$HOST" > ~/.ssh/known_hosts
           actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
           test "$actual" = "$HOST_FINGERPRINT"
+
+      - name: Prepare pinned container images
+        run: |
+          docker pull caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+          docker pull peerjs/peerjs-server:1.0.2@sha256:77194fb7803430832a39b84f1b1a7a413fe0e438ff39a7de3b2b62be0c184c02
+          docker pull coturn/coturn:4.18.0-alpine@sha256:c29135c08565810d37053f384584392b7c24b69570fc81a721b878d6fe63e04e
+          docker pull node:22.23.3-alpine3.24@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+          docker save caddy:2.11.7-alpine peerjs/peerjs-server:1.0.2 coturn/coturn:4.18.0-alpine node:22.23.3-alpine3.24 | gzip -1 > /tmp/ncp-images.tar.gz
 
       - name: Prepare deployment configuration
         run: |
@@ -51,24 +54,24 @@ jobs:
           ENV
           chmod 600 /tmp/ncp.env
 
-      - name: Bootstrap SSH key and transfer deployment files
+      - name: Transfer deployment files and images
         run: |
-          export SSHPASS="$SSH_PASSWORD"
-          sshpass -e scp -o PreferredAuthentications=password -o PubkeyAuthentication=no -o NumberOfPasswordPrompts=1 /tmp/ncp.tar.gz /tmp/ncp.env /tmp/ncp.pub root@$HOST:/root/
-          sshpass -e ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o NumberOfPasswordPrompts=1 root@$HOST 'install -d -m 700 /root/.ssh && install -m 600 /root/ncp.pub /root/.ssh/authorized_keys && mkdir -p /opt/secure-mobile-messenger-mvp/infra && tar -xzf /root/ncp.tar.gz -C /opt/secure-mobile-messenger-mvp/infra && install -m 600 /root/ncp.env /opt/secure-mobile-messenger-mvp/infra/ncp/.env && rm -f /root/ncp.tar.gz /root/ncp.env /root/ncp.pub'
+          scp -o BatchMode=yes -i ~/.ssh/ncp_key /tmp/ncp.tar.gz /tmp/ncp.env /tmp/ncp-images.tar.gz root@$HOST:/root/
+          ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'mkdir -p /opt/secure-mobile-messenger-mvp/infra && tar -xzf /root/ncp.tar.gz -C /opt/secure-mobile-messenger-mvp/infra && install -m 600 /root/ncp.env /opt/secure-mobile-messenger-mvp/infra/ncp/.env && rm -f /root/ncp.tar.gz /root/ncp.env'
 
       - name: Deploy authenticated signaling and TURN stack
         run: |
           ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'bash -se' <<'REMOTE'
           set -euo pipefail
+          gunzip -c /root/ncp-images.tar.gz | docker load
+          rm -f /root/ncp-images.tar.gz
           cd /opt/secure-mobile-messenger-mvp/infra/ncp
           chmod +x turn/start-coturn.sh scripts/*.sh
           if [ ! -f secrets/turn_shared_secret ] && [ ! -f secrets/admin_secret ]; then
             ./scripts/generate-secrets.sh
           fi
           ./scripts/preflight.sh
-          timeout 10m docker compose pull
-          timeout 10m docker compose build --pull auth
+          docker compose build --pull=false auth
           docker compose up -d
           ufw default deny incoming
           ufw default allow outgoing
