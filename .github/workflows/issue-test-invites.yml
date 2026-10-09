@@ -52,8 +52,8 @@ jobs:
           test -n "$invite_b"
           display_dir="$(mktemp -d)"
           chmod 700 "$display_dir"
-          docker exec "$container" npx --yes qrcode-terminal@0.12.0 "$invite_a" > "$display_dir/a.qr"
-          docker exec "$container" npx --yes qrcode-terminal@0.12.0 "$invite_b" > "$display_dir/b.qr"
+          docker exec -e npm_config_cache=/tmp/npm-cache "$container" npx --yes qrcode-terminal@0.12.0 "$invite_a" > "$display_dir/a.qr"
+          docker exec -e npm_config_cache=/tmp/npm-cache "$container" npx --yes qrcode-terminal@0.12.0 "$invite_b" > "$display_dir/b.qr"
           {
             printf '\033c'
             printf '\nPHONE A - SCAN THIS QR WITH PHONE A\n\n'
