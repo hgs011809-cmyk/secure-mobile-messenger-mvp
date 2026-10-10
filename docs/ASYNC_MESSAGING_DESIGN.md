@@ -64,7 +64,7 @@
 - https://github.com/signalapp/libsignal
 
 ## 독립 로컬 검증 결과
-- matrix-js-sdk 43.0.0의 Rust/WASM 암호 엔진 의존성인 matrix-sdk-crypto-wasm 18.7.0을 운영 앱과 분리해 검증했다.
+- 초기 별도 암호 엔진 smoke test는 matrix-sdk-crypto-wasm 18.7.0을 운영 앱과 분리해 검증했다. 이후 matrix-js-sdk 43.0.0의 CI lockfile은 엔진 18.9.0을 선택했다. 초기 테스트 버전과 현재 SDK 검증 버전을 혼동하지 않는다.
 - CLI npm 설치는 작업 경로 처리 오류와 CLI DNS 제한으로 실패했으며, 브라우저 네트워크로 공식 tarball을 다운로드해 우회했다.
 - 공식 npm SHA-512 무결성 일치 테스트와 합성 메시지 암호화 테스트가 통과했다. 서로 다른 기기의 공개 서명키가 다르고, 암호문에 본문이 없고, 보낸 기기의 로컬 복호화는 성공하며 키가 없는 기기와 변조된 암호문은 복호화에 실패했다.
 - 총 2개 로컬 테스트 통과, 실행 프로세스 종료 코드 0. 개인키나 실제 메시지를 출력하거나 서버에 전송하지 않았다.
@@ -73,6 +73,16 @@
 
 ## 개발 1차 구현
 - experimental/matrix-client: 실험용 SDK 초기화·전송 안전 게이트·영속 삭제 메타데이터·삭제/재시도 어댑터. 운영 app.js에서 가져오지 않는다.
-- 모의 SDK 기반 16개 회귀 테스트가 로컬에서 통과했다. Android나 실제 홈서버 동기화가 검증된 것은 아니다.
-- infra/ncp/matrix-lab: 루프백 전용 서버 개발 구성. 비밀값은 생성한 로컬 파일에만 넣는다. 서버 이미지 선택과 Docker 실행은 아직 검증되지 않았다.
-- 실제 Chromium WASM·IndexedDB 테스트를 CI로 실행한다. 기존 NCP 서비스와 등록 정보는 변경하지 않는다.
+- 모의 SDK 기반 16개 회귀 테스트와 실제 Chromium WASM·SDK 종료/재생성·페이지 새로고침 기기 키 유지 검증이 CI에서 통과했다. 암호 키와 삭제 표시는 IndexedDB에 유지하고 SDK 메시지 저장소는 localStorage 없는 MemoryStore를 사용한다. 네트워크 없는 과거 기록 조회와 영속 오프라인 발신 큐는 아직 없다.
+- infra/ncp/matrix-lab: 별도 개발 구성. 비밀값은 생성한 로컬 파일에만 넣는다. CI의 공식 Synapse v1.162.0 이미지는 실제 다운로드로 확인한 불변 digest로 고정했다. 로컬 Docker 실행과 Android 접근은 검증되지 않았다.
+- 운영 앱과 NCP 서비스 및 등록 정보는 변경하지 않는다. 기존 인증과 Matrix 세션/기기 검증의 연결 조건은 [MATRIX_ADMISSION_PLAN.md](MATRIX_ADMISSION_PLAN.md)에 정리했다.
+
+## 실제 Synapse 합성 통합 검증: 2026-10-10
+- 커밋 962268b9ed186cfb3a2d2dce9f555afbe8bf6113, [CI run #3](https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38057556704) 성공.
+- 두 비관리자 합성 계정, 각 1개 기기, 메모리에서 직접 얻은 상대 공개키와 조회된 정확한 기기 키 비교 후 검증, 초대 전용/연합 차단/암호화된 room v12를 확인했다.
+- 수신 프로세스를 실제로 SIGSTOP한 동안 전송하고 SIGCONT 후 /sync 복호화를 확인했다. 이는 메모리를 유지하는 일시중지/재개이며 완전 종료 후 cold reopen 검증이 아니다.
+- 상대 승인 없이 다른 사용자가 보낸 메시지를 삭제하는 양방향 권한, 서버 API 열람 차단, 오프라인 프로세스의 다음 동기화 삭제 반영을 확인했다.
+- 삭제 서버 승인 후 API 논리 차단 확인 7ms; 활성 SQLite event_json 행의 암호문 내용 정리 296248ms(296.248초, 약 4분 56초). 샘플 1회이며 p95/최악값, 부하/재시작 시 300초 상한을 보장하지 않는다.
+- 호스트 루프백 게시 연결은 실패했고, 컨테이너 자체와 호스트의 격리 private bridge 경로는 HTTP 200으로 확인됐다. 메시지/삭제 통과를 루프백 게시·실제 LAN/Android 접근 통과로 표현하지 않는다.
+- 테스트 자원 한도 2 CPU/2GB는 현재 NCP 1 CPU/1GB/10GB에서 안전한 동시 운영의 근거가 아니다. 운영 이관이나 추가 비용은 승인 전 실행하지 않는다.
+- 활성 논리 행 변경을 확인한 것이며 WAL/백업/스냅샷/빈 페이지/첨부/클라이언트 복사본의 물리적 삭제 증거는 아니다. 사용자 기기 등록 연결, 실제 Android E2EE cold reopen, 서버 권한 강제와 부하·백업 삭제 정책은 여전히 운영 게이트다.
