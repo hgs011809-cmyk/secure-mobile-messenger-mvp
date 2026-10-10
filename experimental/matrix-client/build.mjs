@@ -1,0 +1,12 @@
+import {build} from 'esbuild';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.dirname(fileURLToPath(import.meta.url));
+await fs.mkdir(path.join(root,'dist/pkg'),{recursive:true});
+await build({absWorkingDir:root,entryPoints:['client.mjs'],outfile:'dist/client.mjs',bundle:true,platform:'browser',format:'esm',target:'es2022',preserveSymlinks:true,sourcemap:false});
+const cryptoEntry=fileURLToPath(import.meta.resolve('@matrix-org/matrix-sdk-crypto-wasm'));
+await fs.copyFile(path.join(path.dirname(cryptoEntry),'pkg/matrix_sdk_crypto_wasm_bg.wasm'),path.join(root,'dist/pkg/matrix_sdk_crypto_wasm_bg.wasm'));
+await fs.copyFile(path.join(root,'deletion-ledger.mjs'),path.join(root,'dist/deletion-ledger.mjs'));
+await fs.copyFile(path.join(root,'browser-smoke.html'),path.join(root,'dist/index.html'));
+console.log('Browser SDK bundle and WASM asset built. This is a loopback-only development harness.');

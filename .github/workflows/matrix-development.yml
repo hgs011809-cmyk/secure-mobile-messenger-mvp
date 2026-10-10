@@ -1,0 +1,44 @@
+name: Matrix development checks
+on:
+  push:
+    paths:
+      - 'experimental/matrix-client/**'
+      - 'infra/ncp/matrix-lab/**'
+      - '.github/workflows/matrix-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: matrix-development-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: experimental/matrix-client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install development dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Test encryption gates and deletion reconciliation
+        run: npm test
+      - name: Build browser SDK and copy official WASM asset
+        run: npm run build
+      - name: Install test Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test actual browser crypto and IndexedDB
+        run: npm run test:browser
+      - name: Preserve development dependency lock and build for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-development-build
+          retention-days: 3
+          path: |
+            experimental/matrix-client/package-lock.json
+            experimental/matrix-client/dist/

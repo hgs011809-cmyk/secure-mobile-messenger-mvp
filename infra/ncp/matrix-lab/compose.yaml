@@ -1,0 +1,27 @@
+name: secure-messenger-matrix-lab
+services:
+  synapse:
+    image: ${SYNAPSE_IMAGE:?Select verified stable official image and digest in .env}
+    pull_policy: never
+    restart: "no"
+    ports:
+      - "127.0.0.1:18008:8008"
+    environment:
+      SYNAPSE_CONFIG_PATH: /data/homeserver.yaml
+      SYNAPSE_REPORT_STATS: "no"
+    volumes:
+      - type: bind
+        source: ./generated
+        target: /data
+        bind:
+          create_host_path: false
+    networks: [offline]
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 256
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: "none"
+networks:
+  offline:
+    internal: true

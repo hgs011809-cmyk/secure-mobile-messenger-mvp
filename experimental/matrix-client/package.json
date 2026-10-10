@@ -1,0 +1,20 @@
+{
+  "name": "direct-matrix-client-experimental",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test conversation.test.mjs",
+    "build": "node build.mjs",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "matrix-js-sdk": "43.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "@playwright/test": "1.64.0"
+  }
+}

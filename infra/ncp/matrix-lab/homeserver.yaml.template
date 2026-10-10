@@ -1,0 +1,41 @@
+# Generated lab only. Never commit the rendered file.
+server_name: "matrix.lab"
+public_baseurl: "http://127.0.0.1:18008/"
+pid_file: /data/homeserver.pid
+listeners:
+  - port: 8008
+    type: http
+    tls: false
+    bind_addresses: ["0.0.0.0"]
+    x_forwarded: false
+    resources:
+      - names: [client]
+        compress: false
+# Client-only listener + empty federation allowlist + isolated Docker network.
+federation_domain_whitelist: []
+trusted_key_servers: []
+allow_public_rooms_over_federation: false
+allow_public_rooms_without_auth: false
+enable_registration: false
+enable_registration_without_verification: false
+allow_guest_access: false
+# Local operator provisioning only; remove after accounts are provisioned.
+registration_shared_secret: "__REGISTRATION_SECRET__"
+macaroon_secret_key: "__MACAROON_SECRET__"
+form_secret: "__FORM_SECRET__"
+signing_key_path: /data/matrix.lab.signing.key
+report_stats: false
+enable_metrics: false
+log_config: /data/log.config
+# This replaces event JSON content, not forensic/backup erasure.
+redaction_retention_period: 0
+# Retention purge_jobs is a different mechanism; do not enable it for redaction.
+retention:
+  enabled: false
+database:
+  name: sqlite3
+  args:
+    database: /data/homeserver.db
+media_store_path: /data/media_store
+max_upload_size: 1M
+url_preview_enabled: false
