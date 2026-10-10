@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {webcrypto,randomUUID} from 'node:crypto';
+import {promises as fs} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {BridgeStore} from './store.mjs';
+import {MatrixAdmissionBroker} from './broker.mjs';
+import {fingerprintSpki} from '../../infra/ncp/auth/src/crypto.js';
+const ids=['DEVICE_ALICE_000000000000','DEVICE_BOB_00000000000000'];
+async function setup(t,overrides={}){
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'matrix-auth-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ const devices=new Map(),keys=new Map();for(const [index,id] of ids.entries()){
+  const key=await webcrypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+  const spki=Buffer.from(await webcrypto.subtle.exportKey('spki',key.publicKey)).toString('base64url');
+  keys.set(id,key.privateKey);devices.set(id,{deviceId:id,peerId:index===0?'peer-alice':'peer-bob',publicKeySpkiB64:spki,fingerprint:fingerprintSpki(spki)});
+ }
+ const store=new BridgeStore(path.join(dir,'private','mapping.json'));let clock=100000;
+ const sessions=new Map(),accounts=new Map();const calls={ensure:0,login:0,revoke:0};
+ const issuer={
+  async ensureAccount(m){calls.ensure++;accounts.set(m.userId,{deviceId:m.matrixDeviceId});},
+  async login(m){calls.login++;const access_token='synthetic-'+randomUUID();const r={access_token,user_id:m.userId,device_id:m.matrixDeviceId,expires_in_ms:300000};sessions.set(access_token,r);return {...r};},
+  async whoami(token){const r=sessions.get(token);return {user_id:r?.user_id,device_id:r?.device_id};},
+  async listDevices(token){return [{device_id:sessions.get(token)?.device_id}];},
+  async revoke(m){calls.revoke++;accounts.delete(m.userId);for(const [token,r] of sessions)if(r.user_id===m.userId)sessions.delete(token);},
+ };
+ const config={enabled:true,store,getDevice:async id=>devices.get(id),issuer,allowedDeviceIds:ids,now:()=>clock,...overrides};
+ const broker=new MatrixAdmissionBroker(config);
+ async function proof(id=ids[0],b=broker){const peerId=devices.get(id)?.peerId||'peer-alice';const c=await b.challenge({deviceId:id,peerId});const signature=Buffer.from(await webcrypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},keys.get(id),Buffer.from(c.challengeText))).toString('base64url');return {deviceId:id,peerId,challengeId:c.challengeId,signature};}
+ return {broker,store,config,proof,devices,keys,issuer,calls,sessions,accounts,dir,advance:ms=>clock+=ms};
+}
+const rejects=(p,code)=>assert.rejects(p,e=>e.code===code);
+test('disabled by default does not issue challenges or grants',async()=>{const b=new MatrixAdmissionBroker();await rejects(b.challenge({}),'matrix_disabled');await rejects(b.grant({}),'matrix_disabled');});
+test('requires exactly two allowed enrolled devices and lab server name',()=>{for(const config of [{allowedDeviceIds:[]},{allowedDeviceIds:[...ids,'DEVICE_THIRD_000000000000']},{allowedDeviceIds:ids,serverName:'production.example'}])assert.throws(()=>new MatrixAdmissionBroker({enabled:true,...config}),e=>e.code==='bridge_config_invalid');});
+test('signed enrolled device gets fixed identity and response excludes password',async t=>{const f=await setup(t);const r=await f.broker.grant(await f.proof());assert.equal(r.keyVerified,false);assert.deepEqual(Object.keys(r),['userId','deviceId','accessToken','expiresAt','keyVerified']);const m=await f.store.transaction(d=>d.mappings[ids[0]]);assert.equal(r.userId,m.userId);assert.equal(r.deviceId,m.matrixDeviceId);assert.equal(JSON.stringify(r).includes(m.password),false);});
+test('challenge replay fails including concurrent grants',async t=>{const f=await setup(t);const p=await f.proof();const results=await Promise.allSettled([f.broker.grant(p),f.broker.grant(p)]);assert.equal(results.filter(x=>x.status==='fulfilled').length,1);assert.equal(f.calls.login,1);await rejects(f.broker.grant(p),'challenge_expired');});
+test('expired challenge is consumed',async t=>{const f=await setup(t);const p=await f.proof();f.advance(30000);await rejects(f.broker.grant(p),'challenge_expired');assert.equal(f.calls.ensure,0);});
+test('invalid signature consumes nonce and cannot provision',async t=>{const f=await setup(t);const p=await f.proof();await rejects(f.broker.grant({...p,signature:'invalid'}),'invalid_signature');await rejects(f.broker.grant(p),'challenge_expired');assert.equal(f.calls.login,0);});
+test('signature for different purpose cannot authenticate Matrix',async t=>{const f=await setup(t);const p=await f.proof();p.signature=Buffer.from(await webcrypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},f.keys.get(ids[0]),Buffer.from('direct-auth-v1'))).toString('base64url');await rejects(f.broker.grant(p),'invalid_signature');});
+test('binding cannot be swapped to the other device',async t=>{const f=await setup(t);const p=await f.proof();await rejects(f.broker.grant({...p,deviceId:ids[1],peerId:'peer-bob'}),'challenge_binding');});
+test('third device, wrong peer and missing enrollment fail closed',async t=>{const f=await setup(t);await rejects(f.broker.challenge({deviceId:'DEVICE_THIRD_000000000000',peerId:'peer-third'}),'device_not_allowed');await rejects(f.broker.challenge({deviceId:ids[0],peerId:'peer-other'}),'device_not_enrolled');f.devices.delete(ids[0]);await rejects(f.broker.challenge({deviceId:ids[0],peerId:'peer-alice'}),'device_not_enrolled');});
+test('invalid fingerprint fails before any session',async t=>{const f=await setup(t);f.devices.get(ids[0]).fingerprint='0'.repeat(64);await rejects(f.proof(),'device_key_invalid');});
+test('identity and password persist across broker/store restart',async t=>{const f=await setup(t);const first=await f.broker.grant(await f.proof());const before=await f.store.transaction(d=>structuredClone(d.mappings[ids[0]]));const b=new MatrixAdmissionBroker({...f.config,store:new BridgeStore(f.store.file)});const second=await b.grant(await f.proof(ids[0],b));const after=await f.store.transaction(d=>d.mappings[ids[0]]);assert.equal(first.userId,second.userId);assert.equal(first.deviceId,second.deviceId);assert.equal(before.password,after.password);});
+test('mapping is durable before any external provisioning',async t=>{const f=await setup(t);f.issuer.ensureAccount=async m=>{const disk=JSON.parse(await fs.readFile(f.store.file,'utf8'));assert.equal(disk.mappings[ids[0]].userId,m.userId);assert.equal(disk.mappings[ids[0]].status,'pending');};await f.broker.grant(await f.proof());});
+test('client supplied Matrix IDs/password never control identity',async t=>{const f=await setup(t);const r=await f.broker.grant({...await f.proof(),userId:'@attacker:matrix.lab',matrixDeviceId:'attacker',password:'attacker'});assert.notEqual(r.userId,'@attacker:matrix.lab');assert.notEqual(r.deviceId,'attacker');});
+for(const mode of ['wrongUser','wrongDevice','noExpiry','tooLong','extraDevice','wrongWhoami'])test('rejects and quarantines '+mode,async t=>{const f=await setup(t);const login=f.issuer.login;f.issuer.login=async m=>{const r=await login(m);if(mode==='wrongUser')r.user_id='@other:matrix.lab';if(mode==='wrongDevice')r.device_id='other';if(mode==='noExpiry')delete r.expires_in_ms;if(mode==='tooLong')r.expires_in_ms=600001;return r;};if(mode==='extraDevice')f.issuer.listDevices=async()=>[{device_id:'one'},{device_id:'two'}];if(mode==='wrongWhoami')f.issuer.whoami=async()=>({user_id:'@other:matrix.lab',device_id:'other'});await rejects(f.broker.grant(await f.proof()),'matrix_session_rejected');const m=await f.store.transaction(d=>d.mappings[ids[0]]);assert.equal(m.status,'revoked');assert.equal(m.password,undefined);assert.equal(f.calls.revoke,1);await rejects(f.proof(),'device_blocked');});
+test('login/validation latency does not extend token deadline',async t=>{const f=await setup(t);const login=f.issuer.login;f.issuer.login=async m=>{f.advance(1000);return login(m);};const who=f.issuer.whoami;f.issuer.whoami=async token=>{f.advance(2000);return who(token);};const r=await f.broker.grant(await f.proof());assert.equal(r.expiresAt,400000);});
+test('revoked enrollment during provider login never receives credentials',async t=>{const f=await setup(t);const who=f.issuer.whoami;f.issuer.whoami=async token=>{f.devices.delete(ids[0]);return who(token);};await rejects(f.broker.grant(await f.proof()),'matrix_session_rejected');assert.equal(f.calls.revoke,1);});
+test('cleanup failure is durable and never reopens grant access',async t=>{const f=await setup(t);await f.broker.grant(await f.proof());f.issuer.revoke=async()=>{throw new Error('synthetic-private-error');};const r=await f.broker.revoke(ids[0]);assert.deepEqual(r,{revoked:false,cleanupPending:true});const m=await f.store.transaction(d=>d.mappings[ids[0]]);assert.equal(m.status,'blocked');assert.equal(m.cleanupPending,true);const b=new MatrixAdmissionBroker({...f.config,store:new BridgeStore(f.store.file)});await rejects(f.proof(ids[0],b),'device_blocked');});
+test('revocation retry clears all sessions and secret password',async t=>{const f=await setup(t);await f.broker.grant(await f.proof());await f.broker.grant(await f.proof());const revoke=f.issuer.revoke;f.issuer.revoke=async()=>{throw new Error('fixture');};await f.broker.revoke(ids[0]);f.issuer.revoke=revoke;assert.equal((await f.broker.revoke(ids[0])).revoked,true);assert.equal(f.sessions.size,0);assert.equal((await f.store.transaction(d=>d.mappings[ids[0]])).password,undefined);});
+test('revocation before first grant persists tombstone and invalidates challenge',async t=>{const f=await setup(t);const p=await f.proof();assert.equal((await f.broker.revoke(ids[0])).revoked,true);await rejects(f.broker.grant(p),'challenge_expired');await rejects(f.proof(),'device_blocked');assert.equal(f.calls.login,0);assert.equal(f.calls.revoke,0);});
+test('concurrent challenge issuance remains bounded',async t=>{const f=await setup(t,{maxChallenges:3});const results=await Promise.allSettled(Array.from({length:30},()=>f.broker.challenge({deviceId:ids[0],peerId:'peer-alice'})));assert.equal(results.filter(x=>x.status==='fulfilled').length,3);assert.equal(f.broker.challenges.size,3);f.advance(30000);await f.proof();assert.equal(f.broker.challenges.size,1);});
+test('secret provider exception text never escapes grant',async t=>{const f=await setup(t);f.issuer.login=async()=>{throw new Error('synthetic-private-error');};await assert.rejects(f.broker.grant(await f.proof()),e=>e.code==='matrix_session_rejected'&&!e.message.includes('synthetic-private-error'));});
+test('two simultaneous enrolled devices keep distinct mappings',async t=>{const f=await setup(t);const results=await Promise.all(ids.map(async id=>f.broker.grant(await f.proof(id))));assert.notEqual(results[0].userId,results[1].userId);assert.notEqual(results[0].deviceId,results[1].deviceId);assert.equal(Object.keys(await f.store.transaction(d=>d.mappings)).length,2);});

@@ -1,0 +1,65 @@
+name: Matrix admission lab
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experimental/auth-bridge/**'
+      - 'infra/ncp/auth/src/crypto.js'
+      - 'infra/ncp/auth/src/store.js'
+      - 'infra/ncp/matrix-lab/ci/**'
+      - '.github/workflows/matrix-admission-lab.yml'
+  pull_request:
+    paths:
+      - 'experimental/auth-bridge/**'
+      - '.github/workflows/matrix-admission-lab.yml'
+permissions:
+  contents: read
+jobs:
+  admission:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Signed device admission and secret-exclusion tests
+        run: node --test experimental/auth-bridge/broker.spec.mjs experimental/auth-bridge/issuer.spec.mjs
+      - name: Pull pinned official development server
+        run: |
+          docker pull matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311 > /dev/null 2>&1
+      - name: Prepare disposable bounded server
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          export CI_UID="$(id -u)" CI_GID="$(id -g)"
+          echo "CI_UID=$CI_UID" >> "$GITHUB_ENV"
+          echo "CI_GID=$CI_GID" >> "$GITHUB_ENV"
+          python3 configure.py
+          node --input-type=module -e "import{appendFile}from'node:fs/promises';await appendFile('runtime/homeserver.yaml','\nsession_lifetime: 10m\n');"
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml config --quiet
+          if ! docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml up -d --pull never > /dev/null 2>&1; then
+            echo 'Lab startup rejected; sensitive logs suppressed.'
+            exit 1
+          fi
+      - name: Real Synapse fixed-device session and revocation gates
+        run: node experimental/auth-bridge/ci.mjs
+      - name: Constrained resource observation, not production sizing
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          container="$(docker compose -f compose.yaml ps -q synapse 2>/dev/null)"
+          if [ -n "$container" ]; then
+            docker stats --no-stream --format 'memory={{.MemUsage}} cpu={{.CPUPerc}}' "$container" 2>/dev/null
+            docker inspect --format 'oom_killed={{.State.OOMKilled}} memory_limit_bytes={{.HostConfig.Memory}} nano_cpus={{.HostConfig.NanoCpus}}' "$container" 2>/dev/null
+          fi
+          exit 0
+      - name: Always remove synthetic runtime
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          docker compose -f compose.yaml down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1 || true
+          rm -rf -- runtime

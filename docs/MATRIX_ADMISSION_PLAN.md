@@ -1,6 +1,6 @@
 # Matrix admission and application integration gate
 
-Design only. NOT implemented, NOT deployed, and NOT a security sign-off. Existing app/auth/NCP services stay unchanged. The synthetic CI does not replace Android acceptance or hosting approval.
+Partially implemented ONLY as disabled-by-default standalone development code in `experimental/auth-bridge/`. NOT integrated into production auth/app, NOT deployed, and NOT a security sign-off. Existing app/auth/NCP services stay unchanged. Synthetic CI does not replace Android acceptance or hosting approval.
 
 ## Existing authenticated boundary
 
@@ -8,7 +8,13 @@ Design only. NOT implemented, NOT deployed, and NOT a security sign-off. Existin
 
 A future optional Matrix broker belongs only after successful device signature verification. It must be explicitly disabled by default and leave existing session responses/behavior unchanged while disabled. No Matrix credentials currently exist in this auth service.
 
-## Required broker contract, still unverified
+## Standalone implementation, production boundary still unverified
+
+The new lab broker verifies a fresh purpose-separated enrolled P-256 challenge, persists opaque account/fixed device/server-only password before provisioning, rejects missing/indefinite or excessive token lifetime, verifies login/whoami/device inventory and never marks encryption keys verified automatically. Durable tombstone/quarantine blocks future grants even if remote cleanup fails. The original auth server and existing signal/push responses are untouched.
+
+35 synthetic unit tests and a dedicated real-Synapse admission CI are provided; check the specific GitHub run before claiming server success. The CI includes the original invitation Store and constrains ONLY its disposable Synapse to 1 CPU/512 MiB. Broker restart is NOT browser/Android cold reopen. Extra-device inventory detection followed by account deactivation is reactive cleanup, NOT server-side prevention of direct session/device APIs. No trusted room admission/render policy or production HTTP routes are implemented.
+
+## Required full broker contract, not yet satisfied
 
 1. Map the stable enrolled `deviceId` to one persisted opaque Matrix user ID and one allowed Matrix device ID. Do not accept a client-supplied replacement user/device as authority. Verify current enrollment before every grant. Keep Matrix admin access and any server-generated account passwords server-side, never in frontend builds, GitHub logs, chat, or URL query strings.
 2. Use only the selected Synapse version's supported provisioning/login/revocation APIs, after checking exact device-binding and lifetime behavior. Browser receives only its own bounded session. Separate this from signal/push token issuance; fail closed for Matrix while preserving the legacy path when Matrix is disabled.
@@ -33,5 +39,5 @@ The existing P-256 safety code authenticates the previous identity flow; it is N
 
 - Android pair: fresh admission, exact device verification, restart/reload continuity, recipient fully closed during send, subsequent decrypt, one-side delete without other approval, deleting while the other is closed, next-open deletion reconciliation, changed-key/third-device/revoked-device rejection.
 - Server: API logical redaction separate from active-row ciphertext rewrite. Measure multiple job phases, load and restarts, reporting sample count/p50/p95/max and >300s failures. A single synthetic <=300s result is not a guarantee. WAL/backups/snapshots/free pages/attachments/independent copies remain separately scoped.
-- Resource/hosting: CI's 2 CPU/2 GB limits and one memory snapshot do NOT validate safe cohosting on the current NCP 1 CPU/1 GB/10 GB machine. Validate peaks, growth, disk limits and impact on current services separately. No server increase, extra cost or operational migration before explicit approval.
+- Resource/hosting: messaging CI's 2 CPU/2 GB limits, admission CI's 1 CPU/512 MiB disposable Synapse cap and individual memory snapshots do NOT validate safe cohosting on the current NCP 1 CPU/1 GB/10 GB machine. Validate peaks, growth, disk limits and impact on current services separately. No server increase, extra cost or operational migration before explicit approval.
 - Actual notification click/reopen and reconnect on both Android devices remains unverified.

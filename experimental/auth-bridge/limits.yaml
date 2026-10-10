@@ -1,0 +1,5 @@
+# CI-only override, not proof of safe 1GB NCP cohosting.
+services:
+  synapse:
+    mem_limit: 512m
+    cpus: 1.0
