@@ -3,6 +3,7 @@ import { randomBytes, createHmac } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { waitForServer } from './readiness.mjs';
+import { safeDiagnostic } from './safe-diagnostic.mjs';
 let base = 'http://127.0.0.1:18008';
 const ci = fileURLToPath(new URL('.', import.meta.url));
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -35,7 +36,8 @@ function worker() {
         const entry = pending.get(message.id);
         if (!entry) return;
         clearTimeout(entry.timer); pending.delete(message.id);
-        if (message.ok) entry.resolve(message.value); else entry.reject(new Error('worker gate failed'));
+        if (message.ok) entry.resolve(message.value);
+        else { console.error(JSON.stringify({workerDiagnostic:safeDiagnostic(message.diagnostic)})); entry.reject(new Error('worker gate failed')); }
     });
     child.on('exit', () => { for (const entry of pending.values()) { clearTimeout(entry.timer); entry.reject(new Error('worker exited')); } pending.clear(); });
     return { child, call(op, args = {}) {
@@ -79,12 +81,17 @@ try {
     }
     gates.push('ordinary-users');
     const alice = worker(), bob = worker();
-    stage = 'SDK crypto and exact out-of-band device verification';
+    stage = 'Alice SDK crypto initialization and sync';
     const aDevice = await alice.call('start', { ...aLogin, baseUrl: base });
+    stage = 'Bob SDK crypto initialization and sync';
     const bDevice = await bob.call('start', { ...bLogin, baseUrl: base });
+    stage = 'private encrypted room creation';
     const roomId = await alice.call('create', { otherUser: bLogin.user_id });
+    stage = 'recipient invited room join';
     await bob.call('join', { roomId });
+    stage = 'two-member encrypted room readiness';
     await Promise.all([alice.call('ready', { roomId }), bob.call('ready', { roomId })]);
+    stage = 'exact out-of-band device verification';
     // Expected keys originate directly in isolated worker memory, NOT from /keys/query.
     await alice.call('verify', bDevice); await bob.call('verify', aDevice);
     gates.push('exact-synthetic-device-verification');

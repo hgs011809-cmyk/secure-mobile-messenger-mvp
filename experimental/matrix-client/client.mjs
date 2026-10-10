@@ -17,6 +17,7 @@ export async function createLabClient({baseUrl,userId,deviceId,accessToken}){
   await client.initRustCrypto({useIndexedDB:true,cryptoDatabasePrefix:'direct-matrix-lab-keys-'+namespace});
   const crypto=client.getCrypto();if(!crypto)throw new Error('crypto_initialization_failed');
   crypto.globalBlacklistUnverifiedDevices=true;
+  crypto.setTrustCrossSignedDevices(false);
   // Tokens stay in memory. No localStorage token persistence or debug logging.
   return client;
 }

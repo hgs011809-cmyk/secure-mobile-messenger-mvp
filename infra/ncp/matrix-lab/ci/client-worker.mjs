@@ -1,6 +1,7 @@
 // Synthetic CI worker. No logs, credentials or SDK exceptions leave this process.
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { safeDiagnostic } from './safe-diagnostic.mjs';
 const requireSdk = createRequire(new URL('../../../../experimental/matrix-client/package.json', import.meta.url));
 for (const name of ['log', 'warn', 'error', 'info', 'debug', 'trace']) console[name] = () => {};
 const sdk = await import(pathToFileURL(requireSdk.resolve('matrix-js-sdk')).href);
@@ -42,14 +43,15 @@ async function execute(op, args) {
         return true;
     }
     if (op === 'create') {
-        const result = await client.createRoom({ visibility: 'private', preset: 'private_chat',
+        const result = await client.createRoom({ visibility: 'private', preset: 'private_chat', room_version: '12',
             invite: [args.otherUser], creation_content: { 'm.federate': false },
             initial_state: [
                 { type: 'm.room.encryption', state_key: '', content: { algorithm: 'm.megolm.v1.aes-sha2' } },
                 { type: 'm.room.history_visibility', state_key: '', content: { history_visibility: 'joined' } },
                 { type: 'm.room.join_rules', state_key: '', content: { join_rule: 'invite' } },
                 { type: 'm.room.guest_access', state_key: '', content: { guest_access: 'forbidden' } },
-            ], power_level_content_override: { users: { [client.getUserId()]: 100, [args.otherUser]: 0 },
+            ], // Room v12 creators have implicit infinite power and must not appear in users.
+            power_level_content_override: { users: { [args.otherUser]: 0 },
                 users_default: 0, events_default: 0, state_default: 100, invite: 100, kick: 100, ban: 100, redact: 0 },
         });
         return result.room_id;
@@ -85,7 +87,11 @@ async function execute(op, args) {
 }
 process.on('message', async ({ id, op, args }) => {
     try { process.send({ id, ok: true, value: await execute(op, args) }); }
-    catch { process.send({ id, ok: false }); }
+    catch (error) {
+        const diagnostic=safeDiagnostic({operation:op,kind:error?.name,code:error?.errcode ?? error?.code ?? error?.cause?.code,httpStatus:error?.httpStatus});
+        // Only fixed/allowlisted classifications, never exception messages or stack traces.
+        process.send({ id, ok: false, diagnostic });
+    }
 });
 process.on('disconnect', () => { try { client?.stopClient(); } finally { process.exit(0); } });
 process.on('uncaughtException', () => process.exit(1));

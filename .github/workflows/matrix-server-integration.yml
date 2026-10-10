@@ -35,6 +35,8 @@ jobs:
       - name: Install exact SDK43 package
         working-directory: experimental/matrix-client
         run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
+      - name: Verify diagnostics never expose sensitive fields
+        run: node --test infra/ncp/matrix-lab/ci/safe-diagnostic.spec.mjs
       - name: Pull official stable image and measure public digest
         run: |
           set -euo pipefail

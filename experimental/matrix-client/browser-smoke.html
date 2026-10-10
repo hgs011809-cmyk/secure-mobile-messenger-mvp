@@ -4,7 +4,7 @@ import {DeletionLedger} from './deletion-ledger.mjs';
 const button=document.getElementById('run'),out=document.getElementById('result');
 button.onclick=async()=>{button.disabled=true;let client,ledger;try{
  client=await createLabClient({baseUrl:'http://127.0.0.1:18008',userId:'@browser-fixture:matrix.lab',deviceId:'SYNTHETIC_BROWSER',accessToken:'synthetic-not-an-authentication-token'});
- if(!client.getCrypto()||client.getCrypto().globalBlacklistUnverifiedDevices!==true)throw new Error('crypto_not_ready');
+ if(!client.getCrypto()||client.getCrypto().globalBlacklistUnverifiedDevices!==true||client.getCrypto().getTrustCrossSignedDevices()!==false)throw new Error('crypto_not_ready');
  const originalKeys=await client.getCrypto().getOwnDeviceKeys();client.stopClient();
  client=await createLabClient({baseUrl:'http://127.0.0.1:18008',userId:'@browser-fixture:matrix.lab',deviceId:'SYNTHETIC_BROWSER',accessToken:'synthetic-not-an-authentication-token'});
  const reopenedKeys=await client.getCrypto().getOwnDeviceKeys();
