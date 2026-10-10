@@ -53,31 +53,31 @@ jobs:
           display_dir="$(mktemp -d)"
           chmod 700 "$display_dir"
           docker exec -e npm_config_cache=/data/.npm-cache "$container" npm install --silent --no-audit --no-fund --prefix /data/qrtool qrcode-terminal@0.12.0
-          docker exec "$container" node -e 'const qr=require("/data/qrtool/node_modules/qrcode-terminal"); qr.generate(process.argv[1], { small: true });' "$invite_a" > "$display_dir/a.qr"
-          docker exec "$container" node -e 'const qr=require("/data/qrtool/node_modules/qrcode-terminal"); qr.generate(process.argv[1], { small: true });' "$invite_b" > "$display_dir/b.qr"
+          docker exec "$container" node -e 'const qr=require("/data/qrtool/node_modules/qrcode-terminal"); qr.setErrorLevel("Q"); qr.generate(process.argv[1], { small: true }, o => { const lines=o.split("\n"); const width=Math.max(...lines.map(s=>s.length)); const edge="█".repeat(width+8); console.log([edge,edge,...lines.map(s=>"████"+s.padEnd(width,"█")+"████"),edge,edge].join("\n")); });' "$invite_a" > "$display_dir/a.qr"
+          docker exec "$container" node -e 'const qr=require("/data/qrtool/node_modules/qrcode-terminal"); qr.setErrorLevel("Q"); qr.generate(process.argv[1], { small: true }, o => { const lines=o.split("\n"); const width=Math.max(...lines.map(s=>s.length)); const edge="█".repeat(width+8); console.log([edge,edge,...lines.map(s=>"████"+s.padEnd(width,"█")+"████"),edge,edge].join("\n")); });' "$invite_b" > "$display_dir/b.qr"
           docker exec "$container" rm -rf /data/.npm-cache /data/qrtool
           {
             printf '\033c'
             printf '\nPHONE A - SCAN THIS QR WITH PHONE A\n\n'
             cat "$display_dir/a.qr"
-            printf '\nCopy the scanned text into the app. PHONE B appears in 10 seconds.\n'
+            printf '\nCopy the scanned text into the app. PHONE B appears in 20 seconds.\n'
           } > "$display_dir/a.txt"
           {
             printf '\033c'
             printf '\nPHONE B - SCAN THIS QR WITH PHONE B\n\n'
             cat "$display_dir/b.qr"
-            printf '\nCopy the scanned text into the app. PHONE A appears in 10 seconds.\n'
+            printf '\nCopy the scanned text into the app. PHONE A appears in 20 seconds.\n'
           } > "$display_dir/b.txt"
           chmod 600 "$display_dir"/*
           cat > "$display_dir/show.sh" <<'SHOW'
           #!/bin/sh
           dir="$1"
           i=0
-          while [ "$i" -lt 45 ]; do
+          while [ "$i" -lt 22 ]; do
             timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/a.txt" || true
-            sleep 10
+            sleep 20
             timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/b.txt" || true
-            sleep 10
+            sleep 20
             i=$((i + 1))
           done
           rm -rf "$dir"
