@@ -1,4 +1,4 @@
-import {createClient,IndexedDBStore} from 'matrix-js-sdk';
+import {createClient,MemoryStore} from 'matrix-js-sdk';
 import {DeletionLedger} from './deletion-ledger.mjs';
 import {EncryptedConversation} from './conversation.mjs';
 const silentLogger={trace(){},debug(){},info(){},warn(){},error(){},getChild(){return this;}};
@@ -9,8 +9,10 @@ export async function createLabClient({baseUrl,userId,deviceId,accessToken}){
   if(!globalThis.indexedDB)throw new Error('indexeddb_required');
   if(!userId||!deviceId||!accessToken)throw new Error('local_test_session_required');
   const namespace=encodeURIComponent(userId+'|'+deviceId);
-  const store=new IndexedDBStore({indexedDB:globalThis.indexedDB,dbName:'direct-matrix-lab-events-'+namespace});
-  await store.startup();
+  // Persist crypto keys and deletion metadata, not SDK event/local-echo history.
+  // MemoryStore receives no localStorage option; plaintext pending echoes stay in memory.
+  // History is re-fetched from the encrypted homeserver after reconnect.
+  const store=new MemoryStore();
   const client=createClient({baseUrl:url.origin,userId,deviceId,accessToken,store,logger:silentLogger,timelineSupport:true});
   await client.initRustCrypto({useIndexedDB:true,cryptoDatabasePrefix:'direct-matrix-lab-keys-'+namespace});
   const crypto=client.getCrypto();if(!crypto)throw new Error('crypto_initialization_failed');

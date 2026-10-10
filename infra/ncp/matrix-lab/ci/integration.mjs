@@ -2,7 +2,8 @@ import { fork, execFileSync } from 'node:child_process';
 import { randomBytes, createHmac } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-const base = 'http://127.0.0.1:18008';
+import { waitForServer } from './readiness.mjs';
+let base = 'http://127.0.0.1:18008';
 const ci = fileURLToPath(new URL('.', import.meta.url));
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const assert = value => { if (!value) throw new Error('gate failed'); };
@@ -62,11 +63,9 @@ function dbStatus(eventId) {
 }
 const deadline = setTimeout(() => { for (const c of children) { c.kill('SIGCONT'); c.kill('SIGKILL'); } process.exit(1); }, 650000);
 try {
-    let ready = false;
-    for (let i = 0; i < 90; i++) {
-        try { await api('/_matrix/client/versions'); ready = true; break; } catch { await sleep(1000); }
-    }
-    assert(ready); gates.push('server-ready');
+    base = await waitForServer(ci);
+    // Container-local and selected host transport both returned 200 on the exact client resource.
+    gates.push('server-ready');
     stage = 'ordinary synthetic accounts';
     const aLogin = await provision('ci_alice');
     const bLogin = await provision('ci_bob');
@@ -81,8 +80,8 @@ try {
     gates.push('ordinary-users');
     const alice = worker(), bob = worker();
     stage = 'SDK crypto and exact out-of-band device verification';
-    const aDevice = await alice.call('start', aLogin);
-    const bDevice = await bob.call('start', bLogin);
+    const aDevice = await alice.call('start', { ...aLogin, baseUrl: base });
+    const bDevice = await bob.call('start', { ...bLogin, baseUrl: base });
     const roomId = await alice.call('create', { otherUser: bLogin.user_id });
     await bob.call('join', { roomId });
     await Promise.all([alice.call('ready', { roomId }), bob.call('ready', { roomId })]);
@@ -139,6 +138,8 @@ try {
     await bob.call('deleted', { roomId, eventId: reverseId });
     gates.push('both-ordinary-users-can-redact-other');
     const report = { status: 'passed', gates, apiLogicalMs, activeRowScrubMs: scrubMs, samples: 1,
+        transport: base === 'http://127.0.0.1:18008' ? 'host-loopback' : 'host-private-internal-bridge',
+        loopbackPublicationVerified: base === 'http://127.0.0.1:18008',
         offlineModel: 'Linux SIGSTOP/SIGCONT; memory preserved; NOT cold reopen',
         physicalErasure: 'NOT verified; WAL/backups/free-pages/media/client-storage out of scope' };
     await writeFile(new URL('runtime/result.json', import.meta.url), JSON.stringify(report, null, 2), { mode: 0o600 });

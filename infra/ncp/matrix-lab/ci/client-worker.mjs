@@ -18,7 +18,7 @@ const wait = async (predicate, timeout = 90000) => {
 const eventInRoom = (roomId, eventId) => client.getRoom(roomId)?.findEventById(eventId);
 async function execute(op, args) {
     if (op === 'start') {
-        client = sdk.createClient({ baseUrl: 'http://127.0.0.1:18008', userId: args.user_id,
+        client = sdk.createClient({ baseUrl: args.baseUrl, userId: args.user_id,
             accessToken: args.access_token, deviceId: args.device_id, logger: silent });
         await client.initRustCrypto({ useIndexedDB: false }); // Memory-only CI, never production.
         client.getCrypto().globalBlacklistUnverifiedDevices = true;

@@ -39,12 +39,12 @@ jobs:
         run: |
           set -euo pipefail
           # Stable release v1.162.0 verified by parent via official releases API.
-          # Tag is not an immutable digest pin; measure what registry supplied.
-          if ! docker pull matrixdotorg/synapse:v1.162.0 > /dev/null 2>&1; then
+          # Immutable digest was observed during successful official-image pull in run #1.
+          if ! docker pull matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311 > /dev/null 2>&1; then
             echo 'Official stable image pull failed; no runtime result.'
             exit 1
           fi
-          docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' matrixdotorg/synapse:v1.162.0
+          docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
       - name: Prepare ephemeral loopback-only server
         working-directory: infra/ncp/matrix-lab/ci
         run: |

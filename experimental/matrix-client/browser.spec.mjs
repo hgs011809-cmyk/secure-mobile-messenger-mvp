@@ -11,5 +11,7 @@ test('real browser initializes Rust crypto and keeps only durable deletion metad
  await expect(page.locator('#result')).toContainText('PASS:',{timeout:45000});
  const afterReload=await page.evaluate(()=>window.fixtureDeviceKeys);
  expect(afterReload).toEqual(firstKeys);
+ const databaseNames=await page.evaluate(async()=> (await indexedDB.databases()).map(db=>db.name));
+ expect(databaseNames.some(name=>name?.startsWith('direct-matrix-lab-events-'))).toBe(false);
  expect(errors).toEqual([]);
 });

@@ -43,3 +43,13 @@ Local static checks: Docker Compose `config --quiet` passed without starting con
 - https://github.com/matrix-org/matrix-js-sdk/blob/v43.0.0/src/models/device.ts
 - https://spec.matrix.org/latest/client-server-api/
 - https://sqlite.org/wal.html
+
+## Readiness diagnosis follow-up
+
+Parent reported real-server run 38053498391 failed at readiness after ~90s while container remained alive (126.6MiB, no OOM, synthetic directory 3296KiB). Those observations do NOT prove endpoint availability or networking cause. The next revision probes the exact unauthenticated `/_matrix/client/versions` endpoint independently at runner loopback and container-local loopback, emitting ONLY HTTP status and allowlisted connection error codes. No response bodies, raw exceptions, headers or server logs are emitted.
+
+Official v1.162.0 `synapse/rest/client/versions.py` matches `^/_matrix/client/versions$`; `synapse/app/homeserver.py` wires it under the `client` listener resource. The existing client-only listener configuration is therefore not changed speculatively.
+
+Only if container-local endpoint returns 200 and published host-loopback does not, the harness inspects this job's exact `matrix-server-integration_offline` network, requires `Internal=true` and `Driver=bridge`, obtains this service's RFC1918 IPv4 address, and separately probes it from the runner. If that also returns 200, both harness and SDK workers use the host-reachable private bridge path. Docker's official bridge documentation describes host access to its own user-defined bridge containers: https://docs.docker.com/engine/network/drivers/bridge/ . No network is added, internal isolation is not disabled, and no new public port/bind is created. No arbitrary URL override is accepted by the transport selector.
+
+This fallback is evidence-driven in that CI run, not a claim that Docker networking caused the first failure. Its report explicitly marks `loopbackPublicationVerified:false`, prints `loopback_publication_gate=FAILED`, and labels transport as private internal bridge. Passing message/redaction gates through that path must not be reported as passing published-loopback reachability. If container-local status is not 200, there is no transport fallback. If both host paths fail, readiness remains blocked with sanitized diagnostic output. Effective LAN/egress isolation and the original failed-run root cause remain unverified.
