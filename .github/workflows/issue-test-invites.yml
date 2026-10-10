@@ -44,46 +44,40 @@ jobs:
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i ~/.ssh/ncp_key root@$HOST 'bash -s' <<'REMOTE'
           set -euo pipefail
           container=secure-messenger-infra-auth-1
-          invite_a_json="$(docker exec "$container" node src/cli.js create-invite 1800)"
-          invite_b_json="$(docker exec "$container" node src/cli.js create-invite 1800)"
+          invite_a_json="$(docker exec "$container" node src/cli.js create-invite 1800 numeric)"
+          invite_b_json="$(docker exec "$container" node src/cli.js create-invite 1800 numeric)"
           invite_a="$(printf '%s\n' "$invite_a_json" | sed -n 's/^[[:space:]]*"inviteCode":[[:space:]]*"\([^"]*\)".*/\1/p')"
           invite_b="$(printf '%s\n' "$invite_b_json" | sed -n 's/^[[:space:]]*"inviteCode":[[:space:]]*"\([^"]*\)".*/\1/p')"
-          test -n "$invite_a"
-          test -n "$invite_b"
+          printf '%s\n' "$invite_a" | grep -Eq '^[0-9]{8}$'
+          printf '%s\n' "$invite_b" | grep -Eq '^[0-9]{8}$'
+          for old_script in /tmp/tmp.*/show.sh; do
+            [ -e "$old_script" ] || continue
+            pkill -f "$old_script" || true
+            rm -rf "$(dirname "$old_script")"
+          done
           display_dir="$(mktemp -d)"
           chmod 700 "$display_dir"
-          docker exec -e npm_config_cache=/data/.npm-cache "$container" npm install --silent --no-audit --no-fund --prefix /data/qrtool qrcode-terminal@0.12.0
-          docker exec "$container" node -e 'const qr=require("/data/qrtool/node_modules/qrcode-terminal"); qr.setErrorLevel("Q"); qr.generate(process.argv[1], { small: true }, o => { const lines=o.split("\n"); const width=Math.max(...lines.map(s=>s.length)); const edge="█".repeat(width+8); console.log([edge,edge,...lines.map(s=>"████"+s.padEnd(width,"█")+"████"),edge,edge].join("\n")); });' "$invite_a" > "$display_dir/a.qr"
-          docker exec "$container" node -e 'const qr=require("/data/qrtool/node_modules/qrcode-terminal"); qr.setErrorLevel("Q"); qr.generate(process.argv[1], { small: true }, o => { const lines=o.split("\n"); const width=Math.max(...lines.map(s=>s.length)); const edge="█".repeat(width+8); console.log([edge,edge,...lines.map(s=>"████"+s.padEnd(width,"█")+"████"),edge,edge].join("\n")); });' "$invite_b" > "$display_dir/b.qr"
-          docker exec "$container" rm -rf /data/.npm-cache /data/qrtool
           {
             printf '\033c'
-            printf '\nPHONE A - SCAN THIS QR WITH PHONE A\n\n'
-            cat "$display_dir/a.qr"
-            printf '\nCopy the scanned text into the app. PHONE B appears in 20 seconds.\n'
-          } > "$display_dir/a.txt"
-          {
-            printf '\033c'
-            printf '\nPHONE B - SCAN THIS QR WITH PHONE B\n\n'
-            cat "$display_dir/b.qr"
-            printf '\nCopy the scanned text into the app. PHONE A appears in 20 seconds.\n'
-          } > "$display_dir/b.txt"
-          chmod 600 "$display_dir"/*
+            printf '\nMVP TEST INVITE CODES - 30 MINUTES - ONE USE EACH\n\n'
+            printf 'PHONE A: %s\n\n' "$invite_a"
+            printf 'PHONE B: %s\n\n' "$invite_b"
+            printf 'Type each 8-digit code into its phone.\n'
+          } > "$display_dir/codes.txt"
+          chmod 600 "$display_dir/codes.txt"
           cat > "$display_dir/show.sh" <<'SHOW'
           #!/bin/sh
           dir="$1"
           i=0
-          while [ "$i" -lt 22 ]; do
-            timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/a.txt" || true
-            sleep 20
-            timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/b.txt" || true
-            sleep 20
+          while [ "$i" -lt 60 ]; do
+            timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$dir/codes.txt" || true
+            sleep 15
             i=$((i + 1))
           done
           rm -rf "$dir"
           SHOW
           chmod 700 "$display_dir/show.sh"
-          timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$display_dir/a.txt" || true
+          timeout 3s sh -c 'cat "$1" > /dev/tty1' sh "$display_dir/codes.txt" || true
           nohup "$display_dir/show.sh" "$display_dir" </dev/null >/dev/null 2>&1 &
           unset invite_a invite_b invite_a_json invite_b_json
           REMOTE
