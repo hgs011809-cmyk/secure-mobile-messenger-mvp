@@ -2,16 +2,18 @@
   "name": "secure-mobile-messenger-auth",
   "version": "1.0.0",
   "private": true,
-  "description": "Authentication / device-registration / signaling-token backend for the secure mobile messenger MVP. Node built-ins only.",
+  "description": "Authentication, device registration, signaling and Web Push backend",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test test/unit.test.js test/integration.test.js",
+    "test": "node --test test/unit.test.js test/integration.test.js test/push.test.js",
     "cli": "node src/cli.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "web-push": "3.6.7"
+  },
   "devDependencies": {}
 }

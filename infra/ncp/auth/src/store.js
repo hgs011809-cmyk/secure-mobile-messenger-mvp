@@ -35,10 +35,10 @@ export class Store {
     if (this._cache) return this._cache;
     try {
       const parsed = JSON.parse(await fs.readFile(this.filePath, 'utf8'));
-      this._cache = { version: 1, devices: parsed.devices || {}, invites: parsed.invites || {} };
+      this._cache = { version: 1, devices: parsed.devices || {}, invites: parsed.invites || {}, pushSubscriptions: parsed.pushSubscriptions || {}, pushPairs: parsed.pushPairs || {} };
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
-      this._cache = { version: 1, devices: {}, invites: {} };
+      this._cache = { version: 1, devices: {}, invites: {}, pushSubscriptions: {}, pushPairs: {} };
     }
     return this._cache;
   }
@@ -145,8 +145,53 @@ export class Store {
       const data = await this._load();
       if (!data.devices[deviceId]) return false;
       delete data.devices[deviceId];
+      delete data.pushSubscriptions[deviceId];
+      delete data.pushPairs[deviceId];
+      for (const consent of Object.values(data.pushPairs)) delete consent[deviceId];
       await this._persist();
       return true;
+    });
+  }
+
+  async setPushSubscription(deviceId, subscription) {
+    return this._withLock(async () => {
+      const data = await this._load();
+      if (!data.devices[deviceId]) return false;
+      if (subscription) data.pushSubscriptions[deviceId] = subscription;
+      else delete data.pushSubscriptions[deviceId];
+      await this._persist();
+      return true;
+    });
+  }
+
+  async pairPush(deviceId, targetPeerId) {
+    return this._withLock(async () => {
+      const data = await this._load();
+      const target = Object.values(data.devices).find(d => d.peerId === targetPeerId);
+      if (!data.devices[deviceId] || !target || target.deviceId === deviceId) return false;
+      data.pushPairs[deviceId] ||= {};
+      data.pushPairs[deviceId][target.deviceId] = true;
+      await this._persist();
+      return true;
+    });
+  }
+
+  async pushTarget(deviceId, targetPeerId) {
+    return this._withLock(async () => {
+      const data = await this._load();
+      const target = Object.values(data.devices).find(d => d.peerId === targetPeerId);
+      if (!data.devices[deviceId] || !target || !data.pushPairs[deviceId]?.[target.deviceId] || !data.pushPairs[target.deviceId]?.[deviceId]) return null;
+      return { deviceId: target.deviceId, subscription: data.pushSubscriptions[target.deviceId] || null };
+    });
+  }
+
+  async prunePushSubscription(deviceId, subscription) {
+    return this._withLock(async () => {
+      const data = await this._load();
+      if (JSON.stringify(data.pushSubscriptions[deviceId]) === JSON.stringify(subscription)) {
+        delete data.pushSubscriptions[deviceId];
+        await this._persist();
+      }
     });
   }
 

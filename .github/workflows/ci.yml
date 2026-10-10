@@ -23,7 +23,7 @@ jobs:
         working-directory: infra/ncp/auth
         env:
           TEST_TMP_DIR: /tmp/secure-messenger-auth-tests
-        run: node --test test/unit.test.js test/integration.test.js
+        run: npm ci --ignore-scripts && npm test
       - name: Prepare non-secret validation fixtures
         working-directory: infra/ncp
         run: |
@@ -41,7 +41,9 @@ jobs:
           mkdir -p secrets
           printf '%064d\n' 0 > secrets/turn_shared_secret
           printf '%064d\n' 1 > secrets/admin_secret
-          chmod 600 .env secrets/turn_shared_secret secrets/admin_secret
+          printf 'ci-only-public\n' > secrets/vapid_public_key
+          printf 'ci-only-private\n' > secrets/vapid_private_key
+          chmod 600 .env secrets/turn_shared_secret secrets/admin_secret secrets/vapid_public_key secrets/vapid_private_key
       - name: Validate Compose and secret checks
         working-directory: infra/ncp
         run: sh scripts/preflight.sh

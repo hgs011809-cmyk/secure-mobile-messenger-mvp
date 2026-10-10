@@ -47,7 +47,7 @@ jobs:
       - name: Check remote image cache
         id: remote
         run: |
-          if ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker image inspect caddy:2.11.7-alpine peerjs/peerjs-server:1.0.2 coturn/coturn:4.18.0-alpine secure-msg-auth:numeric-v1 >/dev/null 2>&1'; then
+          if ssh -o BatchMode=yes -i ~/.ssh/ncp_key root@$HOST 'docker image inspect caddy:2.11.7-alpine peerjs/peerjs-server:1.0.2 coturn/coturn:4.18.0-alpine secure-msg-auth:push-v1 >/dev/null 2>&1'; then
             echo "images=true" >> "$GITHUB_OUTPUT"
           else
             echo "images=false" >> "$GITHUB_OUTPUT"
@@ -72,9 +72,9 @@ jobs:
           docker tag "$(docker image inspect --format '{{.Id}}' peerjs/peerjs-server:1.0.2@sha256:77194fb7803430832a39b84f1b1a7a413fe0e438ff39a7de3b2b62be0c184c02)" peerjs/peerjs-server:1.0.2
           docker tag "$(docker image inspect --format '{{.Id}}' coturn/coturn:4.18.0-alpine@sha256:c29135c08565810d37053f384584392b7c24b69570fc81a721b878d6fe63e04e)" coturn/coturn:4.18.0-alpine
           docker tag "$(docker image inspect --format '{{.Id}}' node:22.23.3-alpine3.24@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402)" node:22.23.3-alpine3.24
-          docker build --pull=false -t secure-msg-auth:numeric-v1 infra/ncp/auth
+          docker build --pull=false -t secure-msg-auth:push-v1 infra/ncp/auth
           set -o pipefail
-          docker save caddy:2.11.7-alpine peerjs/peerjs-server:1.0.2 coturn/coturn:4.18.0-alpine secure-msg-auth:numeric-v1 | gzip -1 > /tmp/ncp-images.tar.gz
+          docker save caddy:2.11.7-alpine peerjs/peerjs-server:1.0.2 coturn/coturn:4.18.0-alpine secure-msg-auth:push-v1 | gzip -1 > /tmp/ncp-images.tar.gz
           tar -tzf /tmp/ncp-images.tar.gz | grep -qx manifest.json
 
       - name: Prepare deployment configuration
@@ -116,6 +116,9 @@ jobs:
           fi
           chown root:root secrets/admin_secret secrets/turn_shared_secret
           chmod 0600 secrets/admin_secret secrets/turn_shared_secret
+          ./scripts/generate-vapid.sh secure-msg-auth:push-v1
+          chgrp 4242 secrets/vapid_public_key secrets/vapid_private_key
+          chmod 0640 secrets/vapid_public_key secrets/vapid_private_key
           ./scripts/preflight.sh
           chgrp 4242 secrets/admin_secret secrets/turn_shared_secret
           chmod 0640 secrets/admin_secret secrets/turn_shared_secret
@@ -125,7 +128,7 @@ jobs:
               image: caddy:2.11.7-alpine
               pull_policy: never
             auth:
-              image: secure-msg-auth:numeric-v1
+              image: secure-msg-auth:push-v1
               pull_policy: never
             peerjs:
               image: peerjs/peerjs-server:1.0.2
@@ -154,6 +157,10 @@ jobs:
           systemctl reload ssh
           docker compose ps
           REMOTE
+
+      - name: Smoke-test public push readiness
+        run: |
+          node --input-type=module -e "const r=await fetch('https://api.thevault73.com/v1/push/public-key',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});const j=await r.json();if(!r.ok||!j.enabled||!j.publicKey)process.exit(1);console.log('Web Push configured; no private keys exposed');"
 
       - name: Smoke-test authenticated API, signaling, and TURN
         env:

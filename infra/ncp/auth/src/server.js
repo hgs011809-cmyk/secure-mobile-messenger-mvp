@@ -1,3 +1,4 @@
+import { createPushService, validateSubscription } from './push.js';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
@@ -63,10 +64,17 @@ export function createServer(overrides = {}) {
   const rateLimiter = new RateLimiter({ windowMs: config.rateLimitWindowMs, max: config.rateLimitMax });
   const challenges = new TtlMap();
   const signalTokens = new TtlMap();
+  const pushTokens = new TtlMap();
+  const pushService = createPushService(config, overrides.pushTransport);
+  const senderLimiter = new RateLimiter({ windowMs: config.pushRateWindowMs, max: config.pushSenderMax });
+  const targetLimiter = new RateLimiter({ windowMs: config.pushRateWindowMs, max: config.pushTargetMax });
   const cleanupInterval = setInterval(() => {
     rateLimiter.cleanup();
     challenges.cleanup();
     signalTokens.cleanup();
+    pushTokens.cleanup();
+    senderLimiter.cleanup();
+    targetLimiter.cleanup();
   }, 30000);
   cleanupInterval.unref?.();
 
@@ -174,6 +182,9 @@ export function createServer(overrides = {}) {
     const signalToken = randomToken(32);
     const signalTtlMs = config.signalTokenTtlSeconds * 1000;
     signalTokens.set(signalToken, { deviceId, peerId }, signalTtlMs);
+    const pushToken = randomToken(32);
+    const pushTtlMs = config.pushTokenTtlSeconds * 1000;
+    pushTokens.set(pushToken, { deviceId, peerId }, pushTtlMs);
     const turn = turnCredentials(config.turnSecret, deviceId, config.turnTtlSeconds);
     const iceServers = [];
     if (config.stunUrls.length) iceServers.push({ urls: config.stunUrls });
@@ -181,6 +192,8 @@ export function createServer(overrides = {}) {
 
     return sendJson(res, 200, {
       signalToken,
+      pushToken,
+      pushExpiresAt: Date.now() + pushTtlMs,
       expiresAt: Date.now() + signalTtlMs,
       iceServers,
       turnExpiresAt: turn.expiry * 1000,
@@ -218,6 +231,45 @@ export function createServer(overrides = {}) {
     if (!device || device.peerId !== peerId) return sendError(res, 403, 'device_revoked');
     res.writeHead(200, { 'content-length': 0, 'cache-control': 'no-store' });
     res.end();
+  }
+
+  async function handlePush(req, res, route) {
+    if (route === 'public-key') return sendJson(res, 200, { enabled: pushService.enabled, publicKey: pushService.enabled ? config.vapidPublicKey : null });
+    const body = await bodyOrError(req, res);
+    if (!body) return;
+    const entry = typeof body.pushToken === 'string' ? pushTokens.get(body.pushToken) : null;
+    if (!entry) return sendError(res, 401, 'invalid_push_token');
+    const device = await store.getDevice(entry.deviceId);
+    if (!device || device.peerId !== entry.peerId) return sendError(res, 403, 'device_revoked');
+    if (route !== 'wake' && !rateLimiter.check('push-control:' + entry.deviceId)) return sendError(res, 429, 'rate_limited');
+    if (route === 'unsubscribe') {
+      if (!await store.setPushSubscription(entry.deviceId, null)) return sendError(res, 403, 'device_revoked');
+      return sendJson(res, 200, { ok: true });
+    }
+    if (route === 'subscribe') {
+      let subscription;
+      try { subscription = validateSubscription(body.subscription); }
+      catch { return sendError(res, 400, 'invalid_subscription'); }
+      if (!pushService.enabled) return sendError(res, 503, 'push_unavailable');
+      if (!await store.setPushSubscription(entry.deviceId, subscription)) return sendError(res, 403, 'device_revoked');
+      return sendJson(res, 200, { ok: true });
+    }
+    if (typeof body.targetPeerId !== 'string' || !PEER_ID_RE.test(body.targetPeerId) || body.targetPeerId === entry.peerId) return sendError(res, 400, 'invalid_target');
+    if (route === 'pair') {
+      if (!await store.pairPush(entry.deviceId, body.targetPeerId)) return sendError(res, 403, 'pair_not_allowed');
+      return sendJson(res, 200, { ok: true });
+    }
+    const target = await store.pushTarget(entry.deviceId, body.targetPeerId);
+    if (!target) return sendError(res, 403, 'pair_required');
+    // Keys exclude IP and token: token refresh/IP rotation cannot bypass limits.
+    if (!senderLimiter.check(entry.deviceId) || !targetLimiter.check(body.targetPeerId)) return sendError(res, 429, 'rate_limited');
+    if (!pushService.enabled) return sendError(res, 503, 'push_unavailable');
+    if (target.subscription) {
+      const result = await pushService.send(target.subscription);
+      if (result === 'gone') await store.prunePushSubscription(target.deviceId, target.subscription);
+    }
+    // Never expose subscription existence or provider errors to the caller.
+    return sendJson(res, 202, { ok: true });
   }
 
   function requireAdmin(req, res) {
@@ -260,6 +312,9 @@ export function createServer(overrides = {}) {
     for (const [token, wrapped] of signalTokens.entries()) {
       if (wrapped.value?.deviceId === deviceId) signalTokens.delete(token);
     }
+    for (const [token, wrapped] of pushTokens.entries()) {
+      if (wrapped.value?.deviceId === deviceId) pushTokens.delete(token);
+    }
     return sendJson(res, 200, { deviceId, revoked });
   }
 
@@ -294,6 +349,7 @@ export function createServer(overrides = {}) {
         res.setHeader('access-control-allow-origin', config.allowedOrigin);
         res.setHeader('vary', 'Origin');
       }
+      if (method === 'POST' && ['public-key', 'subscribe', 'unsubscribe', 'pair', 'wake'].some(route => pathname === '/v1/push/' + route)) return handlePush(req, res, pathname.split('/').pop());
       if (method === 'POST' && pathname === '/v1/register') return handleRegister(req, res);
       if (method === 'POST' && pathname === '/v1/challenge') return handleChallenge(req, res);
       if (method === 'POST' && pathname === '/v1/session') return handleSession(req, res);
@@ -329,7 +385,7 @@ export function createServer(overrides = {}) {
     return new Promise((resolve) => server.close(resolve));
   }
 
-  return { server, config, store, listen, close, _internals: { challenges, signalTokens, rateLimiter } };
+  return { server, config, store, listen, close, _internals: { challenges, signalTokens, pushTokens, rateLimiter, senderLimiter, targetLimiter } };
 }
 
 function isMainModule() {

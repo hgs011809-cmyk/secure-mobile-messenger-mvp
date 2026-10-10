@@ -53,6 +53,10 @@ services:
       TURN_TTL_SECONDS: "600"
       SIGNAL_TOKEN_TTL_SECONDS: "120"
       CHALLENGE_TTL_SECONDS: "120"
+      VAPID_PUBLIC_KEY_FILE: /run/secrets/vapid_public_key
+      VAPID_PRIVATE_KEY_FILE: /run/secrets/vapid_private_key
+      VAPID_SUBJECT: https://api.thevault73.com
+      PUSH_TOKEN_TTL_SECONDS: "300"
       INVITE_TTL_SECONDS: "604800"
       RATE_LIMIT_WINDOW_MS: "60000"
       RATE_LIMIT_MAX: "30"
@@ -63,6 +67,8 @@ services:
     secrets:
       - admin_secret
       - turn_shared_secret
+      - vapid_public_key
+      - vapid_private_key
     networks:
       - edge
     read_only: true
@@ -184,3 +190,8 @@ secrets:
     file: ./secrets/admin_secret
   turn_shared_secret:
     file: ./secrets/turn_shared_secret
+
+  vapid_public_key:
+    file: ./secrets/vapid_public_key
+  vapid_private_key:
+    file: ./secrets/vapid_private_key
