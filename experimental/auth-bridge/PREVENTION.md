@@ -34,3 +34,9 @@ Official source evidence:
 - https://github.com/element-hq/synapse/blob/v1.162.0/synapse/module_api/callbacks/spamchecker_callbacks.py#L936-L991
 - https://github.com/element-hq/synapse/blob/v1.162.0/synapse/rest/client/devices.py#L451-L479
 - https://github.com/element-hq/synapse/blob/v1.162.0/synapse/handlers/register.py#L860-L919
+
+## Observed prevention acceptance
+
+Real Synapse admission CI run #5 passed at commit `8412b9c38bc7cb40eccb1b33127616f95b5b2831` on 2026-10-11 Asia/Seoul: https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38089734460 . The Node suite (68 tests) and native module suite (10 tests) passed. Extra-device and missing-device logins both returned actual 403 after CI rate-isolation; mapped-account device/access/refresh-token aggregate row counts did not increase. All nine exercised client-facing mutation paths returned 403 with unchanged mapped-account auth counts. All ten emitted lifecycle/admission gates passed, including current-vs-old lease, preserved fixed identity after coordinator/broker restart, coordinated revocation, simulated cleanup failure persistent denial after restart and private retry invalidating the native token. Backend had no published port and the inspected private internal bridge carried the tests; HTTPS/public deployment remains untested.
+
+Runs #3/#4 failed because the rapid second veto attempt encountered native 429 throttling. Run #4 confirmed extra-device=403, missing-device=429. No 429 was accepted as a successful veto; the disposable CI burst isolation resolved the attribution issue. This acceptance is for the deliberately read-only staging ingress and private backend boundary only, NOT full Matrix SDK/E2EE/room/rendering/Android/cold-reopen/production integration. Native old-token rows are not claimed removed by renewal, and hardware attestation/current bearer theft prevention are not claimed.
