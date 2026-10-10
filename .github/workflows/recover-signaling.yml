@@ -1,0 +1,57 @@
+name: Recover signaling connections
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-ncp-pilot
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      HOST: 211.233.206.144
+      HOST_FINGERPRINT: SHA256:Zm5aAv5DJ/EnKiObKSadOxA5nKuXgToCGhNiyhVhAjY
+      SSH_KEY: ${{ secrets.NCP_SSH_KEY }}
+    steps:
+      - name: Wait for temporary runner IP allowlist
+        run: |
+          set -euo pipefail
+          runner_ip="$(curl --max-time 8 -fsS https://api.ipify.org || curl --max-time 8 -fsS https://checkip.amazonaws.com)"
+          echo "::notice::Temporarily allow TCP 22 from $runner_ip/32 in secure-msg-acg."
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
+          chmod 600 ~/.ssh/ncp_key
+          : > ~/.ssh/known_hosts
+          for attempt in $(seq 1 48); do
+            if ssh-keyscan -T 5 -t ed25519 "$HOST" > ~/.ssh/known_hosts 2>/dev/null; then break; fi
+            sleep 10
+          done
+          test -s ~/.ssh/known_hosts
+          actual="$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')"
+          test "$actual" = "$HOST_FINGERPRINT"
+
+      - name: Clear stale signaling sessions without changing device registration
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i ~/.ssh/ncp_key root@$HOST 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          docker restart secure-messenger-infra-peerjs-1 secure-messenger-infra-caddy-1 >/dev/null
+          for attempt in $(seq 1 20); do
+            status="$(docker inspect --format '{{.State.Health.Status}}' secure-messenger-infra-peerjs-1)"
+            [ "$status" = healthy ] && break
+            sleep 3
+          done
+          test "$(docker inspect --format '{{.State.Health.Status}}' secure-messenger-infra-peerjs-1)" = healthy
+          test "$(docker inspect --format '{{.State.Health.Status}}' secure-messenger-infra-auth-1)" = healthy
+          echo 'Signaling sessions reset; authentication data and device keys unchanged.'
+          REMOTE
+
+      - name: Verify public signaling and push readiness
+        run: |
+          node --input-type=module -e "const h=await fetch('https://signal.thevault73.com/healthz');const p=await fetch('https://api.thevault73.com/v1/push/public-key',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});const j=await p.json();if(!h.ok||!p.ok||!j.enabled)process.exit(1);console.log('Signaling health and Web Push readiness passed');"
