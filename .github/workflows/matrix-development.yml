@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install development dependencies without lifecycle scripts
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test encryption gates and deletion reconciliation
         run: npm test
       - name: Build browser SDK and copy official WASM asset

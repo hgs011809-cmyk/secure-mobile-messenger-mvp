@@ -5,10 +5,16 @@ const button=document.getElementById('run'),out=document.getElementById('result'
 button.onclick=async()=>{button.disabled=true;let client,ledger;try{
  client=await createLabClient({baseUrl:'http://127.0.0.1:18008',userId:'@browser-fixture:matrix.lab',deviceId:'SYNTHETIC_BROWSER',accessToken:'synthetic-not-an-authentication-token'});
  if(!client.getCrypto()||client.getCrypto().globalBlacklistUnverifiedDevices!==true)throw new Error('crypto_not_ready');
+ const originalKeys=await client.getCrypto().getOwnDeviceKeys();client.stopClient();
+ client=await createLabClient({baseUrl:'http://127.0.0.1:18008',userId:'@browser-fixture:matrix.lab',deviceId:'SYNTHETIC_BROWSER',accessToken:'synthetic-not-an-authentication-token'});
+ const reopenedKeys=await client.getCrypto().getOwnDeviceKeys();
+ if(originalKeys.ed25519!==reopenedKeys.ed25519||originalKeys.curve25519!==reopenedKeys.curve25519)throw new Error('device_keys_changed_on_reopen');
+ // Public synthetic fixture keys only; used by the browser reload test.
+ window.fixtureDeviceKeys=reopenedKeys;
  ledger=new DeletionLedger({name:'direct-matrix-browser-smoke'});await ledger.open();
  await ledger.put('!fixture:matrix.lab','$fixture',{status:'pending_server',body:'must-never-be-stored'});
  const stored=await ledger.get('!fixture:matrix.lab','$fixture');if(stored.status!=='pending_server'||'body' in stored)throw new Error('metadata_store_failed');
  ledger.close();await ledger.open();if((await ledger.get('!fixture:matrix.lab','$fixture'))?.status!=='pending_server')throw new Error('metadata_persistence_failed');
- out.textContent='PASS: Rust/WASM 초기화, 미검증 기기 차단, IndexedDB 삭제 메타데이터 저장·재열기, 평문 저장 제외';
+ out.textContent='PASS: Rust/WASM 초기화, SDK 종료·재생성 후 기기 키 유지, 미검증 기기 차단, IndexedDB 삭제 메타데이터 저장·재열기, 평문 저장 제외';
 }catch(error){out.textContent='FAIL: '+error.name;throw error;}finally{client?.stopClient();ledger?.close();button.disabled=false;}};
 </script></body></html>

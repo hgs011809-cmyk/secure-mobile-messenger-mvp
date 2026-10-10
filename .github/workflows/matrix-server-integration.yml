@@ -1,0 +1,85 @@
+name: Matrix server integration (synthetic lab)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'infra/ncp/matrix-lab/ci/**'
+      - '.github/workflows/matrix-server-integration.yml'
+      - 'experimental/matrix-client/package.json'
+      - 'experimental/matrix-client/package-lock.json'
+  push:
+    paths:
+      - 'infra/ncp/matrix-lab/ci/**'
+      - '.github/workflows/matrix-server-integration.yml'
+      - 'experimental/matrix-client/package.json'
+      - 'experimental/matrix-client/package-lock.json'
+permissions:
+  contents: read
+concurrency:
+  group: matrix-server-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-synapse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact SDK43 package
+        working-directory: experimental/matrix-client
+        run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
+      - name: Pull official stable image and measure public digest
+        run: |
+          set -euo pipefail
+          # Stable release v1.162.0 verified by parent via official releases API.
+          # Tag is not an immutable digest pin; measure what registry supplied.
+          if ! docker pull matrixdotorg/synapse:v1.162.0 > /dev/null 2>&1; then
+            echo 'Official stable image pull failed; no runtime result.'
+            exit 1
+          fi
+          docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' matrixdotorg/synapse:v1.162.0
+      - name: Prepare ephemeral loopback-only server
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          echo "CI_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "CI_GID=$(id -g)" >> "$GITHUB_ENV"
+          export CI_UID="$(id -u)" CI_GID="$(id -g)"
+          python3 configure.py
+          docker compose -f compose.yaml config --quiet
+          if ! docker compose -f compose.yaml up -d --pull never > /dev/null 2>&1; then
+            echo 'Synthetic server startup failed; logs suppressed.'
+            exit 1
+          fi
+      - name: Encrypted offline delivery and redaction gates
+        timeout-minutes: 11
+        run: node infra/ncp/matrix-lab/ci/integration.mjs
+      - name: Resource observation (not production sizing)
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          container="$(docker compose -f compose.yaml ps -q synapse 2>/dev/null)"
+          if [ -n "$container" ]; then
+            docker stats --no-stream --format 'memory={{.MemUsage}} cpu={{.CPUPerc}} block_io={{.BlockIO}}' "$container" 2>/dev/null
+            docker inspect --format 'oom_killed={{.State.OOMKilled}} exit_code={{.State.ExitCode}}' "$container" 2>/dev/null
+          fi
+          if [ -d runtime ]; then du -sk runtime | awk '{print "synthetic_data_disk_kib=" $1}'; fi
+          df -Pk . | awk 'NR==2 {print "runner_disk_available_kib=" $4}'
+          exit 0
+      - name: Always stop server and destroy synthetic runtime
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          docker compose -f compose.yaml down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1
+          # Fixed CI-local path only. Nothing from NCP or production is referenced.
+          rm -rf -- runtime
+          exit 0

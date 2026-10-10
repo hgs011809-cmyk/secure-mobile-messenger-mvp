@@ -11,11 +11,11 @@ Not imported by deployed `app.js`; not a finished offline messenger. No producti
 - Logical redaction acknowledgment does NOT confirm database, WAL, media or backup cleanup.
 
 ## Development checks
-With Node 22+ in this folder: `npm install --ignore-scripts`, `npm test`, `npm run build`, `npx playwright install chromium`, `npm run test:browser`.
+With Node 22+ in this folder: `npm ci --ignore-scripts`, `npm test`, `npm run build`, `npx playwright install chromium`, `npm run test:browser`.
 
-Build copies the official crypto WASM beside the browser bundle. No external CDN import is used. Root versions are pinned; generated dependency lock must be reviewed and committed before production use.
+Build copies the official crypto WASM beside the browser bundle. No external CDN import is used. Root versions and the reviewed CI-generated dependency lock are committed. The successful initial build used crypto engine 18.9.0; the earlier standalone smoke test used 18.7.0.
 
-The browser harness uses synthetic credentials only, aborts loopback homeserver requests, and tests actual WASM initialization plus IndexedDB deletion metadata. It is not a two-phone/server delivery test.
+The browser harness uses synthetic credentials only, aborts loopback homeserver requests, and tests actual WASM initialization plus IndexedDB deletion metadata. A stronger test also checks device-key continuity after SDK stop/recreate and page reload. It is not a two-phone/server delivery test.
 
 ## Not implemented / deployment gates
 - Existing invite/device authentication to Matrix account/token provisioning.
