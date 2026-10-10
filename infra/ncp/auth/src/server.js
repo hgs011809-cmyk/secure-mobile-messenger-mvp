@@ -237,7 +237,11 @@ export function createServer(overrides = {}) {
     if (!Number.isFinite(ttlSeconds) || ttlSeconds < 60 || ttlSeconds > 2592000) {
       return sendError(res, 400, 'invalid_ttl');
     }
-    const invite = await store.createInvite(ttlSeconds * 1000);
+    const format = body.format === undefined ? 'standard' : String(body.format);
+    if (format !== 'standard' && format !== 'numeric') {
+      return sendError(res, 400, 'invalid_invite_format');
+    }
+    const invite = await store.createInvite(ttlSeconds * 1000, { numeric: format === 'numeric' });
     return sendJson(res, 201, invite);
   }
 
