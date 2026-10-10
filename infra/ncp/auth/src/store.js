@@ -4,9 +4,18 @@ import crypto from 'node:crypto';
 
 const FILE_MODE = 0o600;
 const DIR_MODE = 0o700;
+const NUMERIC_INVITE_RE = /^\d{8}$/;
 
 function hashInvite(code) {
   return crypto.createHash('sha256').update(code).digest();
+}
+
+function numericInviteKey(code) {
+  return `n_${hashInvite(code).toString('hex')}`;
+}
+
+function randomNumericInvite() {
+  return crypto.randomInt(0, 100_000_000).toString().padStart(8, '0');
 }
 
 export class Store {
@@ -51,11 +60,23 @@ export class Store {
     await fs.chmod(this.filePath, FILE_MODE).catch(() => {});
   }
 
-  async createInvite(ttlMs) {
+  async createInvite(ttlMs, { numeric = false } = {}) {
     return this._withLock(async () => {
       const data = await this._load();
-      const inviteId = crypto.randomUUID();
-      const secret = crypto.randomBytes(24).toString('base64url');
+      let inviteId;
+      let secret;
+      let inviteCode;
+      if (numeric) {
+        do {
+          inviteCode = randomNumericInvite();
+          inviteId = numericInviteKey(inviteCode);
+        } while (data.invites[inviteId]);
+        secret = inviteCode;
+      } else {
+        inviteId = crypto.randomUUID();
+        secret = crypto.randomBytes(24).toString('base64url');
+        inviteCode = `${inviteId}.${secret}`;
+      }
       const now = Date.now();
       const expiresAt = now + ttlMs;
       data.invites[inviteId] = {
@@ -66,7 +87,7 @@ export class Store {
         deviceId: null,
       };
       await this._persist();
-      return { inviteCode: `${inviteId}.${secret}`, inviteId, expiresAt };
+      return { inviteCode, inviteId, expiresAt };
     });
   }
 
@@ -74,10 +95,17 @@ export class Store {
     return this._withLock(async () => {
       const data = await this._load();
       if (typeof inviteCode !== 'string') return { ok: false, reason: 'invite_invalid' };
-      const separator = inviteCode.indexOf('.');
-      if (separator < 1) return { ok: false, reason: 'invite_invalid' };
-      const inviteId = inviteCode.slice(0, separator);
-      const secret = inviteCode.slice(separator + 1);
+      let inviteId;
+      let secret;
+      if (NUMERIC_INVITE_RE.test(inviteCode)) {
+        inviteId = numericInviteKey(inviteCode);
+        secret = inviteCode;
+      } else {
+        const separator = inviteCode.indexOf('.');
+        if (separator < 1) return { ok: false, reason: 'invite_invalid' };
+        inviteId = inviteCode.slice(0, separator);
+        secret = inviteCode.slice(separator + 1);
+      }
       const invite = data.invites[inviteId];
       if (!invite || invite.usedAt || Date.now() > invite.expiresAt) {
         return { ok: false, reason: 'invite_invalid' };
