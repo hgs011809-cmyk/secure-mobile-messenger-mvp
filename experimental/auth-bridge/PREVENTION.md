@@ -13,7 +13,7 @@ Pinned Synapse v1.162.0 supports `register_spam_checker_callbacks(check_login_fo
 
 ## Latest usable session, not one backend token row
 
-A fresh enrolled P-256 proof renews the SAME Matrix user/device and preserves its device identity. Broker stores only a SHA-256 digest of the latest access token plus its conservative expiry. Ingress accepts that latest lease only. Older Synapse tokens can remain valid on the PRIVATE backend until their bounded lifetime expires; they are not publicly usable through ingress. We do not use logout to rotate because device/key continuity needs separate care. Native deactivation still invalidates all tokens on successful revocation. Do not claim all old token rows are deleted on every renewal.
+A fresh enrolled P-256 proof renews the SAME Matrix user/device and preserves its device identity. Broker stores only a SHA-256 digest of the latest access token plus its conservative expiry. Ingress accepts that latest lease only. Older Synapse tokens can remain valid on the PRIVATE backend until their bounded lifetime expires; they are not publicly usable through ingress. We do not use logout to rotate because device/key continuity needs separate care. Native deactivation still invalidates all tokens on successful revocation. These are logical enrolled device IDs, not hardware attestation: theft/replay of the current bearer token is not prevented merely by limiting device IDs. Do not claim all old token rows are deleted on every renewal.
 
 ## Coordinated revocation
 
@@ -23,7 +23,7 @@ A fresh enrolled P-256 proof renews the SAME Matrix user/device and preserves it
 
 `ci-policy.mjs` replaces the historical `ci.mjs` as the selected workflow entry point. It verifies fresh invite enrollment/P-256 proof, fixed identity after broker + coordinator restart, native extra/missing device denial, unchanged aggregate device/access/refresh token rows after rejected attempts, previous lease denial despite private native token validity, denied public mutation routes, coordinated native revocation, and simulated remote-cleanup failure with persistent deny/retry across coordinator restart. Node unit suite adds gateway URL/routing/error/rate/epoch tests and lease/lifecycle tests; ten native Synapse module tests run in the container.
 
-Check the exact GitHub run before claiming new server tests pass. The 1 CPU/512 MiB fixture is NOT proof of safe cohosting on NCP's 1 GiB machine. Earlier 139.3 MiB one-instant observation and prior ~296s ciphertext cleanup remain independent samples, not new measurements of this change.
+The rapid synthetic accounts share one host IP. CI-only login address/account/failed-attempt burst is 20 at 1/sec to distinguish actual pre-login 403 veto from unrelated 429 throttling. Production settings are untouched; ingress rate tests remain enabled. HTTP diagnostics output only fixed attempt labels/statuses; a 429 is NOT accepted as a successful device veto. Check the exact GitHub run before claiming new server tests pass. The 1 CPU/512 MiB fixture is NOT proof of safe cohosting on NCP's 1 GiB machine. Earlier 139.3 MiB one-instant observation and prior ~296s ciphertext cleanup remain independent samples, not new measurements of this change.
 
 ## Remaining rollout gates
 
