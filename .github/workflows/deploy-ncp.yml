@@ -26,7 +26,16 @@ jobs:
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/ncp_key
           chmod 600 ~/.ssh/ncp_key
-          ssh-keyscan -T 10 -t ed25519 "$HOST" > ~/.ssh/known_hosts
+          runner_ip="$(curl --max-time 8 -fsS https://api.ipify.org || curl --max-time 8 -fsS https://checkip.amazonaws.com)"
+          echo "::notice::Temporarily allow TCP 22 from $runner_ip/32 in secure-msg-acg."
+          : > ~/.ssh/known_hosts
+          for attempt in $(seq 1 48); do
+            if ssh-keyscan -T 5 -t ed25519 "$HOST" > ~/.ssh/known_hosts 2>/dev/null; then
+              break
+            fi
+            sleep 10
+          done
+          test -s ~/.ssh/known_hosts
           actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
           test "$actual" = "$HOST_FINGERPRINT"
 
