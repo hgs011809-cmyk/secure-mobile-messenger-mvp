@@ -70,8 +70,9 @@ async function sign(privateKey, text) {
 test('invite, registration, signed session, TURN credentials, signaling gate, and revocation', async () => {
   const { app, dataDir, base } = await start();
   try {
-    const invitation = await admin(base, '/internal/admin/invites');
+    const invitation = await admin(base, '/internal/admin/invites', { ttlSeconds: 60, format: 'numeric' });
     assert.equal(invitation.response.status, 201);
+    assert.match(invitation.body.inviteCode, /^\d{8}$/);
     const { pair, spki } = await keyPair();
 
     const registration = await json(base, '/v1/register', { invite: invitation.body.inviteCode, peerId: PEER_ID, publicKey: spki });
