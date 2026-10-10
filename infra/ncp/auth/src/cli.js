@@ -24,16 +24,19 @@ async function request(path, method, body) {
 function usage() {
   process.stderr.write([
     'Usage:',
-    '  node src/cli.js create-invite [ttlSeconds]',
+    '  node src/cli.js create-invite [ttlSeconds] [standard|numeric]',
     '  node src/cli.js list-devices',
     '  node src/cli.js revoke-device <deviceId>',
   ].join('\n') + '\n');
 }
 
-const [command, argument] = process.argv.slice(2);
+const [command, argument, format] = process.argv.slice(2);
 if (command === 'create-invite') {
   const ttlSeconds = argument ? Number(argument) : undefined;
-  console.log(JSON.stringify(await request('/internal/admin/invites', 'POST', ttlSeconds ? { ttlSeconds } : {}), null, 2));
+  const body = {};
+  if (ttlSeconds) body.ttlSeconds = ttlSeconds;
+  if (format) body.format = format;
+  console.log(JSON.stringify(await request('/internal/admin/invites', 'POST', body), null, 2));
 } else if (command === 'list-devices') {
   console.log(JSON.stringify(await request('/internal/admin/devices', 'GET'), null, 2));
 } else if (command === 'revoke-device') {
