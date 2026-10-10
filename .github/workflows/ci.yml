@@ -53,3 +53,6 @@ jobs:
       - name: Build authentication image
         working-directory: infra/ncp
         run: docker compose build auth
+
+      - name: Verify push dependency inside production image
+        run: docker run --rm --entrypoint node secure-messenger-auth:1.0.0 -e "require.resolve('web-push'); console.log('Web Push dependency is installed')"

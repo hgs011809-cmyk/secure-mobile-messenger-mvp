@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 # Generate only on the authenticated server. Never print private key material.
-image="${1:-secure-msg-auth:push-v1}"
+image="${1:-secure-msg-auth:push-v2}"
 if [ -s secrets/vapid_private_key ] && [ -s secrets/vapid_public_key ]; then exit 0; fi
 if [ -e secrets/vapid_private_key ] || [ -e secrets/vapid_public_key ]; then
   echo 'Incomplete VAPID key pair. Stop and repair without overwriting keys.' >&2

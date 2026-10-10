@@ -6,8 +6,9 @@ RUN addgroup -S authapp && adduser -S authapp -G authapp -h /app
 
 WORKDIR /app
 
-# No dependencies to install (Node built-ins only), but keep package.json for metadata/tooling.
-COPY package.json ./
+# Install pinned production dependencies from lockfile.
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 COPY src ./src
 
 # Data directory for the JSON file store (public device keys + hashed invites).
