@@ -2,7 +2,11 @@
 
 Standalone development code only. No production auth import, HTTP route, frontend integration, NCP deployment or capacity purchase. Existing P2P/push behavior is unchanged. Not a security sign-off.
 
-## Implemented scope
+## New prevention stage
+
+See [PREVENTION.md](PREVENTION.md) for the supported pre-login device veto, no-published-port private backend, default-deny read-only client ingress, latest-session lease and dedicated durable revocation coordinator. Current workflow selects `ci-policy.mjs`; historical `ci.mjs` remains the previous reactive-only fixture. Full Matrix key/message/SAS routes and production HTTP wiring are still closed/not implemented. New server CI must be checked separately before claiming prevention success.
+
+## Initial implemented scope
 
 - `MatrixAdmissionBroker` defaults to disabled. An enabled lab requires exactly two operator-selected enrolled device IDs and `matrix.lab` or `matrix.ci` server name.
 - Fresh one-use `direct-matrix-auth-v1` challenge binds enrolled P-256 public-key fingerprint, device and peer. Reuses the existing auth cryptographic verifier, NOT legacy signal/push credentials or challenges.
@@ -13,9 +17,9 @@ Standalone development code only. No production auth import, HTTP route, fronten
 - Revocation first persists a deny/tombstone, then deactivates the mapped account. Failures leave cleanup pending and grants blocked; retry is internal/operator-only. Deactivation is token/device access revocation, NOT erasure of messages, local keys or copies.
 - Unexpected Matrix device discovery quarantines the account and requests full account-session revocation. This is REACTIVE DETECTION, NOT prevention of direct Matrix extra-session/device creation.
 
-## Tests and disposable server CI
+## Historical phase-one tests and disposable server CI
 
-`node --test experimental/auth-bridge/broker.spec.mjs experimental/auth-bridge/issuer.spec.mjs`
+Current Node suite: `node --test experimental/auth-bridge/broker.spec.mjs experimental/auth-bridge/issuer.spec.mjs experimental/auth-bridge/policy.spec.mjs`. Native module tests run inside the pinned Synapse container.
 
 35 unit tests cover enrollment/signature/purpose/device binding, nonce replay/expiry, fixed identity across restart, durable provisioning intent, password omission, bounded lifetime, latency, unexpected devices, revoked enrollment, cleanup retry and concurrent challenge capacity. These unit tests use synthetic fake issuers, not Synapse or real Android.
 

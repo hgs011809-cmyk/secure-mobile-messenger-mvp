@@ -1,4 +1,4 @@
-import {randomBytes} from 'node:crypto';
+import {randomBytes,createHash,timingSafeEqual} from 'node:crypto';
 import {importP256PublicKey,verifyEcdsaSignature,fingerprintSpki} from '../../infra/ncp/auth/src/crypto.js';
 const ID=/^[A-Za-z0-9_-]{16,128}$/;
 const PEER=/^[A-Za-z0-9._-]{3,80}$/;
@@ -64,7 +64,7 @@ export class MatrixAdmissionBroker {
     if(who?.user_id!==m.userId||who.device_id!==m.matrixDeviceId||!Array.isArray(devices)||devices.length!==1||devices[0].device_id!==m.matrixDeviceId)throw new BridgeError('matrix_device_binding');
     const after=await this._device(deviceId,peerId);if(after.fingerprint!==d.fingerprint)throw new BridgeError('device_key_changed');
     const expiresAt=loginStartedAt+login.expires_in_ms;if(expiresAt<=this.now())throw new BridgeError('matrix_session_expired');
-    await this.store.transaction(data=>{data.mappings[deviceId].status='active';});
+    await this.store.transaction(data=>{Object.assign(data.mappings[deviceId],{status:'active',sessionDigest:createHash('sha256').update(login.access_token).digest('hex'),sessionExpiresAt:expiresAt});});
     if(expiresAt<=this.now())throw new BridgeError('matrix_session_expired');
     return {userId:m.userId,deviceId:m.matrixDeviceId,accessToken:login.access_token,expiresAt,keyVerified:false};
    }catch{
@@ -76,6 +76,13 @@ export class MatrixAdmissionBroker {
  async _quarantine(m){
   await this.store.transaction(data=>{const x=data.mappings[m.deviceId];if(x){x.status='blocked';x.cleanupPending=true;}});
   try{await this.issuer.revoke(m);await this.store.transaction(data=>{const x=data.mappings[m.deviceId];x.status='revoked';x.cleanupPending=false;delete x.password;});}catch{}
+ }
+ // Authorizes only the latest session lease. Old native tokens may remain privately valid until expiry.
+ async resolveSession(accessToken,who){
+  if(!this.enabled||typeof accessToken!=='string'||!who?.user_id||!who.device_id)return null;
+  const digest=createHash('sha256').update(accessToken).digest();
+  const m=await this.store.transaction(data=>Object.values(data.mappings).find(x=>x.status==='active'&&x.userId===who.user_id&&x.matrixDeviceId===who.device_id&&x.sessionExpiresAt>this.now()&&/^[0-9a-f]{64}$/.test(x.sessionDigest||'')&&timingSafeEqual(Buffer.from(x.sessionDigest,'hex'),digest)));
+  if(!m)return null;try{const d=await this._device(m.deviceId,m.peerId);if(d.fingerprint!==m.fingerprint)return null;return {userId:m.userId,matrixDeviceId:m.matrixDeviceId,deviceId:m.deviceId};}catch{return null;}
  }
  // INTERNAL operator/revocation hook only. Never expose as unauthenticated client route.
  async revoke(deviceId){if(!this.enabled)fail('matrix_disabled');return this._serial(async()=>{

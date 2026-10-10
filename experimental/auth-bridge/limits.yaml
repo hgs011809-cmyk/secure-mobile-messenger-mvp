@@ -3,3 +3,9 @@ services:
   synapse:
     mem_limit: 512m
     cpus: 1.0
+    # Backend is reachable only on this job's private bridge, never a published port.
+    ports: !reset []
+    environment:
+      PYTHONPATH: /gate
+    volumes:
+      - ../../../../experimental/auth-bridge:/gate:ro
