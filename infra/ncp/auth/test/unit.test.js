@@ -32,6 +32,20 @@ test('Store atomically registers one device with a one-time invite', async () =>
   }
 });
 
+test('Store creates an 8-digit one-time numeric invite', async () => {
+  const { dir, store } = await makeStore();
+  try {
+    const invite = await store.createInvite(60000, { numeric: true });
+    assert.match(invite.inviteCode, /^\d{8}$/);
+    const record = { deviceId: 'device_numeric_1234', peerId: 'dm-abcdef1234567890abcdef12345678', publicKeySpkiB64: 'key', fingerprint: 'fp', createdAt: 'now' };
+    assert.equal((await store.registerDevice('00000000', record.peerId, record)).ok, false);
+    assert.equal((await store.registerDevice(invite.inviteCode, record.peerId, record)).ok, true);
+    assert.equal((await store.registerDevice(invite.inviteCode, record.peerId, { ...record, deviceId: 'device_numeric_5678' })).ok, false);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('Store writes the database with mode 0600 on POSIX', async () => {
   const { dir, file, store } = await makeStore();
   try {
