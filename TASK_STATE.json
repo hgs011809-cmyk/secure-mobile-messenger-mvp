@@ -1,5 +1,5 @@
 {
-  "phase": "sdk_process_foundation_reviewed_pending_linux",
+  "phase": "synthetic_sdk_process_foundation_linux_verified",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "inspect_single_foundation_CI_aggregate_cleanup_then_actualSDK_adapter_bounded_candidate",
+  "next": "next_routine_NEW_actualSDK_authority_adapter_candidate_with_exact_initial_binding_snapshot_and_abortable_fresh_callbacks_else_cold_quota_alternative",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -191,13 +191,32 @@
     "backupCommit": "5eb813568de53a123236512c10df1b9ae5261ff3"
   },
   "sdkProcessFoundation": {
-    "status": "reviewed_syntax_only",
+    "status": "linux_verified_synthetic_foundation_only",
+    "run": "38158717874",
+    "job": "114526955635",
+    "sourceCommit": "ca0ef1f9ea059137544b606e902f9d3809a476d0",
+    "workflowCommit": "ec3cf78e9fa439b830983b6c1e0e690d36402460",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flat": true,
+    "runnerExit": 0,
+    "prePostPins": 44,
+    "unchangedPriorFiles": 895,
     "actualSDKIntegration": false,
-    "runtimeTests": 0,
-    "expectedTests": 6,
-    "priorFilesUnchanged": 895,
-    "workflow": "matrix-sdk-process-lab.yml",
+    "authorization": "synthetic_only",
+    "plaintextProof": false,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "independentCleanup": true,
+    "ownedWorkersAbsent": true,
+    "privateNamespaceAbsent": true,
+    "forcedWorkerCleanup": 0,
+    "containersCreated": 0,
     "reviewTask": "nx9aaScAATxMMaK0",
-    "implementationTask": "A92R3SAa3nq5AGar"
+    "implementationTask": "A92R3SAa3nq5AGar",
+    "screenshotSaved": true
   }
 }

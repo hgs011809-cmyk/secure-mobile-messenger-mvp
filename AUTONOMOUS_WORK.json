@@ -7,21 +7,21 @@
   "routineId": "fBhYJ5G17fGs6JU9",
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
-  "ownerSession": "4hVha2NRWs9veURt",
-  "status": "sdk_process_foundation_reviewed_pending_ci_backup",
+  "ownerSession": null,
+  "status": "sdk_process_foundation_linux_verified",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "next_routine_bounded_NEW_sdk_process_wrapper_candidate_review_no_core_policy_changes_else_cold_quota_alternative",
+  "next": "next_routine_NEW_actualSDK_authority_adapter_candidate_with_exact_initial_binding_snapshot_and_abortable_fresh_callbacks_else_cold_quota_alternative",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T17:12:03.602Z",
+  "updatedAt": "2026-10-11T17:15:56.846Z",
   "implementationTask": "A92R3SAa3nq5AGar",
   "independentReviewTask": "nx9aaScAATxMMaK0",
   "completed": [
@@ -31,11 +31,11 @@
     "new_six_persisted_ciphertext_corruption_cases_linux_verified",
     "pre_post38_hash_guards_verified",
     "independent_always_cleanup_verified",
-    "read_only_sdk_to_child_design_candidate_independently_reviewed_no_runtime"
+    "read_only_sdk_to_child_design_candidate_independently_reviewed_no_runtime",
+    "synthetic_ipc_foundation_six_linux_verified_only"
   ],
   "pending": [
-    "foundation_linux_runtime_not_executed",
-    "actual_sdk_authority_adapter_unimplemented"
+    "results_checkpoint_branch_backup"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -85,7 +85,7 @@
     "screenshotSaved": true,
     "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
-  "lastOwnerSession": "UE8Y1upFB6ODcS2l",
+  "lastOwnerSession": "4hVha2NRWs9veURt",
   "checkpointCommit": "5eb813568de53a123236512c10df1b9ae5261ff3",
   "investigationTask": "bZcgUyvsP90GFDUL",
   "sdkProcessFeasibility": {
@@ -108,13 +108,32 @@
     "backupCommit": "5eb813568de53a123236512c10df1b9ae5261ff3"
   },
   "sdkProcessFoundation": {
-    "status": "reviewed_syntax_only",
+    "status": "linux_verified_synthetic_foundation_only",
+    "run": "38158717874",
+    "job": "114526955635",
+    "sourceCommit": "ca0ef1f9ea059137544b606e902f9d3809a476d0",
+    "workflowCommit": "ec3cf78e9fa439b830983b6c1e0e690d36402460",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flat": true,
+    "runnerExit": 0,
+    "prePostPins": 44,
+    "unchangedPriorFiles": 895,
     "actualSDKIntegration": false,
-    "runtimeTests": 0,
-    "expectedTests": 6,
-    "priorFilesUnchanged": 895,
-    "workflow": "matrix-sdk-process-lab.yml",
+    "authorization": "synthetic_only",
+    "plaintextProof": false,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "independentCleanup": true,
+    "ownedWorkersAbsent": true,
+    "privateNamespaceAbsent": true,
+    "forcedWorkerCleanup": 0,
+    "containersCreated": 0,
     "reviewTask": "nx9aaScAATxMMaK0",
-    "implementationTask": "A92R3SAa3nq5AGar"
+    "implementationTask": "A92R3SAa3nq5AGar",
+    "screenshotSaved": true
   }
 }
