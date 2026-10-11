@@ -21,6 +21,7 @@ const {createLabClient, bindLabConversation} = await import('./client.mjs');
 // SDK43 public VerificationPhase enum values. No raw WASM objects or trust setters.
 const Phase = Object.freeze({Ready:3, Started:4, Cancelled:5, Done:6});
 let client, conversation, bound, request, verifier, callbacks;
+let bindPhase = 'not-started', bindFailure = 'none';
 let verificationDone = false, verificationFailed = false, feedFailed = false;
 let feedQueue = Promise.resolve();
 const watchedEvents = new WeakSet();
@@ -177,15 +178,26 @@ const api = {
     requireClient();
     if (conversation) throw new Error('already_bound');
     bound = {room,peer,device};
-    conversation = await bindLabConversation({client,roomId:room,peerUserId:peer,peerDeviceId:device,
-      onUpdate:() => { progress.textContent = 'Running'; }});
-    await wait(() => {
-      const joined = client.getRoom(room)?.getJoinedMembers().map(member => member.userId) || [];
-      return joined.length === 2 && joined.includes(client.getUserId()) && joined.includes(peer);
-    }, 'two_members');
-    sweep();
-    await feedQueue;
-    return true;
+    bindFailure = 'none';
+    try {
+      conversation = await bindLabConversation({client,roomId:room,peerUserId:peer,peerDeviceId:device,
+        onBindPhase:phase => { bindPhase = phase; },
+        onUpdate:() => { progress.textContent = 'Running'; }});
+      bindPhase = 'participant-readiness';
+      await wait(() => {
+        const joined = client.getRoom(room)?.getJoinedMembers().map(member => member.userId) || [];
+        return joined.length === 2 && joined.includes(client.getUserId()) && joined.includes(peer);
+      }, 'two_members');
+      bindPhase = 'ingestion';
+      sweep();
+      await feedQueue;
+      bindPhase = 'completed';
+      return true;
+    } catch (error) {
+      bindFailure = error?.message === 'invalid_bound_room_state' ? 'invalid_bound_room_state'
+        : error?.message === 'invalid_bound_room_creation' ? 'invalid_bound_room_creation' : 'unknown';
+      throw error;
+    }
   },
   async blocked() {
     try { await requireConversation().assertSendAllowed(); return false; }
@@ -284,13 +296,14 @@ const api = {
     const found=timelineEvent(event),crypto=client.getCrypto();
     const peerDevices=(await crypto.getUserDeviceInfo([bound.peer],true)).get(bound.peer),device=peerDevices?.get(bound.device);
     const info=found?await crypto.getEncryptionInfoForEvent(found):null;
-    return {eventFound:Boolean(found),decryptionFailed:found?.isDecryptionFailure()===true,
+    return {bindPhase,bindFailure,roomKnown:Boolean(client.getRoom(bound?.room)),
+      eventFound:Boolean(found),decryptionFailed:found?.isDecryptionFailure()===true,
       peerVerified:(await crypto.getDeviceVerificationStatus(bound.peer,bound.device))?.isVerified()===true,
       peerDeviceCount:peerDevices?.size??0,senderKeyMatches:Boolean(found?.getSenderKey()&&found.getSenderKey()===device?.getIdentityKey()),
       claimedKeyMatches:Boolean(found?.getClaimedEd25519Key()&&found.getClaimedEd25519Key()===device?.getFingerprint()),
       shieldColour:Number.isInteger(info?.shieldColour)?info.shieldColour:-1,
       shieldReason:Number.isInteger(info?.shieldReason)?info.shieldReason:-1,
-      visible:conversation.snapshot().some(m=>m.id===event)};
+      visible:conversation?.snapshot().some(m=>m.id===event)??false};
   },
   async remove({event}) { return requireConversation().deleteForBoth(event); },
   async deleted({event}) {

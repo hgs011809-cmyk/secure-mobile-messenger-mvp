@@ -22,15 +22,22 @@ export async function createLabClient({baseUrl,userId,deviceId,accessToken}){
   // Tokens stay in memory. No localStorage token persistence or debug logging.
   return client;
 }
-export async function bindLabConversation({client,roomId,peerUserId,peerDeviceId,onUpdate}){
+export async function bindLabConversation({client,roomId,peerUserId,peerDeviceId,onUpdate,onBindPhase}){
+  // Diagnostic observers must not change binding behavior. Labels contain no runtime values.
+  const phase=label=>{try{onBindPhase?.(label);}catch{}};
   // Filtered sync is not sufficient proof that the SDK has complete policy state.
   // Fetch authoritative state through the SAME current-lease, fixed-room read-only ingress.
   // Never synthesize policy content or modify crypto/device verification state.
-  const room=client.getRoom(roomId),state=await client.roomState(roomId);
+  const room=client.getRoom(roomId);
+  phase('authoritative-fetch');
+  const state=await client.roomState(roomId);
+  phase('authoritative-validation');
   validateBoundRoomState({room,roomId,state});
+  phase('authoritative-apply');
   room.currentState.setStateEvents(state.map(e=>new MatrixEvent({...e,room_id:roomId})));
   const ledger=new DeletionLedger({name:'direct-matrix-lab-deletions-'+encodeURIComponent(client.getUserId()+'|'+client.getDeviceId())});
   const conversation=new EncryptedConversation({client,roomId,peerUserId,peerDeviceId,ledger,onUpdate});
+  phase('conversation-initialize');
   await conversation.initialize();
   // Fail closed for already-visible plaintext while key/trust metadata changes.
   client.on('crypto.devicesUpdated',users=>{if(!Array.isArray(users)||users.includes(client.getUserId())||users.includes(peerUserId))conversation.clearMemory();});
