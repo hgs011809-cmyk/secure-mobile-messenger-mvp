@@ -1,6 +1,6 @@
 # Synthetic deletion repetition, bounded burst and server restart
 
-Status: implemented; GitHub Actions measurement pending. No production/NCP changes or approval.
+Status: measured. No-restart control passed 36/36; same-volume restart confirmed 36/36 misses of the 300000ms target. The workflow remains FAILED and rollout stays blocked. See [RESULTS.md](RESULTS.md). No production/NCP changes or approval.
 
 ## Fixed scope
 
