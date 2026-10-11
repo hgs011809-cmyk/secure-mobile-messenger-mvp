@@ -149,3 +149,9 @@ test('additional owner self-signature requires pinned signer plus mandatory devi
  const bad=structuredClone(d);bad.signatures[identity.userId]['ed25519:'+p]=Buffer.alloc(64).toString('base64').replace(/=+$/,'');assert.equal(request('POST',root+'/keys/upload',{device_keys:bad},{binding:pins}),null);
  delete d.signatures[identity.userId]['ed25519:A'];assert.equal(request('POST',root+'/keys/upload',{device_keys:d},{binding:pins}),null);
 });
+
+test('fixed-room sync timeline preserves policy state and never plaintext room messages',()=>{
+ const r=request('GET',root+'/sync');const f=JSON.parse(new URL('http://lab'+r.path).searchParams.get('filter'));
+ for(const type of ['m.room.create','m.room.encryption','m.room.history_visibility','m.room.join_rules','m.room.member','m.room.power_levels'])assert.ok(f.room.timeline.types.includes(type));
+ assert.deepEqual(f.room.timeline.rooms,[binding.roomId]);assert.equal(f.room.timeline.types.includes('m.room.message'),false);assert.equal(f.room.timeline.types.includes('*'),false);
+});

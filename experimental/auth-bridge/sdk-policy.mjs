@@ -38,7 +38,9 @@ function forcedFilter(binding) {
     room: { rooms: [binding.roomId], include_leave: false,
       account_data: { types: [] }, ephemeral: { types: [] },
       state: { rooms: [binding.roomId], lazy_load_members: false },
-      timeline: { rooms: [binding.roomId], types: ['m.room.encrypted', 'm.room.redaction'], limit: 100 }
+      // Policy state can appear in the timeline instead of the state delta.
+      // Preserve it for fail-closed room/membership checks, not plaintext messages.
+      timeline: { rooms: [binding.roomId], types: ['m.room.encrypted', 'm.room.redaction', 'm.room.create', 'm.room.encryption', 'm.room.history_visibility', 'm.room.join_rules', 'm.room.member', 'm.room.power_levels'], limit: 100 }
     }
   };
 }
