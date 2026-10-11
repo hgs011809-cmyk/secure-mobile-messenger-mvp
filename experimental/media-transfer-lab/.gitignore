@@ -1,0 +1,6 @@
+last-*.json
+*.bin
+*.pending
+*.log
+.private/
+fixtures/

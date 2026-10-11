@@ -1,0 +1,8 @@
+# Local runtime attempts, preserved honestly
+
+- Standard Windows Node --test pathname invocation did not resolve these permitted source files; individual built-in/data-URL runs passed portable receiver/voice/ingress suites without increasing filesystem permission.
+- Nested spawnSync all-suite attempt was stopped after no output; no execution/pass/cleanup result is claimed for that interrupted attempt. Do not replay it. Any interrupted default-OS-temp fixture cleanup remains unverified. No key/plaintext persistence was designed.
+- First direct vm.runInThisContext attempt failed before test registration because of dynamic import loader context. Explicit private namespace removal was verified by the saved exit record. Use main-context evaluation of this authored loader, not that VM invocation.
+- First74-test direct run:66 pass,6 failures,2 Linux skips. Six network cases failed teardown assertions; the multi-recreate8 MiB scenario also could not progress past failed teardown. Do not treat functional replies as a passed scenario.
+- Safe scalar diagnostics identified stop-phase observer timing: server.close callback alone did not prove socket close observers/sets drained. Network helper now explicitly awaits each server-side socket close promise plus client close promises before checking zero live sockets/listener false. No ignored cleanup errors or relaxed assertion.
+- Diagnostic logs are fixed codes/counts/status only. Use --test-reporter=lcov locally to avoid data-URL source/stack dumps; CI keeps TAP privately then emits only checked aggregates and removes its namespace. No artifacts, keys, bodies, SDP/ICE or capability values are uploaded.
