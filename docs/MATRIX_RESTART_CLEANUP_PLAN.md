@@ -1,6 +1,6 @@
 # Restart cleanup: source-grounded next experiment
 
-Status: source investigation and isolated Linux source checks complete. Candidate NOT runtime-validated. Existing retention run stays FAILED. No production/NCP changes or authorization.
+Status: source investigation and isolated Linux source checks complete. Candidate small runtime pilot PASSED; broader safety/load/crash validation remains incomplete. Existing retention run stays FAILED. No production/NCP changes or authorization.
 
 ## Verified v1.162.0 implementation
 
@@ -9,9 +9,9 @@ Status: source investigation and isolated Linux source checks complete. Candidat
 
 This supplies a concrete restart-delay mechanism consistent with observed 343.659–545.165s cleanup upper bounds. It does not prove that scheduling was the only cause in the recorded run: index readiness, query/callback duration and queue depth were not separately measured. More than 100 eligible records can require multiple checks even without restart. Standard zero-retention configuration is not a strict 300000ms active-row guarantee.
 
-## Minimal isolated candidate, not approved runtime code
+## Minimal isolated candidate, not approved for operation
 
-A pure, default-disabled source transformer and nine source-guard test cases are committed under experimental/matrix-cleanup-candidate (d2e03c0). The separate source-check workflow is committed at 3856e38. No server has been modified. Proposed change is only the pinned scheduler expression:
+A pure, default-disabled source transformer and nine source-guard test cases are committed under experimental/matrix-cleanup-candidate (d2e03c0). The separate source-check workflow is committed at 3856e38. No operational server has been modified. The disposable CI image changes only the pinned scheduler expression:
 
 - Old: looping_call(self._censor_redactions, Duration(minutes=5))
 - Candidate: looping_call_now(self._censor_redactions, Duration(seconds=30))
@@ -32,4 +32,12 @@ This is a private implementation customization, NOT a supported homeserver confi
 
 No local test pass is claimed. The earlier short Node test call reported file-not-found before any TAP output. A read-only probe confirmed the file exists. Switching from discovery to direct ESM loading produced EPERM on lstat C:\ at Node module resolution, before the test module ran. Both calls exited 1; no further retries or permission bypass. This identifies a local ancestor-path permission block. It does not retroactively explain the earlier daemon restart or exit 1223 cancellation.
 
-The validation route is now working: [GitHub Actions source-check run 38123669253](https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38123669253), commit 3856e38, succeeded in 25 seconds on Node22/Linux. It extracted the exact pinned-image source, passed all nine source guards (0 failures/cancellations/skips), generated a temporary candidate and passed Python syntax parsing with runtime_executed=false. Temporary source cleanup passed. This resolves the task validation blockage without expanding local filesystem permission; the local Windows EPERM limitation remains. Next step is a separately bounded candidate-runtime startup/index/authorization experiment, not another unchanged source-test retry. Until runtime gates and operational approval, rollout, resource purchases, public staging changes and NCP deployment remain BLOCKED. WAL/backup/media/Android/human-OOB obligations remain unchanged.
+The validation route is now working: [GitHub Actions source-check run 38123669253](https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38123669253), commit 3856e38, succeeded in 25 seconds on Node22/Linux. It extracted the exact pinned-image source, passed all nine source guards (0 failures/cancellations/skips), generated a temporary candidate and passed Python syntax parsing with runtime_executed=false. Temporary source cleanup passed. This resolves the task validation blockage without expanding local filesystem permission; the local Windows EPERM limitation remains. The separately bounded candidate-runtime startup/ready-index/authorization pilot subsequently passed in run38124599670 (5ccf62d):3 control and3 pending-event clean restart samples. This does not validate index-not-ready branches,100/101 batching, abrupt crash or production. Until runtime gates and operational approval, rollout, resource purchases, public staging changes and NCP deployment remain BLOCKED. WAL/backup/media/Android/human-OOB obligations remain unchanged.
+
+## Runtime pilot follow-through
+
+[Candidate evidence](../experimental/matrix-cleanup-candidate/RESULTS.md): run38124599670 passed six predefined active-row samples. Control upper bounds24.777–29.491s; clean-restart upper bounds2.979–3.043s. Existing stock restart miss results are preserved, not superseded as success. First candidate run38124400500 failed at a harness cross-room status expectation before sample registration; fixed using official pinned native error behavior without changing authorization.
+
+Both jobs used the host-private internal Docker bridge; loopback publication stayed FAILED. The candidate source remains disabled outside explicit CI opt-in. No NCP or operating app configuration changed. The stronger terminal cleanup gate at614da25 passed in run38124904942 for both jobs, explicitly verifying private/build-directory and fixture-container absence. Its6/6 repeated functional samples passed:control24.928–30.044s; restart4.592–4.616s. Across the two successful pilots12/12 within300s, with no physical-erasure or SLA claim.
+
+Next bounded validation must separately exercise: (1) native index-not-ready and retry paths with controlled clock evidence; (2)100/101 eligible-row batching without altering the native100-row limit or weakening admission/rate limits; (3) same-pending-event repeated/abrupt restart and exact boundary observations; (4) policy-regression reruns on the candidate composition, not only native direct-client paths. Any unit/fake-clock result must be labeled separately from real encrypted-client/native-database evidence. A load test that cannot accumulate101eligible rows under the unchanged policy must not disable policy or claim that boundary tested. Public staging, Android/human OOB, WAL/backups/physical deletion and NCP capacity still block rollout.
