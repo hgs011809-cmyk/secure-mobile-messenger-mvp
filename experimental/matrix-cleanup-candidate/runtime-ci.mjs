@@ -40,7 +40,8 @@ function rawProbe(eventIds){
  return {eventIds,states:result.states,probeStartedAtMs:started,probeFinishedAtMs:finished};
 }
 function stoppedProbe(eventIds){
- const started=performance.now();const result=JSON.parse(execFileSync('docker',['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','256m','--cpus','1','--pids-limit','64','--label','com.docker.compose.project=matrix-server-integration','--mount','type=bind,source='+ci+'runtime,target=/data,readonly','--entrypoint','python','-i','matrix-cleanup-candidate:ci','-c',source],{input:JSON.stringify({event_ids:eventIds}),encoding:'utf8',timeout:10000,stdio:['pipe','pipe','ignore']}));const finished=performance.now();
+ assert(/^\d+$/.test(process.env.CI_UID??'')&&/^\d+$/.test(process.env.CI_GID??''));
+ const started=performance.now();const result=JSON.parse(execFileSync('docker',['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','256m','--cpus','1','--pids-limit','64','--user',process.env.CI_UID+':'+process.env.CI_GID,'--label','com.docker.compose.project=matrix-server-integration','--mount','type=bind,source='+ci+'runtime,target=/data,readonly','--entrypoint','python','-i','matrix-cleanup-candidate:ci','-c',source],{input:JSON.stringify({event_ids:eventIds}),encoding:'utf8',timeout:10000,stdio:['pipe','pipe','ignore']}));const finished=performance.now();
  assert(result&&Object.keys(result).length===1&&Array.isArray(result.states)&&result.states.length===eventIds.length&&result.states.every(s=>['encrypted','scrubbed'].includes(s)));
  return {eventIds,states:result.states,probeStartedAtMs:started,probeFinishedAtMs:finished};
 }
