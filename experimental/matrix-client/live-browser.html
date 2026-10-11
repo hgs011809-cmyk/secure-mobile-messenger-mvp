@@ -132,6 +132,9 @@ const api = {
     requireClient();await client.startClient({initialSyncLimit:50});
     await wait(()=>['PREPARED','SYNCING'].includes(client.getSyncState()),'sync');return true;
   },
+  async ownerStatus() {
+    const c=requireClient().getCrypto(),s=await c.getCrossSigningStatus();return {public:Boolean(s.publicKeysOnDevice),privateMaster:Boolean(s.privateKeysCachedLocally?.masterKey),privateSelf:Boolean(s.privateKeysCachedLocally?.selfSigningKey),privateUser:Boolean(s.privateKeysCachedLocally?.userSigningKey),ready:await c.isCrossSigningReady()};
+  },
   async bootstrap({password}) {
     // Synthetic initial-profile setup only. Never called on reopen or crypto loss.
     const crypto=requireClient().getCrypto();
