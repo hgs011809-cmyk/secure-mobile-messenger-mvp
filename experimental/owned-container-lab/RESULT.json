@@ -8,7 +8,11 @@
   "staticReview": {
     "task": "yOEJJJrbCF4U4lZY",
     "result": "PASS_after_init_and_ENV_fixes",
-    "runtimeProof": false
+    "runtimeProof": false,
+    "finalFix": {
+      "task": "yOEJJJrbCF4U4lZY",
+      "result": "PASS_static_only_CI4_failed"
+    }
   },
   "localContracts": {
     "tests": 4,
@@ -125,9 +129,53 @@
       },
       "actualPreviousOrNewFieldValuesPublished": false,
       "rawDiagnosticsPublished": false
+    },
+    {
+      "run": "38177830811",
+      "job": "114583871827",
+      "commit": "081a8ed3408c436f86e15ef119ff413aff87cded",
+      "status": "failed",
+      "jobDuration": "41s",
+      "sourcePolicyPins": 38,
+      "sourceGuards": "verified",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "bounds",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true,
+        "configComparison": "not_observed",
+        "hostConfigComparison": "not_observed",
+        "stateShape": "not_observed",
+        "changedConfigFields": [],
+        "changedHostConfigFields": []
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "bounds",
+        "countScope": "current_invocation_only_not_historical_resource_count",
+        "comparison": "not_observed"
+      },
+      "explicitOOMKillerEnabledRequested": true,
+      "fullConfigEqualityRetained": true,
+      "exactFailedBoundsMember": "not_disambiguated",
+      "rawDiagnosticsPublished": false
     }
   ],
-  "current": "explicit_enabled_OOM_killer_false_fixture_flag_pending_review_no_comparison_relaxation",
+  "current": "BLOCKED_STOPPED_NO_MORE_RUNTIME_OR_AUTOMATIC_CHAIN",
   "limits": [
     "not_actual_SDK_integration",
     "not_MXC_or_Internet_transfer",
@@ -140,5 +188,14 @@
     "task": "aiCGPxAcFKeIGjGg",
     "result": "create-time_defaults_evidenced_no_universal_start_rewrite_established",
     "actualRunnerDiffVerified": false
-  }
+  },
+  "acceptance": {
+    "contracts4of4": true,
+    "sourcePolicyPins38Verified": true,
+    "actualLifecycleCasesAccepted": 0,
+    "actualChildChromiumProofAccepted": false,
+    "independentCleanupAccepted": false,
+    "actualSDKIntegrationAccepted": false
+  },
+  "nextSafeStep": "Read-only review of exact Docker CLI/daemon resource representation across create/start; separately reviewed bounded design that preserves exact precreated identity and all resource/security constraints. New runtime only with renewed authorization; do not ignore bounds/full-record checks or use posthoc PID signals."
 }
