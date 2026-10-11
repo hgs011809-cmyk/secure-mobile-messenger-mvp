@@ -8,20 +8,20 @@
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
   "ownerSession": "oGsZGEuxVnzePWPk",
-  "status": "logical_budget_implementation",
+  "status": "logical_budget_linux_verified_backup_pending",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "logical_budget_independent_review_then_single_isolated_linux_CI",
+  "next": "next_scheduled_run_bounded_logical_budget_pending_bytes_peak_accounting_feasibility_no_core_changes",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T18:30:37.263Z",
+  "updatedAt": "2026-10-11T18:37:09.401Z",
   "implementationTask": "o7S4x9Ii9GiXS6wu",
   "independentReviewTask": "hjdadNlDTZLTVTcQ",
   "completed": [
@@ -36,11 +36,11 @@
     "new_sdk_authority_candidate_crossbinding_source_review_only",
     "new_actual_SDK_process_driver_source_candidate_reviewed_only",
     "new_live_CI_feasibility_blocker_source_review_only",
-    "new_startup_ownership_static_audit_independently_reviewed_no_runtime"
+    "new_startup_ownership_static_audit_independently_reviewed_no_runtime",
+    "new_six_logical_ciphertext_length_budget_cases_linux_verified_separate_helper_only"
   ],
   "pending": [
-    "logical_budget_source_backup",
-    "logical_budget_linux_CI"
+    "logical_budget_results_backup"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -254,8 +254,8 @@
     "backupCommit": "72d37b5a2945f05cb0fbf4bf3da94409977a35f8"
   },
   "logicalBudget": {
-    "status": "source_reviewed_revised_cleanup_review_pending",
-    "runtimeProof": false,
+    "status": "linux_verified_synthetic_application_accounting_only",
+    "runtimeProof": true,
     "expectedTests": 6,
     "fixtureBytes": 8388608,
     "chunkBytes": 262144,
@@ -268,6 +268,26 @@
     "initialReview": "PASS_prior_source_but_parent_rejected_posthoc_signaling",
     "cleanup": "readonly_scan_no_signals_failclosed",
     "sourcePolicyPins": 39,
-    "priorFilesUnchanged": 917
+    "priorFilesUnchanged": 917,
+    "sourceCommit": "b959d12841b5bfed389dadc4632622fb7794260e",
+    "finalReview": "PASS_revised_readonly_cleanup_source_only",
+    "workflowCommit": "cee9b9029c0d15fc8483fa041d743d5b6340a504",
+    "run": "38164502992",
+    "job": "114544128863",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flat": true,
+    "runnerExit": 0,
+    "prePostPins": 39,
+    "independentAlwaysCleanupVerified": true,
+    "ownedTestProcessesAlive": 0,
+    "ownedTestProcessesStopped": 0,
+    "containersCreated": 0,
+    "privateNamespaceAbsent": true,
+    "readOnlyCleanupNoSignals": true,
+    "screenshotSaved": true
   }
 }

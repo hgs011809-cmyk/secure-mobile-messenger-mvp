@@ -119,3 +119,6 @@ NEW read-only audit pins6/6,anchors10/10,textualorder3/3; implementer8e6rbieZ2fq
 
 ## Logical ciphertext file-length budget new candidate
 Six flat Linux cases expected, runtime0 until inspected CI.8MiB synthetic ciphertext/256KiB,complete source+cache16MiB logical lengths.Independent helper NOTreceiver/SDK/nativequota/security/concurrency/crash claim.Parent rejected unnecessary posthoc cleanup signaling;new cleanup readonly failclosed retainroot if live processes.39pre/post pins.Review taskhjdadNlDTZLTVTcQ.Onlynewfiles/checkpoints,existingcode/policies unchanged.
+
+## Logical budget6 Linux VERIFIED, separate helper only
+Run38164502992/job114544128863/sourceb959d12/workflowcee9b90:6pass0fail/cancel/skip,flat exit0,39pre/postpins.8MiB/256KiB complete source+cache16MiB logical regularfilelengths.Independent readonly cleanup live0/stopped0/children0/containers0/privateabsent.Parent removed posthoc signaling beforeCI;reviewPASS.917priorfilesunchanged.No receiver/SDK/nativequota/security/concurrency/crash/GB/RSS/physicalerase claim.Onephasecomplete,nextscheduledrunonly.

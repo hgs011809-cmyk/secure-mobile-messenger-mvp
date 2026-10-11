@@ -1,7 +1,14 @@
-# Synthetic logical ciphertext file-length budget candidate
+# Synthetic logical ciphertext file-length budget
 
-## Source candidate only
-Runtime tests executed: 0. Expected Linux tests: 6 flat top-level cases. No pass/fail or cleanup-runtime claim until aggregate CI and independent always-cleanup logs are inspected. No CI launched by implementation worker.
+## Inspected Linux evidence
+- Run https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38164502992 ; job114544128863. Sourceb959d12841b5bfed389dadc4632622fb7794260e,workflowcee9b9029c0d15fc8483fa041d743d5b6340a504. Single CI run, total12s/job9s/test3s.
+- Actual safe aggregate:6tests,6pass,0fail,0cancelled,0skipped;flat=true,runner_exit=0.39pre AND post exact source/policy pins verified.
+- Independent always cleanup inspected:ownedtestprocessesalive0,stopped0,childrencreated0,containerscreated0,readonlyprocessinspection=true,private_namespace_absent=true. Logical unlink,notphysicalerasure.
+- Independent review hjdadNlDTZLTVTcQ PASS revisedsourceonly; parent rejected initial inherited posthoc signal authority, implementer removed ALL signaling and regenerated pins before CI. No policy/core changes.
+- Initial Windows require-path EPERM retained; maincontext generator/syntaxonly,notruntime. Actions Node20deprecation/forcedNode24 warning separate from testNode22,no operationalfix.
+
+## Scope
+Implementation worker launched no CI; parent inspected runtime and cleanup above.
 
 New files only: logical-budget.mjs, logical-budget.spec.mjs, logical-budget-prepare.cjs, logical-budget-cleanup.cjs and isolated matrix-logical-budget-lab.yml. Existing receiver/attachment-stream/SDK/security policies unchanged. Helper is independent synthetic accounting, NOT wired into SyntheticReceiver or SDK.
 
