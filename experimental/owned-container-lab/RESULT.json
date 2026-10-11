@@ -1,0 +1,53 @@
+{
+  "phase": "precreated_owned_container_standalone",
+  "actualSDKIntegration": false,
+  "productionChanges": false,
+  "existingPoliciesChanged": false,
+  "autonomousWindowStillClosed": true,
+  "scope": "network-none CI-only genuine Node child and Chromium; exact precreated container authority",
+  "staticReview": {
+    "task": "yOEJJJrbCF4U4lZY",
+    "result": "PASS_after_init_and_ENV_fixes",
+    "runtimeProof": false
+  },
+  "localContracts": {
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "subprocessWorkloadLaunches": 0
+  },
+  "runs": [
+    {
+      "run": "38175781795",
+      "job": "114577758655",
+      "commit": "d78221f556bfd4e87ae9c36418f64e389dfd94b3",
+      "status": "failed",
+      "duration": "42s",
+      "sourcePolicyPins": 38,
+      "sourceGuards": "verified",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": "failed_unverified",
+      "cleanup": "failed_unverified",
+      "acknowledgedCreatedCount": "unknown",
+      "acknowledgedStartedCount": "unknown",
+      "completedLifecycleCases": "unknown",
+      "rawDiagnosticsPublished": false
+    }
+  ],
+  "current": "sanitized_diagnostic_instrumentation_pending",
+  "limits": [
+    "not_actual_SDK_integration",
+    "not_MXC_or_Internet_transfer",
+    "not_whole_app_or_key_restoration",
+    "not_physical_erasure",
+    "not_hard_runner_loss",
+    "not_production_readiness"
+  ]
+}

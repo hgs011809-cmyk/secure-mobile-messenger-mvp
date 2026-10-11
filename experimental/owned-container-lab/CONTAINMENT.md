@@ -1,6 +1,6 @@
 # CI-only owned-container containment experiment
 
-**Status: runtime pending.** No Docker build, test, browser, network or workload execution was performed while authoring these files. Availability of the parent-resolved Node image, public dependencies and exact Playwright 1.64.0 browser image inputs remains unknown until CI. Actual Matrix SDK integration remains **BLOCKED**. The SDK dependency is copied unchanged as part of the existing manifest/lock, not exercised by this fixture.
+**Status: actual runtime UNVERIFIED; independent cleanup FAILED in the first CI attempt.** No Docker build, test, browser, network or workload execution was performed by this author while writing or instrumenting these files. Parent-reported CI run `38175781795`, job `114577758655`, commit `d78221f` failed in 42 seconds: four flat contracts **4/4 passed**, image build took 34 seconds, `--run` failed in 1 second, independent cleanup failed in 0 seconds. The build completed there, but generic failure output established neither a runtime/cleanup PASS nor how many containers were created or started. No stage/cause or started count is inferred from duration. A bounded diagnostic CI rerun is pending. Actual Matrix SDK integration remains **BLOCKED**. The SDK dependency is copied unchanged as part of the existing manifest/lock, not exercised by this fixture.
 
 ## Ownership and integration boundary
 
@@ -31,7 +31,7 @@ Success stdout, one fixed JSON aggregate per CLI mode:
 {"status":"cleanup_verified","containersAbsent":true,"privateRootAbsent":true}
 ```
 
-Failure is exit code 1 with only `{"version":1,"status":"failed","reason":"containment_unverified"}`. No Docker/browser exceptions, namespace values, IDs, nonce, private-root paths, profiles, URLs or keys are forwarded. All Docker stdout/stderr and worker aggregates are captured in private 0600 files; successful cleanup deletes that root. Failed/ambiguous cleanup preserves evidence. Each Docker command capture is bounded to 4 MiB combined stdout/stderr; exceeding it aborts the client and fails unknown. Private-file reads also reject oversized files; this is not a disk quota proof.
+Failure is exit code 1 with only a whitelisted JSON object: fixed `status=failed`, `reason=containment_unverified`, `stage`, `gate`, integer `createdCount`, `startedCount`, `completedCount` (each 0..2), fixed-enum `networkMapObservation`, and boolean `imageEnvExpectedKeys`. Positive CLI aggregates and all admission rules are unchanged. Every pure-contract rejection retains Error.message `containment_unverified`. No Docker/browser exceptions, namespace values, IDs, nonce, private-root paths, profiles, URLs or keys are forwarded. All Docker stdout/stderr and worker aggregates are captured in private 0600 files; successful cleanup deletes that root. Failed/ambiguous cleanup preserves evidence. Each Docker command capture is bounded to 4 MiB combined stdout/stderr; exceeding it aborts the client and fails unknown. Private-file reads also reject oversized files; this is not a disk quota proof.
 
 ## Concrete confinement
 
@@ -63,4 +63,17 @@ Cleanup reloads private intent/ID/expected records, validates saved expectations
 
 Read-only residual scans by the recorded run label are **detection only**. Any residual output fails cleanup. An unrecorded container from an ambiguous create is unknown and is never killed by a discovered label/name. A missing not-yet-created record likewise fails unknown; partial-root cleanup is intentionally not silently certified. The private root is removed only after both recorded IDs are explicitly absent and residual scans are empty, followed by an explicit root ENOENT check. No root recreation/retry-as-empty can establish prior ownership.
 
-This supports only the recorded, standalone owned-container experiment. It does not establish absence of all host processes, containment after hard runner loss, physical power-loss durability, actual SDK integration, SDK 8 MiB behavior, decryption correctness, no-plaintext handling, RSS or quota exhaustion. SDK work remains BLOCKED; runtime evidence remains pending CI.
+This supports only the recorded, standalone owned-container experiment. It does not establish absence of all host processes, containment after hard runner loss, physical power-loss durability, actual SDK integration, SDK 8 MiB behavior, decryption correctness, no-plaintext handling, RSS or quota exhaustion. SDK work remains BLOCKED; genuine runtime and verified cleanup evidence remain pending a successful CI attempt.
+
+## Bounded failure diagnostics (no admission relaxation)
+
+`stage` is the current attempted phase, not a statement that a phase named `persisted` finished. It is strictly one of: `rootcheck`, `runempty`, `imageinspect`, `image_env_admission`, `intentspersisted`, `create`, `IDpersisted`, `created_security_admission`, `recordpersisted`, `start`, `gracefulwait`, `lingerready`, `probe`, `stop`, `cleanup_load`, `cleanup_stop`, `cleanup_remove`, `cleanup_absence`, `cleanup_residual`, `cleanup_rootremove`.
+
+`gate` is strictly one of: `root`, `image_env`, `saved_record`, `absence`, `docker_cli`, `identity_config`, `env`, `namespace_config`, `bounds`, `tmpfs`, `host_mounts`, `ports`, `image_volumes`, `mounts`, `network_map`, `image_identity`, `create_id`, `created_state`, `workload_output`, `workload_state`, `persistence`, `private_file`, `cleanup_residual`, `root_absence`, `cli_args`, `intent`. These codes are assigned internally before each corresponding admission group or operation, never copied from exception text, Docker output or environment. Unknown Docker CLI transport/exit/parse failures map to `docker_cli`. Cleanup continues its independent exact-ID attempts but preserves its first failure projection, rather than overwriting it with the last attempt.
+
+Counters are local to this CLI invocation. `createdCount` increments only after successful Docker create and a full validated ID response; `startedCount` only after a successful Docker start response; `completedCount` only after validating the case output and required actual terminal exit state. No counter increments on ambiguous timeout, label scan or saved-record inference. Independent cleanup therefore does not manufacture run counters from old records.
+
+`networkMapObservation` discloses only `empty`, `none_only`, `other` or `missing`, based on the inspected network map's key shape; no network names or values are forwarded. It defaults to `missing` before observation. `imageEnvExpectedKeys` reports only whether the inspected image environment has exactly the four expected unique key names; it discloses no values or unknown key strings and is false before observation. A true boolean does not certify value admission.
+
+Strict `Networks` admission still requires exactly `none`; neither an empty pre-start map nor unknown Docker normalization is guessed acceptable. This diagnostic change is not a fix for the first runtime failure's unknown cause and provides no new containment PASS. The parent may project only this fixed failure schema for one bounded diagnostic CI rerun; raw captures remain private.
+
