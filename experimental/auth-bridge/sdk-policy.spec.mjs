@@ -164,3 +164,10 @@ test('SDK to-device optional message id stays bounded without widening recipient
  const encrypted={algorithm:'m.olm.v1.curve25519-aes-sha2',sender_key:b64(1),ciphertext:{[b64(2)]:{type:0,body:b64(3)}},'org.matrix.msgid':'sdk-message-2'};
  assert.ok(request('PUT',root+'/sendToDevice/m.room.encrypted/tx2',toDevice(encrypted)));assert.equal(request('PUT',root+'/sendToDevice/m.room.encrypted/tx2',toDevice({...encrypted,'org.matrix.msgid':null})),null);
 });
+
+test('SAS v2 compatibility name and opaque JSON transaction id do not widen URI or algorithms',()=>{
+ const p=root+'/sendToDevice/m.key.verification.start/tx-safe',c={from_device:'A',method:'m.sas.v1',key_agreement_protocols:['curve25519-hkdf-sha256'],hashes:['sha256'],message_authentication_codes:['hkdf-hmac-sha256.v2','org.matrix.msc3783.hkdf-hmac-sha256'],short_authentication_string:['decimal','emoji'],transaction_id:'opaque/JSON+id=='};
+ assert.ok(request('PUT',p,toDevice(c)));assert.equal(request('PUT',p,toDevice({...c,message_authentication_codes:['unknown-mac']})),null);
+ for(const value of ['',null,'x'.repeat(129),'unsafe\u0000id'])assert.equal(request('PUT',p,toDevice({...c,transaction_id:value})),null);
+ assert.equal(request('PUT',p.replace('tx-safe','unsafe%2Fid'),toDevice(c)),null);assert.equal(request('PUT',p,{messages:{'@b:lab':{'*':c}}}),null);
+});

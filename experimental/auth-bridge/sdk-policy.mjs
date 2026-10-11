@@ -101,11 +101,11 @@ function sasContent(type, c, own) {
     accept: ['method', 'key_agreement_protocol', 'hash', 'message_authentication_code', 'short_authentication_string', 'commitment', 'transaction_id'],
     key: ['key', 'transaction_id'], mac: ['mac', 'keys', 'transaction_id'], done: ['transaction_id'], cancel: ['code', 'reason', 'transaction_id']
   };
-  if (!fields(c, [...schemas[name], 'org.matrix.msgid'], schemas[name]) || Object.hasOwn(c,'org.matrix.msgid')&&!text(c['org.matrix.msgid'],128) || !text(c.transaction_id, 128) || (Object.hasOwn(c, 'from_device') && c.from_device !== own.matrixDeviceId)) return false;
+  if (!fields(c, [...schemas[name], 'org.matrix.msgid'], schemas[name]) || Object.hasOwn(c,'org.matrix.msgid')&&!text(c['org.matrix.msgid'],128) || !token(c.transaction_id, 128) || (Object.hasOwn(c, 'from_device') && c.from_device !== own.matrixDeviceId)) return false;
   const list = (x, values) => Array.isArray(x) && x.length > 0 && x.length <= 8 && new Set(x).size === x.length && x.every(v => values.includes(v));
   if (name === 'request' || name === 'ready') return list(c.methods, ['m.sas.v1']) && (name !== 'request' || Number.isSafeInteger(c.timestamp) && c.timestamp >= 0);
-  if (name === 'start') return c.method === 'm.sas.v1' && list(c.key_agreement_protocols, ['curve25519-hkdf-sha256', 'curve25519']) && list(c.hashes, ['sha256']) && list(c.message_authentication_codes, ['hkdf-hmac-sha256.v2', 'hkdf-hmac-sha256']) && list(c.short_authentication_string, ['decimal', 'emoji']);
-  if (name === 'accept') return c.method === 'm.sas.v1' && ['curve25519-hkdf-sha256', 'curve25519'].includes(c.key_agreement_protocol) && c.hash === 'sha256' && ['hkdf-hmac-sha256.v2', 'hkdf-hmac-sha256'].includes(c.message_authentication_code) && list(c.short_authentication_string, ['decimal', 'emoji']) && b64(c.commitment, 32);
+  if (name === 'start') return c.method === 'm.sas.v1' && list(c.key_agreement_protocols, ['curve25519-hkdf-sha256', 'curve25519']) && list(c.hashes, ['sha256']) && list(c.message_authentication_codes, ['hkdf-hmac-sha256.v2', 'org.matrix.msc3783.hkdf-hmac-sha256', 'hkdf-hmac-sha256']) && list(c.short_authentication_string, ['decimal', 'emoji']);
+  if (name === 'accept') return c.method === 'm.sas.v1' && ['curve25519-hkdf-sha256', 'curve25519'].includes(c.key_agreement_protocol) && c.hash === 'sha256' && ['hkdf-hmac-sha256.v2', 'org.matrix.msc3783.hkdf-hmac-sha256', 'hkdf-hmac-sha256'].includes(c.message_authentication_code) && list(c.short_authentication_string, ['decimal', 'emoji']) && b64(c.commitment, 32);
   if (name === 'key') return b64(c.key, 32);
   if (name === 'mac') return obj(c.mac) && Object.keys(c.mac).length > 0 && Object.keys(c.mac).length <= 3 && Object.entries(c.mac).every(([k,v]) => /^ed25519:[A-Za-z0-9+/_=-]{1,128}$/.test(k) && b64(v, 32)) && b64(c.keys, 32);
   return name === 'done' || name === 'cancel' && text(c.code, 128) && token(c.reason, 256);
