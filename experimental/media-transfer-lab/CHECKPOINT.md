@@ -15,3 +15,9 @@ Offline Windows loader: authored direct-offline-runner.cjs in Node main context 
 
 ## Latest attachment milestone
 Final45/45Linux38146403716,a51e91f/source9868544;Core/ref40+newroundtrip5. Independentcleanupverified;source/licensehashguardsverified. Model16MiBstandalone+8MiBroundtrip. DESTRUCTIVEhandoffNOTcrashsafe; nextnon-destructive8MiBfixture<=24MiBliveciphertextplanned. Authenticatedroomdescriptorstillfixture; actualSDKmedia/Android/browser/GB/RSS/erasure/operations remainunverified. RoutinezAPhQviMivWCZoJp once2026-10-11T14:30:29Z,guardedsynthetic-only,noautochain.
+
+## Preserving handoff follow-up
+New source9892ac9443bf106bf686f6eef0676b30fb477468; exactly5 POSIX-only tests, Linux pending. Windows eligible/loading and independent review recorded ATTACHMENT_HANDOFF_RESULTS.md. Prior failures/evidence unchanged. No operations or actual SDK/auth approval. Stop after bounded milestone; no autochain.
+
+## Bounded handoff milestone complete
+Linux new5=5/5,0fail/skip;38148000046,workflowe89e750,source9892ac9. Source/reference/license guards and private cleanup inspected. One bounded CI run, no second run/autochain. Logical ciphertext retention only,24MiB ceiling on8MiB fixture,not crash/physical/RSS proof. Windows eligible50=25pass/25skip/0fail,new5allskip. Independent code/workflow read-only reviews complete. Priorstockcleanup/timeouts unchanged. Specificvalidation/approval required for blocked integration/operations.
