@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_run_NEW_isolated_Linux_candidate_feasibility_workflow_review_cleanup_no_deadline_weakening",
+  "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -267,6 +267,39 @@
     "redactionAcceptance": "BLOCKED_cause_UNKNOWN_not_counted",
     "parentPlaintextIntegration": false,
     "priorFilesUnchanged": 914,
-    "updatedAt": "2026-10-11T17:53:05.030Z"
+    "updatedAt": "2026-10-11T17:53:05.030Z",
+    "backupCommit": "14746056e41c18b240f5809046181ce3078ade37"
+  },
+  "sdkProcessLiveCIFeasibility": {
+    "status": "blocked_before_runtime_source_reviewed",
+    "implementationTask": "sFBtISyInx11uDWl",
+    "reviewTask": "qPgWYH4XQxJ7nWaG",
+    "sourceReview": "PASS_blocker_disposition_only",
+    "files": [
+      "experimental/matrix-client/sdk-process-live-prepare.cjs",
+      "experimental/matrix-client/sdk-process-live-cleanup.cjs",
+      "experimental/matrix-client/SDK_PROCESS_LIVE_CI.md",
+      ".github/workflows/matrix-sdk-process-live-lab.yml"
+    ],
+    "runtimeTests": 0,
+    "newCI": false,
+    "sourcePins": 134,
+    "syntaxModules": 2,
+    "priorFilesUnchanged": 919,
+    "planningOnly": {
+      "expected": 1,
+      "executed": 0,
+      "pass": 0,
+      "fail": 0,
+      "cancelled": 0,
+      "skip": 1
+    },
+    "blockers": [
+      "Chromium_birth_PID_start_exe_fullargv_marker_absent",
+      "fork_before_worker_marker_recording_gap",
+      "foundation_cleanup_nested_receiver_root_incompatible"
+    ],
+    "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
+    "updatedAt": "2026-10-11T18:06:59.708Z"
   }
 }

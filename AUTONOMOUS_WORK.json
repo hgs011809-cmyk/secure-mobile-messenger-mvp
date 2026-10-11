@@ -8,20 +8,20 @@
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
   "ownerSession": null,
-  "status": "live_driver_candidate_reviewed",
+  "status": "blocked_before_runtime_source_reviewed",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "next_run_NEW_isolated_Linux_candidate_feasibility_workflow_review_cleanup_no_deadline_weakening",
+  "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T17:53:27.197Z",
+  "updatedAt": "2026-10-11T18:07:17.029Z",
   "implementationTask": "AoDsAv7AlpsPjZge",
   "independentReviewTask": "Txww4PHQqAlPd7Xn",
   "completed": [
@@ -34,15 +34,17 @@
     "read_only_sdk_to_child_design_candidate_independently_reviewed_no_runtime",
     "synthetic_ipc_foundation_six_linux_verified_only",
     "new_sdk_authority_candidate_crossbinding_source_review_only",
-    "new_actual_SDK_process_driver_source_candidate_reviewed_only"
+    "new_actual_SDK_process_driver_source_candidate_reviewed_only",
+    "new_live_CI_feasibility_blocker_source_review_only"
   ],
   "pending": [
-    "lab_branch_live_candidate_backup"
+    "branch_backup_reviewed_blocker"
   ],
   "blocked": [
     "actual_MXC_ingress",
     "production_and_cloud_actions",
-    "sdk_child_integration_claim_until_fresh_authority_binding_latch_lifecycle_runtime_proof"
+    "sdk_child_integration_claim_until_fresh_authority_binding_latch_lifecycle_runtime_proof",
+    "actualSDK_runtime_exact_startup_ownership_cleanup_missing"
   ],
   "lastResult": {
     "status": "linux_verified",
@@ -87,8 +89,8 @@
     "screenshotSaved": true,
     "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
-  "lastOwnerSession": "tGkZlk2kU6Ti2Py6",
-  "checkpointCommit": "55fc82e68c940e286f07b12e359be6daba26318e",
+  "lastOwnerSession": "2AKAKDoeQ1wQ03Od",
+  "checkpointCommit": "14746056e41c18b240f5809046181ce3078ade37",
   "investigationTask": "bZcgUyvsP90GFDUL",
   "sdkProcessFeasibility": {
     "status": "conditional_candidate_not_established",
@@ -186,6 +188,40 @@
     "redactionAcceptance": "BLOCKED_cause_UNKNOWN_not_counted",
     "parentPlaintextIntegration": false,
     "priorFilesUnchanged": 914,
-    "updatedAt": "2026-10-11T17:53:05.030Z"
+    "updatedAt": "2026-10-11T17:53:05.030Z",
+    "backupCommit": "14746056e41c18b240f5809046181ce3078ade37"
+  },
+  "sdkProcessLiveCIFeasibility": {
+    "status": "blocked_before_runtime_source_reviewed",
+    "implementationTask": "sFBtISyInx11uDWl",
+    "reviewTask": "qPgWYH4XQxJ7nWaG",
+    "sourceReview": "PASS_blocker_disposition_only",
+    "files": [
+      "experimental/matrix-client/sdk-process-live-prepare.cjs",
+      "experimental/matrix-client/sdk-process-live-cleanup.cjs",
+      "experimental/matrix-client/SDK_PROCESS_LIVE_CI.md",
+      ".github/workflows/matrix-sdk-process-live-lab.yml"
+    ],
+    "runtimeTests": 0,
+    "newCI": false,
+    "sourcePins": 134,
+    "syntaxModules": 2,
+    "priorFilesUnchanged": 919,
+    "planningOnly": {
+      "expected": 1,
+      "executed": 0,
+      "pass": 0,
+      "fail": 0,
+      "cancelled": 0,
+      "skip": 1
+    },
+    "blockers": [
+      "Chromium_birth_PID_start_exe_fullargv_marker_absent",
+      "fork_before_worker_marker_recording_gap",
+      "foundation_cleanup_nested_receiver_root_incompatible"
+    ],
+    "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
+    "updatedAt": "2026-10-11T18:06:59.708Z",
+    "inspectionUnknownFailClosedFix": true
   }
 }
