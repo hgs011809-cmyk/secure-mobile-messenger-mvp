@@ -30,7 +30,7 @@ jobs:
           private_root="$(mktemp -d "${RUNNER_TEMP:?}/synthetic-media.XXXXXX")"
           chmod 700 "$private_root"
           printf 'PRIVATE_MEDIA_ROOT=%s\nTMPDIR=%s\n' "$private_root" "$private_root" >> "$GITHUB_ENV"
-      - name: Offline ciphertext transport, voice state and unchanged ingress regression
+      - name: Ciphertext transport, loopback TCP disconnect, voice state and unchanged ingress
         shell: bash
         working-directory: experimental/media-transfer-lab
         run: |
@@ -38,16 +38,16 @@ jobs:
           umask 077
           node -e 'const fs=require("node:fs"),os=require("node:os");if(fs.realpathSync(os.tmpdir())!==fs.realpathSync(process.env.PRIVATE_MEDIA_ROOT))process.exit(1);console.log("temporary_namespace=verified");'
           log="$PRIVATE_MEDIA_ROOT/test-output.log"
-          if ! node --test --test-concurrency=1 receiver.spec.mjs voice-policy.spec.mjs ingress-regression.spec.mjs > "$log" 2>&1; then
+          if ! node --test --test-concurrency=1 receiver.spec.mjs voice-policy.spec.mjs ingress-regression.spec.mjs network.spec.mjs > "$log" 2>&1; then
             echo 'offline_boundary_tests=failed; diagnostics_suppressed=true'
             exit 1
           fi
-          grep -qx '# tests 59' "$log"
-          grep -qx '# pass 59' "$log"
+          grep -qx '# tests 74' "$log"
+          grep -qx '# pass 74' "$log"
           grep -qx '# fail 0' "$log"
           grep -qx '# skipped 0' "$log"
-          echo 'offline_tests=59; pass=59; fail=0; skipped=0; ciphertext_fixture_bytes=67108864; processed_payload_bytes=262144'
-          echo 'actual_voice_call=false; actual_network_disconnect=false; matrix_media_integration=false; production_changes=false'
+          echo 'synthetic_tests=74; pass=74; fail=0; skipped=0; ciphertext_fixture_bytes=67108864; processed_payload_bytes=262144; loopback_transfer_bytes=8388608'
+          echo 'actual_voice_call=false; actual_internet_disconnect=false; actual_loopback_tcp_disconnect=true; matrix_media_integration=false; production_changes=false'
       - name: Independently verify private files removed
         if: always()
         shell: bash
