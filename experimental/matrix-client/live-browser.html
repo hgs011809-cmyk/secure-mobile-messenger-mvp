@@ -98,7 +98,7 @@ function checkPeer(peer, device) {
   if (peer !== bound.peer || device !== bound.device) throw new Error('verification_binding_mismatch');
 }
 const api = {
-  async start({user_id, device_id, access_token}) {
+  async start({user_id, device_id, access_token, deferSync=false}) {
     if (client) throw new Error('already_started');
     progress.textContent = 'Starting';
     // Credentials are only passed in memory by the synthetic CI driver, never read from the URL.
@@ -124,10 +124,13 @@ const api = {
       sweep();
     });
     client.on('sync', state => { if (state === 'SYNCING' || state === 'PREPARED') sweep(); });
-    await client.startClient({initialSyncLimit:50});
-    await wait(() => ['PREPARED','SYNCING'].includes(client.getSyncState()), 'sync');
+    if(!deferSync)await api.resume();
     progress.textContent = 'Ready';
     return true;
+  },
+  async resume() {
+    requireClient();await client.startClient({initialSyncLimit:50});
+    await wait(()=>['PREPARED','SYNCING'].includes(client.getSyncState()),'sync');return true;
   },
   async bootstrap({password}) {
     // Synthetic initial-profile setup only. Never called on reopen or crypto loss.
