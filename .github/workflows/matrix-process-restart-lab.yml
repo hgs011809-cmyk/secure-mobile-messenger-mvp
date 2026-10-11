@@ -1,0 +1,69 @@
+name: Synthetic encrypted receiver real-process boundaries
+on:
+  workflow_dispatch:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths:
+      - '.github/workflows/matrix-process-restart-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: synthetic-process-restart-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  restart:
+    if: github.ref == 'refs/heads/lab-matrix-cleanup-followup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Owner-only private namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          private_root="$(mktemp -d "${RUNNER_TEMP:?}/synthetic-restart.XXXXXX")"
+          chmod 700 "$private_root"
+          printf 'PRIVATE_ATTACHMENT_ROOT=%s\nTMPDIR=%s\n' "$private_root" "$private_root" >> "$GITHUB_ENV"
+      - name: Exact source and unchanged policy guards
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$GITHUB_REF" = 'refs/heads/lab-matrix-cleanup-followup'
+          node -e 'const f=require("node:fs"),c=require("node:crypto"),o=require("node:os"),p=require("node:path"),r=process.env.PRIVATE_ATTACHMENT_ROOT,s=f.lstatSync(r);if(f.realpathSync(o.tmpdir())!==f.realpathSync(r)||(s.mode&4095)!==448||s.uid!==process.getuid()||s.isSymbolicLink())process.exit(1);const pins={"experimental/matrix-client/descriptor-hooks.inc.mjs":"141c222b64b02e336950aa9dd8acb5cfca757a3b351d4aebcb10d8b0c5514554","experimental/matrix-client/descriptor-driver.inc.mjs":"92c18995a76d507f5d056428b9087954e06a9027bbc3083ca933517370585ae8","experimental/matrix-client/descriptor-fixture.inc.mjs":"9358cd1dc9c2b4bdcb997aa246d4324749f4bfd1e80c457037041c7d14fe4582","experimental/matrix-client/descriptor-browser.html":"f6b4418a21eb653bfc4e7893dea90f3cae10a2e6cbd8c66cb9f6cb6f1a8936c9","experimental/matrix-client/descriptor-build.mjs":"84729488b5adc137e4b131fe469609b18cd449ddf3ba374afbb6ff5307f6942e","experimental/matrix-client/descriptor-composed-ci.mjs":"402ef61d8d7f52e121d3a4409bffadb079f4291424631126c65346f049ce51fc","experimental/matrix-client/descriptor-receipt.mjs":"44e5f862245629caf83f080430c47cfd9a77cac148a6f5f6d70cce9e10a84fb4","experimental/matrix-client/descriptor-receipt.spec.mjs":"7a8505bf52983671fcfbc086ce226c1289b82f45e1916d042ff99a3705c51b18","experimental/media-transfer-lab/attachment-stream.mjs":"1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6","experimental/matrix-client/conversation.mjs":"5703ee41c6de769d65427621ec1d771a58a492e145c7a66cf3ff5648724cbb98","experimental/matrix-client/client.mjs":"f9f29e0b6ba52f297003673bc1a6f481bb29d9f6cc6c37a9842b12f9c3acc5d5","experimental/auth-bridge/sdk-binding.mjs":"e505214ec1020d676a310da283f5d3387c48086dbf507e3f8fedbbd2dd281503","experimental/auth-bridge/sdk-policy.mjs":"e6b9bf86b45cb38d8829e9ac35c7f1534783bf9b9077ddad862681261db3a4d3","experimental/auth-bridge/sdk-ingress.mjs":"d2c415e09cc10662ba84984e719ff277b6a6f0eae537bcda58d93b6a18b1a735","experimental/matrix-client/transport-pipeline.mjs":"07cafe5952aaf48839810b881674a44d2778111dc5c9e36e33f7a33dd2e6656d","experimental/matrix-client/transport-pipeline.spec.mjs":"fc6f3e1e144a121748118c10ac7fa20a95aa47dc5cded58eeedfd939bdfd3094","experimental/matrix-client/transport-hooks.inc.mjs":"bf201dea666c5d1111a0ab3d10df6468b5934d5c97050735983a837b8d682876","experimental/matrix-client/transport-browser.html":"8dd69fccc470ff1ed08c53ec4fd06e819db650878ef8757b085d32dee093ea18","experimental/matrix-client/transport-build.mjs":"1f25714516cb8341279fb7f779fee26a4b3ce7fc20237011e3ed2156d4806059","experimental/matrix-client/transport-prefix.inc.mjs":"7666a81d76d8a16dfd0ad6c161de73d94a9ee74cb39ee7d0f05be1cd2e8a2c39","experimental/matrix-client/transport-driver.inc.mjs":"af04cb26658fa228581f84754349cf76a5d5f07c55eb59cabc0e02ffb0569422","experimental/matrix-client/transport-revoke.inc.mjs":"b1a81c2f1726f1689da309b61e42d5348d6a053909a114d828333692c1712183","experimental/matrix-client/transport-composed-ci.mjs":"f13f7b42278e8448e4ed97e056473ca01c59afa21785456b3eb3a84d3d1dab88","experimental/media-transfer-lab/receiver.mjs":"deb1110aa3d43cfbd9cad917f577412812fc922579e523d328bab101ade71842","experimental/auth-bridge/broker.mjs":"837b7a35d36b75552c220afb835444f7c994a771bde16336c28117ef69907916","experimental/auth-bridge/lifecycle.mjs":"19df008875b8cb2569bb79dbfc3ab3ec0ec83051578cd31656371114e0e05512","experimental/auth-bridge/store.mjs":"1daf59dc1710b902280fa3eee16cdfd74e5ea1511ad12614ea08d875a0607c89","experimental/auth-bridge/synapse-lab-issuer.mjs":"69e469d64675edbdf7695a0aab7012b1c7adb80684ab62617ec584c36f315277","experimental/media-transfer-lab/process-restart-worker.mjs":"68e724111aeecff964f586a498b8248972421e0647e19007b9aa5c284e03130f","experimental/media-transfer-lab/process-restart.spec.mjs":"3fb97f356325cc48975a798722dfff13ae20599dc2ad373f04178e3fc6568992","experimental/media-transfer-lab/process-restart-cleanup.cjs":"14878ea6b21231f06c6c485ecf466ba623ae45866836c1a41ef3466e16f9e36d"};for(const [n,h]of Object.entries(pins))if(c.createHash("sha256").update(f.readFileSync(p.join(process.env.GITHUB_WORKSPACE,n))).digest("hex")!==h)process.exit(1);console.log("source_policy_guard_files=31; verified=true; unchanged_policy=true");' > "$PRIVATE_ATTACHMENT_ROOT/guard.log" 2>&1 || { echo 'source_policy_guards=failed; raw_diagnostics_suppressed=true'; exit 1; }
+          rm -- "$PRIVATE_ATTACHMENT_ROOT/guard.log"
+          echo 'source_policy_guard_files=31; verified=true; unchanged_policy=true'
+      - name: Four actual child-process fixture cases
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          log="$PRIVATE_ATTACHMENT_ROOT/test-output.log"
+          if ! timeout --kill-after=5s 150s node --test --test-concurrency=1 process-restart.spec.mjs > "$log" 2>&1; then
+            node -e 'const f=require("node:fs"),t=f.readFileSync(process.argv[1],"utf8");console.log(JSON.stringify({process_tests_failed:true,failed_case_indexes:[...t.matchAll(/^not ok ([0-9]+) -/gm)].map(m=>Number(m[1])),raw_diagnostics_suppressed:true}));' "$log"
+            exit 1
+          fi
+          grep -qx '# tests 4' "$log"
+          grep -qx '# pass 4' "$log"
+          grep -qx '# fail 0' "$log"
+          grep -qx '# cancelled 0' "$log"
+          grep -qx '# skipped 0' "$log"
+          node process-restart-cleanup.cjs --check-only
+          node -e 'const f=require("node:fs"),n=f.readdirSync(process.env.PRIVATE_ATTACHMENT_ROOT);if(n.length!==1||n[0]!=="test-output.log")process.exit(1);console.log("fixture_namespaces_absent_after_tests=true");'
+          echo 'process_restart_tests=4; pass=4; fail=0; cancelled=0; skipped=0; fixture_bytes=8388608; chunk_ceiling=262144; fresh_OS_processes=true; clean_exit_boundary=true; SIGKILL_acknowledged_idle_boundary=true; retry_idempotent=true; complete_hash_and_stream_decrypt=true; source_and_ciphercache_preserved=true; fresh_mock_authorization_denial=true; changed_manifest_denial=true'
+          echo 'authorization=mock_fixture_only; actual_SDK_in_this_suite=false; actual_media=false; Android=false; midwrite_crash_recovery=false; power_loss_durability=false; filesystem_repair=false; atomic_authorization=false; RSS_GB=false; physical_erasure=false; production_changes=false'
+      - name: Independent owned-worker and private namespace cleanup
+        if: always()
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          node process-restart-cleanup.cjs
