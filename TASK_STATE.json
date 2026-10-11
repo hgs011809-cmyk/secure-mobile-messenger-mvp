@@ -1,5 +1,5 @@
 {
-  "phase": "owned_container_CI5_diagnostic_complete_contract_revision_approval_required",
+  "phase": "new_phase_contract_explicitly_approved_readonly_preflight_ready",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Do not repeat false/omitted CLI variants. Obtain explicit approval and independent review for a NEW phase-bound contract fixture, exact planned complete snapshots before birth plus live container/cgroup identity and kernel limit correlation; solve stopped-case evidence limits. Existing strict fixture remains blocked. Engine version remains other_version, not pinned source proof.",
+  "next": "Run readonly no-container exactengineversion preflight; finish no-privilege liveownership design review before implementation",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -647,5 +647,16 @@
     "authorizationScope": "one_diagnostic_trial_under_unchanged_strict_contract",
     "contractRevisionRequiresNewApproval": true,
     "engineProvisioningRequiresNewApproval": true
+  },
+  "newPhaseContract": {
+    "userApproved": true,
+    "scope": "separate_new_contract_design_implementation_review_isolated_CI",
+    "existingStrictFixturePreservedBlocked": true,
+    "engineProvisioningAuthorized": false,
+    "privilegeGrantAuthorized": false,
+    "SDKAuthorized": false,
+    "preflightOnly": true,
+    "kernelProofAccepted": false,
+    "runtimeProofAccepted": false
   }
 }
