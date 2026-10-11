@@ -26,6 +26,22 @@ export class EncryptedConversation {
     const verification=await crypto.getDeviceVerificationStatus(this.peerUserId,this.peerDeviceId);
     if(!verification?.isVerified())throw new Error('peer_device_verification_required');
   }
+  async assertReceiveAllowed(event){
+    // Decryption alone is not authentication or authorization to display.
+    await this.assertSendAllowed();
+    const sender=event.getSender(),me=this.client.getUserId();
+    if(![me,this.peerUserId].includes(sender))throw new Error('unexpected_sender');
+    const crypto=this.client.getCrypto();
+    const devices=(await crypto.getUserDeviceInfo([sender],true)).get(sender);
+    const id=sender===me?this.client.getDeviceId():this.peerDeviceId,device=devices?.get(id);
+    if(devices?.size!==1||!device)throw new Error('sender_device_binding_required');
+    // These keys come from the decrypted Olm-established Megolm session, not
+    // the event's caller-controlled content.device_id or deprecated sender_key.
+    if(!event.getSenderKey?.()||event.getSenderKey()!==device.getIdentityKey?.()||
+       !event.getClaimedEd25519Key?.()||event.getClaimedEd25519Key()!==device.getFingerprint?.())throw new Error('sender_crypto_key_mismatch');
+    const info=await crypto.getEncryptionInfoForEvent(event);
+    if(!info||info.shieldColour!==0||info.shieldReason!==null)throw new Error('event_authenticity_required');
+  }
   assertDeleteAllowed(){
     const room=this.client.getRoom(this.roomId),me=this.client.getUserId();
     if(!room||room.getMyMembership()!=='join')throw new Error('not_joined');
@@ -54,6 +70,9 @@ export class EncryptedConversation {
     if(!event.isEncrypted()||event.getType()!=='m.room.message'||event.isDecryptionFailure())return;
     if(![this.client.getUserId(),this.peerUserId].includes(event.getSender()))return;
     const content=event.getContent();if(content.msgtype!=='m.text'||typeof content.body!=='string')return;
+    try{await this.assertReceiveAllowed(event);}catch{this.clearMemory();return;}
+    // Trust lookups are async: a concurrent deletion must still win.
+    if(this.hiddenIds.has(id)||(await this.ledger.get(this.roomId,id))){this.messages.delete(id);this.onUpdate(this.snapshot());return;}
     this.messages.set(id,{id,sender:event.getSender(),body:content.body,timestamp:event.getTs()});
     this.onUpdate(this.snapshot());
   }

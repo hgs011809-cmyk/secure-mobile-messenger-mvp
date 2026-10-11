@@ -9,4 +9,5 @@ const cryptoEntry=fileURLToPath(import.meta.resolve('@matrix-org/matrix-sdk-cryp
 await fs.copyFile(path.join(path.dirname(cryptoEntry),'pkg/matrix_sdk_crypto_wasm_bg.wasm'),path.join(root,'dist/pkg/matrix_sdk_crypto_wasm_bg.wasm'));
 await fs.copyFile(path.join(root,'deletion-ledger.mjs'),path.join(root,'dist/deletion-ledger.mjs'));
 await fs.copyFile(path.join(root,'browser-smoke.html'),path.join(root,'dist/index.html'));
+await fs.copyFile(path.join(root,'live-browser.html'),path.join(root,'dist/live.html'));
 console.log('Browser SDK bundle and WASM asset built. This is a loopback-only development harness.');

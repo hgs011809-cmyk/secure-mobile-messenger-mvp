@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<title>Synthetic Matrix loopback harness</title>
+<body>
+<h1>Synthetic Matrix loopback harness</h1>
+<p>Development CI only. Not production admission integration. Never use real credentials or messages.</p>
+<p id="progress" role="status">Loading</p>
+<script type="module">
+// This page intentionally suppresses console output before importing the SDK bundle:
+// SDK internals may use their global logger rather than the factory's silent logger.
+// Do not enable SDK/WASM logging, browser tracing, or credential-bearing URL parameters.
+for (const method of ['log','info','warn','error','debug','trace','dir','table']) console[method] = () => {};
+const progress = document.getElementById('progress');
+if (location.protocol !== 'http:' || !['127.0.0.1','localhost'].includes(location.hostname)) {
+  progress.textContent = 'Loopback only';
+  throw new Error('loopback_lab_only');
+}
+const {createLabClient, bindLabConversation} = await import('./client.mjs');
+// SDK43 public VerificationPhase enum values. No raw WASM objects or trust setters.
+const Phase = Object.freeze({Ready:3, Started:4, Cancelled:5, Done:6});
+let client, conversation, bound, request, verifier, callbacks;
+let verificationDone = false, verificationFailed = false, feedFailed = false;
+let feedQueue = Promise.resolve();
+const watchedEvents = new WeakSet();
+const nap = () => new Promise(resolve => setTimeout(resolve, 100));
+async function wait(check, label, {verification = false} = {}) {
+  const deadline = Date.now() + 60000;
+  while (Date.now() < deadline) {
+    if (feedFailed) throw new Error('live_ingest_failed');
+    if (verification && verificationFailed) throw new Error('verification_failed');
+    const result = await check();
+    if (result) return result;
+    await nap();
+  }
+  throw new Error(label + '_timeout');
+}
+function requireClient() {
+  if (!client) throw new Error('start_required');
+  return client;
+}
+function requireConversation() {
+  if (!conversation || !bound) throw new Error('bind_required');
+  return conversation;
+}
+function requireRequest() {
+  if (!request) throw new Error('verification_request_required');
+  return request;
+}
+function activeRequest(value) {
+  return value && value.phase !== Phase.Cancelled && value.phase !== Phase.Done;
+}
+function resetVerification(value) {
+  request = value;
+  verifier = undefined;
+  callbacks = undefined;
+  verificationDone = false;
+  verificationFailed = false;
+}
+function ingest(event) {
+  const target = conversation;
+  if (!target || event.getRoomId() !== bound?.room) return Promise.resolve();
+  // Only memory contains event/plaintext data. The adapter's ledger stores deletion metadata.
+  const task = feedQueue.then(() => target.ingest(event));
+  feedQueue = task.catch(() => { feedFailed = true; progress.textContent = 'Failed'; });
+  return task;
+}
+async function decryptAndIngest(event) {
+  if (!conversation || event.getRoomId() !== bound?.room) return;
+  if (!watchedEvents.has(event)) {
+    watchedEvents.add(event);
+    // A sync event may initially fail decryption, then succeed after room keys arrive.
+    event.on('Event.decrypted', () => {
+      if (!event.isDecryptionFailure()) void ingest(event).catch(() => {});
+    });
+  }
+  if (!event.isRedacted() && event.isEncrypted()) {
+    try { await client.decryptEventIfNeeded(event); }
+    catch { return; } // receive() retries; late successful decrypt is handled above.
+    if (event.isDecryptionFailure() || event.getType() === 'm.room.encrypted') return;
+  }
+  await ingest(event);
+}
+function sweep() {
+  const room = client?.getRoom(bound?.room);
+  if (!room) return;
+  for (const event of room.getLiveTimeline().getEvents()) {
+    void decryptAndIngest(event).catch(() => { feedFailed = true; });
+  }
+}
+function timelineEvent(id) {
+  const room = requireClient().getRoom(bound?.room);
+  return room?.findEventById(id) || room?.getLiveTimeline().getEvents().find(event => event.getId() === id);
+}
+function checkPeer(peer, device) {
+  requireConversation();
+  if (peer !== bound.peer || device !== bound.device) throw new Error('verification_binding_mismatch');
+}
+const api = {
+  async start({user_id, device_id, access_token}) {
+    if (client) throw new Error('already_started');
+    progress.textContent = 'Starting';
+    // Credentials are only passed in memory by the synthetic CI driver, never read from the URL.
+    client = await createLabClient({baseUrl:'http://127.0.0.1:18008', userId:user_id,
+      deviceId:device_id, accessToken:access_token});
+    client.on('crypto.verificationRequestReceived', incoming => {
+      // Accept only the explicitly bound device. Unrelated requests are not approved.
+      if (!bound || incoming.otherUserId !== bound.peer || incoming.otherDeviceId !== bound.device) {
+        void incoming.cancel().catch(() => {});
+        return;
+      }
+      if (activeRequest(request) && request.transactionId !== incoming.transactionId) {
+        void incoming.cancel().catch(() => {});
+        return;
+      }
+      if (request !== incoming) resetVerification(incoming);
+    });
+    client.on('Room.timeline', event => {
+      void decryptAndIngest(event).catch(() => { feedFailed = true; });
+    });
+    client.on('Room.redaction', event => {
+      void ingest(event).catch(() => {});
+      sweep();
+    });
+    client.on('sync', state => { if (state === 'SYNCING' || state === 'PREPARED') sweep(); });
+    await client.startClient({initialSyncLimit:50});
+    await wait(() => ['PREPARED','SYNCING'].includes(client.getSyncState()), 'sync');
+    progress.textContent = 'Ready';
+    return true;
+  },
+  async keys() { return requireClient().getCrypto().getOwnDeviceKeys(); },
+  async create({peer}) {
+    const me = requireClient().getUserId();
+    if (typeof peer !== 'string' || !peer.startsWith('@') || peer === me) throw new Error('invalid_peer');
+    const result = await client.createRoom({visibility:'private', preset:'private_chat', room_version:'12',
+      invite:[peer], creation_content:{'m.federate':false},
+      // Room v12 creators have implicit power; do not put the creator in users.
+      power_level_content_override:{users:{}, users_default:0, redact:0},
+      initial_state:[
+        {type:'m.room.encryption',state_key:'',content:{algorithm:'m.megolm.v1.aes-sha2'}},
+        {type:'m.room.history_visibility',state_key:'',content:{history_visibility:'joined'}},
+        {type:'m.room.join_rules',state_key:'',content:{join_rule:'invite'}}
+      ]});
+    return result.room_id;
+  },
+  async join({room}) {
+    await requireClient().joinRoom(room);
+    await wait(() => client.getRoom(room)?.getMyMembership() === 'join', 'join');
+    return true;
+  },
+  async bind({room,peer,device}) {
+    requireClient();
+    if (conversation) throw new Error('already_bound');
+    bound = {room,peer,device};
+    conversation = await bindLabConversation({client,roomId:room,peerUserId:peer,peerDeviceId:device,
+      onUpdate:() => { progress.textContent = 'Running'; }});
+    await wait(() => {
+      const joined = client.getRoom(room)?.getJoinedMembers().map(member => member.userId) || [];
+      return joined.length === 2 && joined.includes(client.getUserId()) && joined.includes(peer);
+    }, 'two_members');
+    sweep();
+    await feedQueue;
+    return true;
+  },
+  async blocked() {
+    try { await requireConversation().assertSendAllowed(); return false; }
+    catch (error) {
+      // Do not mistake room, membership, crypto or device-count failures for a trust gate.
+      if (error.message === 'peer_device_verification_required') return true;
+      throw error;
+    }
+  },
+  async request({peer,device}) {
+    checkPeer(peer,device);
+    if (activeRequest(request)) throw new Error('verification_already_pending');
+    resetVerification(undefined);
+    request = await client.getCrypto().requestDeviceVerification(peer,device);
+    return true;
+  },
+  async requestReady() {
+    requireConversation();
+    // A cancelled/done request from the previous test must not satisfy a new incoming wait.
+    await wait(() => activeRequest(request) && !request.initiatedByMe &&
+      request.otherUserId === bound.peer && request.otherDeviceId === bound.device, 'incoming_request');
+    return true;
+  },
+  async cancel() { await requireRequest().cancel(); return true; },
+  async cancelled() {
+    // SDK43 has no request.cancelled property: cancellation is the public phase enum.
+    await wait(() => requireRequest().phase === Phase.Cancelled, 'cancelled');
+    return true;
+  },
+  async accept() { await requireRequest().accept(); return true; },
+  async ready() {
+    await wait(() => requireRequest().phase === Phase.Ready, 'ready', {verification:true});
+    return true;
+  },
+  async verifierReady() {
+    await wait(() => requireRequest().verifier, 'verifier', {verification:true});
+    return true;
+  },
+  async beginSas() {
+    const currentRequest = requireRequest();
+    if (verifier) return true;
+    // CI starts only one side; the other waits verifierReady(), then uses the incoming verifier.
+    verifier = currentRequest.verifier || await currentRequest.startVerification('m.sas.v1');
+    const currentVerifier = verifier;
+    currentVerifier.on('show_sas', value => {
+      if (request === currentRequest && verifier === currentVerifier) callbacks = value;
+    });
+    // Public accessor closes the gap if show_sas preceded listener registration.
+    callbacks = currentVerifier.getShowSasCallbacks() || callbacks;
+    // verify() resolves only at completion. Do not await it here and deadlock SAS exchange.
+    void currentVerifier.verify().then(() => {
+      if (request === currentRequest) verificationDone = true;
+    }).catch(() => {
+      if (request === currentRequest) verificationFailed = true;
+    });
+    return true;
+  },
+  async sas() {
+    await wait(() => callbacks?.sas?.decimal, 'sas', {verification:true});
+    const decimal = callbacks.sas.decimal;
+    if (decimal.length !== 3 || !decimal.every(Number.isInteger)) throw new Error('invalid_sas');
+    return [...decimal];
+  },
+  async confirm() {
+    // ONLY external synthetic CI may invoke this after comparing both complete decimal tuples.
+    // No UI control, event handler, timer, or automatic trust shortcut calls confirm().
+    if (!callbacks?.sas?.decimal || !verifier) throw new Error('sas_required');
+    await callbacks.confirm();
+    await wait(() => verificationDone && requireRequest().phase === Phase.Done, 'verification_done', {verification:true});
+    return true;
+  },
+  async verified() {
+    requireConversation();
+    await wait(async () => (await client.getCrypto().getDeviceVerificationStatus(bound.peer,bound.device))?.isVerified(),
+      'device_verified', {verification:true});
+    await conversation.assertSendAllowed();
+    return true;
+  },
+  async send({body}) {
+    const result = await requireConversation().send(body);
+    return result.event_id;
+  },
+  async receive({event,body}) {
+    requireConversation();
+    // Manual polling is deliberate: /sync, key delivery and Event.decrypted can race.
+    await wait(async () => {
+      const found = timelineEvent(event);
+      if (!found) return false;
+      await decryptAndIngest(found);
+      await feedQueue;
+      return conversation.snapshot().some(message => message.id === event && message.body === body);
+    }, 'receive');
+    return true;
+  },
+  async remove({event}) { return requireConversation().deleteForBoth(event); },
+  async deleted({event}) {
+    requireConversation();
+    await wait(async () => {
+      const found = timelineEvent(event);
+      // Require the actual target's redacted sync state, not just the send acknowledgement.
+      if (!found?.isRedacted()) return false;
+      await ingest(found);
+      await feedQueue;
+      const row = await conversation.ledger.get(bound.room,event);
+      const snapshot = conversation.snapshot();
+      return row?.status === 'server_redacted' && !snapshot.some(message => message.id === event);
+    }, 'deleted');
+    return true;
+  }
+};
+window.lab = Object.freeze(api);
+window.addEventListener('pagehide', () => {
+  client?.stopClient();
+  conversation?.clearMemory();
+  conversation?.ledger.close();
+  callbacks = undefined;
+  request = undefined;
+  verifier = undefined;
+  conversation = undefined;
+  client = undefined;
+});
+progress.textContent = 'Ready';
+</script>
+</body>
+</html>

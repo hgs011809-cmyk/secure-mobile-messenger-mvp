@@ -13,7 +13,7 @@ export async function createLabClient({baseUrl,userId,deviceId,accessToken}){
   // MemoryStore receives no localStorage option; plaintext pending echoes stay in memory.
   // History is re-fetched from the encrypted homeserver after reconnect.
   const store=new MemoryStore();
-  const client=createClient({baseUrl:url.origin,userId,deviceId,accessToken,store,logger:silentLogger,timelineSupport:true});
+  const client=createClient({baseUrl:url.origin,userId,deviceId,accessToken,store,logger:silentLogger,verificationMethods:['m.sas.v1'],timelineSupport:true});
   await client.initRustCrypto({useIndexedDB:true,cryptoDatabasePrefix:'direct-matrix-lab-keys-'+namespace});
   const crypto=client.getCrypto();if(!crypto)throw new Error('crypto_initialization_failed');
   crypto.globalBlacklistUnverifiedDevices=true;
@@ -25,6 +25,9 @@ export async function bindLabConversation({client,roomId,peerUserId,peerDeviceId
   const ledger=new DeletionLedger({name:'direct-matrix-lab-deletions-'+encodeURIComponent(client.getUserId()+'|'+client.getDeviceId())});
   const conversation=new EncryptedConversation({client,roomId,peerUserId,peerDeviceId,ledger,onUpdate});
   await conversation.initialize();
+  // Fail closed for already-visible plaintext while key/trust metadata changes.
+  client.on('crypto.devicesUpdated',users=>{if(!Array.isArray(users)||users.includes(client.getUserId())||users.includes(peerUserId))conversation.clearMemory();});
+  client.on('userTrustStatusChanged',user=>{if(user===client.getUserId()||user===peerUserId)conversation.clearMemory();});
   // A future UI must wire live/decrypted timeline events and server redaction events,
   // clear memory on logout, and render textContent rather than untrusted HTML.
   return conversation;
