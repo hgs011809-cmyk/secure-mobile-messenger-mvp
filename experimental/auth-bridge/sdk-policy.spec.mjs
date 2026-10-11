@@ -171,3 +171,10 @@ test('SAS v2 compatibility name and opaque JSON transaction id do not widen URI 
  for(const value of ['',null,'x'.repeat(129),'unsafe\u0000id'])assert.equal(request('PUT',p,toDevice({...c,transaction_id:value})),null);
  assert.equal(request('PUT',p.replace('tx-safe','unsafe%2Fid'),toDevice(c)),null);assert.equal(request('PUT',p,{messages:{'@b:lab':{'*':c}}}),null);
 });
+
+test('Rust SAS accept may omit method but cannot omit cryptographic negotiation fields',()=>{
+ const p=root+'/sendToDevice/m.key.verification.accept/tx-accept',c={key_agreement_protocol:'curve25519-hkdf-sha256',hash:'sha256',message_authentication_code:'hkdf-hmac-sha256.v2',short_authentication_string:['decimal'],commitment:b64(1),transaction_id:'flow-1'};
+ assert.ok(request('PUT',p,toDevice(c)));assert.ok(request('PUT',p,toDevice({...c,method:'m.sas.v1'})));assert.equal(request('PUT',p,toDevice({...c,method:'unknown-method'})),null);
+ for(const name of ['key_agreement_protocol','hash','message_authentication_code','short_authentication_string','commitment','transaction_id']){const bad={...c};delete bad[name];assert.equal(request('PUT',p,toDevice(bad)),null);}
+ assert.equal(request('PUT',p,toDevice({...c,message_authentication_code:'unknown-mac'})),null);
+});
