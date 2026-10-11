@@ -1,38 +1,65 @@
 {
-  "phase": "actual_sdk_descriptor_verified",
+  "phase": "authenticated_transport_synthetic_verified",
   "branch": "lab-matrix-cleanup-followup",
-  "sourceCommit": "ccff0bd",
-  "workflowCommit": "b48dbd2",
-  "run": "38149969509",
-  "linuxRuns": 1,
-  "units": {
-    "windows": 12,
-    "linux": 12,
+  "run": "38152247874",
+  "job": "114507916337",
+  "sourceCommit": "8170fc9",
+  "workflowCommit": "c8e81c9",
+  "linuxNewTransportUnits": {
+    "pass": 4,
     "fail": 0,
     "skip": 0,
-    "scope": "fixtures"
+    "actualSDKProof": false
   },
-  "actualSDK": {
-    "gates": 6,
+  "actualSDKTransport": {
+    "pass": 5,
+    "fail": 0,
+    "fixtureBytes": 8388608,
+    "dataPlane": "private_in_process_files",
+    "receiverRestart": "same_process_object_recreation",
+    "logicalCiphertextCeiling": 25165824,
+    "chunkBytes": 262144
+  },
+  "sameRunPriorDescriptor": {
     "pass": 6,
     "fail": 0,
-    "fixtureBytes": 4096,
-    "receiverKeySource": "SDK_decrypted_event",
-    "coldRestore": true,
-    "wholeHashBeforeDecrypt": true
+    "fixtureBytes": 4096
   },
-  "sourceAndPolicyGuards": 14,
-  "independentCleanupVerified": true,
-  "existingHandoffWiring": false,
-  "mediaUpload": false,
-  "mediaDownload": false,
-  "browserStreamingTransfer": false,
-  "Android": false,
-  "humanOOB": false,
-  "atomicAuthorization": false,
-  "physicalErasure": false,
-  "productionChanged": false,
+  "windowsUnits": {
+    "registered": 4,
+    "pass": 0,
+    "fail": 0,
+    "skip": 4,
+    "runtimeProof": false
+  },
+  "sourcePolicyGuards": 28,
+  "independentAlwaysCleanupVerified": true,
+  "readOnlyIndependentReview": true,
+  "proof": "inspected_aggregate_CI_logs",
+  "screenshotSaved": false,
+  "priorRuns": {
+    "descriptor": "38149969509",
+    "handoff": "38148000046",
+    "resumedCrypto": "38146403716",
+    "coreReference": "38145268441",
+    "media": "38140155348"
+  },
   "policyFilesChanged": false,
-  "autoChain": false,
-  "next": "specific_validation_of_authenticated_descriptor_to_preserving_transport"
+  "productionChanged": false,
+  "operationalChanges": false,
+  "blocked": [
+    "actualMXCmedia",
+    "browserInternetStreaming",
+    "Android",
+    "realUserDeviceRoom",
+    "humanOOB",
+    "GB_RSS_capacity",
+    "interruptedWriteRepair",
+    "crashRunnerLossRecovery",
+    "atomicAuthorizationRevocation",
+    "backup",
+    "physicalErasure"
+  ],
+  "next": "checkpoint_stop_no_autochain",
+  "resultsCommit": "f3f084c"
 }
