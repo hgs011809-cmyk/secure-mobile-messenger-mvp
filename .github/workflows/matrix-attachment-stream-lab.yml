@@ -1,0 +1,66 @@
+name: Matrix attachment streaming primitive synthetic only
+on:
+  workflow_dispatch:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths:
+      - 'experimental/media-transfer-lab/attachment-stream*'
+      - 'experimental/media-transfer-lab/attachment-interop.spec.mjs'
+      - 'experimental/media-transfer-lab/reference/matrix-encrypt-attachment-1.0.3/**'
+      - '.github/workflows/matrix-attachment-stream-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: synthetic-attachment-stream-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  attachment-stream:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Owner-only disposable ciphertext namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          private_root="$(mktemp -d "${RUNNER_TEMP:?}/synthetic-attachment.XXXXXX")"
+          chmod 700 "$private_root"
+          printf 'PRIVATE_ATTACHMENT_ROOT=%s\nTMPDIR=%s\n' "$private_root" "$private_root" >> "$GITHUB_ENV"
+      - name: Source guard, strict crypto and unmodified reference interoperability
+        shell: bash
+        working-directory: experimental/media-transfer-lab
+        run: |
+          set -euo pipefail
+          umask 077
+          node -e 'const f=require("node:fs"),o=require("node:os"),c=require("node:crypto");const r=process.env.PRIVATE_ATTACHMENT_ROOT,s=f.lstatSync(r);if(f.realpathSync(o.tmpdir())!==f.realpathSync(r)||(s.mode&4095)!==448||s.uid!==process.getuid()||s.isSymbolicLink())process.exit(1);const b=f.readFileSync("reference/matrix-encrypt-attachment-1.0.3/nodejs.js");if(c.createHash("sha256").update(b).digest("hex")!=="bf1862f6cf249a1ac8d9c4871963be97db650a5213114b09d6a47a2269dff89e")process.exit(1);if(c.createHash("sha256").update(f.readFileSync("reference/matrix-encrypt-attachment-1.0.3/LICENSE")).digest("hex")!=="50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a")process.exit(1);console.log("private_namespace=verified; unmodified_reference_hash=verified; reference_license_hash=verified");'
+          log="$PRIVATE_ATTACHMENT_ROOT/test-output.log"
+          if ! node --test --test-concurrency=1 attachment-stream.spec.mjs attachment-interop.spec.mjs > "$log" 2>&1; then
+            echo 'attachment_stream_tests=failed; raw_diagnostics_suppressed=true'
+            exit 1
+          fi
+          grep -qx '# tests 40' "$log"
+          grep -qx '# pass 40' "$log"
+          grep -qx '# fail 0' "$log"
+          grep -qx '# cancelled 0' "$log"
+          grep -qx '# skipped 0' "$log"
+          node -e 'const f=require("node:fs");const names=f.readdirSync(process.env.PRIVATE_ATTACHMENT_ROOT);if(names.length!==1||names[0]!=="test-output.log")process.exit(1);console.log("completed_fixture_namespace=empty_except_private_log");'
+          echo 'synthetic_attachment_tests=40; pass=40; fail=0; skipped=0; streaming_fixture_bytes=16777216; fixture_segment_bytes=65536; max_api_segment_bytes=262144'
+          echo 'reference_node_interoperability=true; hash_before_plaintext=true; authenticated_room_descriptor=external_fixture_assumption; browser_or_android_file_transfer=false; actual_sdk_media_integration=false; gb_scale=false; rss_bound=false; production_changes=false'
+      - name: Independently remove and verify disposable namespace
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${PRIVATE_ATTACHMENT_ROOT:-}" || "$PRIVATE_ATTACHMENT_ROOT" != "$RUNNER_TEMP"/synthetic-attachment.* ]]; then
+            echo 'private_cleanup=failed; invalid_namespace=true'
+            exit 1
+          fi
+          rm -rf -- "$PRIVATE_ATTACHMENT_ROOT"
+          test ! -e "$PRIVATE_ATTACHMENT_ROOT"
+          echo 'private_cleanup=verified; physical_erasure=false; hard_runner_loss_cleanup=unverified'
