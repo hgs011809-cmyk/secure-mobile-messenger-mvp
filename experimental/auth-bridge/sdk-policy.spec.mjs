@@ -40,7 +40,7 @@ test('default deny all privilege and lifecycle endpoints', () => {
   assert.equal(request('GET','/_synapse/admin/v1/users'),null);
 });
 test('canonical path and query restrictions fail closed', () => {
-  for (const path of [room.replace('%21','%2521')+'/state',room.replace('%21','%21%2F')+'/state',root+'/rooms/../state',root+'//devices',root+'/%64evices',root+'/devices?access_token=x',root+'/devices?x=y',root+'/devices#fragment',root+'/devices?',root+'/devices?x=%ZZ',root+'/devices?x=one+two']) assert.equal(request('GET',path),null,path);
+  for (const path of [room.replace('%3A','%253A')+'/state',room.replace('%3A','%2F')+'/state',root+'/rooms/../state',root+'//devices',root+'/%64evices',root+'/devices?access_token=x',root+'/devices?x=y',root+'/devices#fragment',root+'/devices?',root+'/devices?x=%ZZ',root+'/devices?x=one+two']) assert.equal(request('GET',path),null,path);
   assert.equal(request('GET',root+'/sync?timeout=1&timeout=2'),null);
   assert.equal(request('GET',root+'/sync?set_presence=online'),null);
   assert.equal(request('GET',root+'/sync?timeout=30001'),null);

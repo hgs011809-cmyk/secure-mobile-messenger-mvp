@@ -128,7 +128,7 @@ export function authorizeSdkRequest({ method, target, body, identity, binding } 
     if (method === 'GET') {
       if (body != null) return null;
       if (['account/whoami', 'devices', 'capabilities', 'pushrules', 'pushrules/'].includes(route.join('/')) && !q.size) return result();
-      if (route.length === 1 && route[0] === 'sync' && queries(q, { since: v => token(v), timeout: v => decimal(v, 30000), filter: v => token(v, 4096), full_state: v => ['true', 'false'].includes(v), set_presence: v => ['online','offline', 'unavailable'].includes(v), _cacheBuster: v => decimal(v,9999999999999), 'org.matrix.msc4222.use_state_after': v=>['true','false'].includes(v) })) {
+      if (route.length === 1 && route[0] === 'sync' && queries(q, { since: v => token(v), timeout: v => decimal(v, 30000), filter: v => token(v, 4096), full_state: v => ['true', 'false'].includes(v), set_presence: v => ['offline', 'unavailable'].includes(v), _cacheBuster: v => decimal(v,9999999999999), 'org.matrix.msc4222.use_state_after': v=>['true','false'].includes(v) })) {
         const forced = new URLSearchParams(); for (const [k, v] of q) if (k !== 'filter') forced.set(k, v);
         forced.set('set_presence','offline');forced.set('filter', canonical(forcedFilter(binding)));
         return result(null, p.pathname + '?' + forced.toString());
