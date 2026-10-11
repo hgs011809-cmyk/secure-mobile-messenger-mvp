@@ -1,0 +1,168 @@
+name: Matrix encrypted attachment descriptor (synthetic only)
+on:
+  workflow_dispatch:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths:
+      - 'experimental/matrix-client/descriptor-*'
+      - '.github/workflows/matrix-attachment-descriptor-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: matrix-attachment-descriptor-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  composed:
+    if: ${{ github.ref == 'refs/heads/lab-matrix-cleanup-followup' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BASE_IMAGE: matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
+    steps:
+      - name: Create owner-only fixture temp namespace
+        run: |
+          set -euo pipefail
+          PRIVATE_FIXTURE_TMP="$RUNNER_TEMP/candidate-composed-private"
+          umask 077
+          mkdir -p -m 700 "$PRIVATE_FIXTURE_TMP"
+          chmod 700 "$PRIVATE_FIXTURE_TMP"
+          printf 'PRIVATE_FIXTURE_TMP=%s\nTMPDIR=%s\nTMP=%s\nTEMP=%s\n' "$PRIVATE_FIXTURE_TMP" "$PRIVATE_FIXTURE_TMP" "$PRIVATE_FIXTURE_TMP" "$PRIVATE_FIXTURE_TMP" >> "$GITHUB_ENV"
+          echo 'private_fixture_tmp_namespace=READY'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact new source and unchanged policy guards
+        run: |
+          set -euo pipefail
+          node -e 'const f=require("node:fs"),c=require("node:crypto"),p={"experimental/matrix-client/descriptor-hooks.inc.mjs":"141c222b64b02e336950aa9dd8acb5cfca757a3b351d4aebcb10d8b0c5514554","experimental/matrix-client/descriptor-driver.inc.mjs":"92c18995a76d507f5d056428b9087954e06a9027bbc3083ca933517370585ae8","experimental/matrix-client/descriptor-fixture.inc.mjs":"9358cd1dc9c2b4bdcb997aa246d4324749f4bfd1e80c457037041c7d14fe4582","experimental/matrix-client/descriptor-browser.html":"f6b4418a21eb653bfc4e7893dea90f3cae10a2e6cbd8c66cb9f6cb6f1a8936c9","experimental/matrix-client/descriptor-build.mjs":"84729488b5adc137e4b131fe469609b18cd449ddf3ba374afbb6ff5307f6942e","experimental/matrix-client/descriptor-composed-ci.mjs":"402ef61d8d7f52e121d3a4409bffadb079f4291424631126c65346f049ce51fc","experimental/matrix-client/descriptor-receipt.mjs":"44e5f862245629caf83f080430c47cfd9a77cac148a6f5f6d70cce9e10a84fb4","experimental/matrix-client/descriptor-receipt.spec.mjs":"7a8505bf52983671fcfbc086ce226c1289b82f45e1916d042ff99a3705c51b18","experimental/media-transfer-lab/attachment-stream.mjs":"1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6","experimental/matrix-client/conversation.mjs":"5703ee41c6de769d65427621ec1d771a58a492e145c7a66cf3ff5648724cbb98","experimental/matrix-client/client.mjs":"f9f29e0b6ba52f297003673bc1a6f481bb29d9f6cc6c37a9842b12f9c3acc5d5","experimental/auth-bridge/sdk-binding.mjs":"e505214ec1020d676a310da283f5d3387c48086dbf507e3f8fedbbd2dd281503","experimental/auth-bridge/sdk-policy.mjs":"e6b9bf86b45cb38d8829e9ac35c7f1534783bf9b9077ddad862681261db3a4d3","experimental/auth-bridge/sdk-ingress.mjs":"d2c415e09cc10662ba84984e719ff277b6a6f0eae537bcda58d93b6a18b1a735"};for(const [n,h]of Object.entries(p))if(c.createHash("sha256").update(f.readFileSync(n)).digest("hex")!==h)process.exit(1);console.log("descriptor_source_and_policy_guards=verified");'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Auth broker, bounded SDK ingress and pin regression tests
+        run: |
+          if ! node --test experimental/auth-bridge/*.spec.mjs > /dev/null 2>&1; then echo 'auth_ingress_regressions=FAILED; details_suppressed'; exit 1; fi
+          echo 'auth_ingress_regressions=PASSED'
+      - name: Install pinned browser dependencies
+        working-directory: experimental/matrix-client
+        run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
+      - name: Fail-closed client regression tests
+        working-directory: experimental/matrix-client
+        run: |
+          if ! npm test > /dev/null 2>&1; then echo 'client_failclosed_regressions=FAILED; details_suppressed'; exit 1; fi
+          echo 'client_failclosed_regressions=PASSED'
+      - name: Twelve descriptor receipt fixture unit tests
+        working-directory: experimental/matrix-client
+        run: |
+          set -euo pipefail
+          log="$PRIVATE_FIXTURE_TMP/descriptor-unit.log"
+          if ! node --test descriptor-receipt.spec.mjs > "$log" 2>&1; then echo 'descriptor_unit_tests=failed; raw_diagnostics_suppressed=true'; exit 1; fi
+          grep -qx '# tests 12' "$log" && grep -qx '# pass 12' "$log" && grep -qx '# fail 0' "$log" && grep -qx '# skipped 0' "$log"
+          rm -- "$log"
+          echo 'descriptor_unit_tests=12; pass=12; fail=0; skipped=0; actual_sdk_proof=false'
+      - name: Build private synthetic browser harness
+        working-directory: experimental/matrix-client
+        run: |
+          if ! node descriptor-build.mjs > /dev/null 2>&1; then echo 'synthetic_browser_build=FAILED; details_suppressed'; exit 1; fi
+          echo 'synthetic_browser_build=PASSED'
+      - name: Install synthetic Chromium
+        working-directory: experimental/matrix-client
+        run: npx playwright install --with-deps chromium > /dev/null 2>&1
+      - name: Extract and transform exact public source
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/candidate-build"
+          if ! docker pull "$BASE_IMAGE" > /dev/null 2>&1; then
+            echo 'Pinned base pull failed; no runtime result.'
+            exit 1
+          fi
+          docker run --rm --name candidate-composition-source-extraction --label aside.synthetic-candidate-composition=true --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 256m --cpus 1 -e PYTHONDONTWRITEBYTECODE=1 --entrypoint python "$BASE_IMAGE" -c 'import pathlib,synapse,sys;sys.stdout.write((pathlib.Path(synapse.__file__).parent/"storage/databases/main/censor_events.py").read_text())' > "$RUNNER_TEMP/candidate-build/original.py" 2>/dev/null
+          export SYNAPSE_CENSOR_SOURCE="$RUNNER_TEMP/candidate-build/original.py"
+          if ! node --test experimental/matrix-cleanup-candidate/source-policy.spec.mjs > /dev/null 2>&1; then
+            echo 'source_guards=FAILED; details_suppressed'; exit 1
+          fi
+          echo 'source_guards=PASSED; details_suppressed'
+          cd experimental/matrix-cleanup-candidate
+          if ! node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";import {prepareCandidate,BASE_IMAGE} from "./source-policy.mjs";const t=process.env.RUNNER_TEMP+"/candidate-build/";writeFileSync(t+"candidate.py",prepareCandidate(readFileSync(t+"original.py","utf8"),{enabled:true,scope:"github-actions-synthetic",baseImage:BASE_IMAGE}));' > /dev/null 2>&1; then
+            echo 'source_transform_gate=FAILED; details_suppressed'; exit 1
+          fi
+          echo 'source_transform_gate=PASSED'
+      - name: Build isolated non-published candidate image
+        run: |
+          set -euo pipefail
+          cp experimental/matrix-cleanup-candidate/Candidate.Dockerfile "$RUNNER_TEMP/candidate-build/Dockerfile"
+          if ! docker build --pull=false --network=none -t matrix-cleanup-candidate:ci "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1; then
+            echo 'Pinned candidate build failed; no runtime result.'
+            exit 1
+          fi
+      - name: Prepare unpublished bounded backend and native veto
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          export CI_UID="$(id -u)" CI_GID="$(id -g)"
+          echo "CI_UID=$CI_UID" >> "$GITHUB_ENV"
+          echo "CI_GID=$CI_GID" >> "$GITHUB_ENV"
+          if ! python3 configure.py > /dev/null 2>&1; then echo 'fixture_config=FAILED; details_suppressed'; exit 1; fi
+          if ! node --input-type=module -e "import{appendFile}from'node:fs/promises';await appendFile('runtime/homeserver.yaml','\nsession_lifetime: 10m\n');" > /dev/null 2>&1; then echo 'fixture_lease_config=FAILED; details_suppressed'; exit 1; fi
+          if ! node ../../../../experimental/auth-bridge/prepare-policy.mjs > /dev/null 2>&1; then echo 'native_policy_setup=FAILED; details_suppressed'; exit 1; fi
+          if ! candidate_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci 2>/dev/null)"; then echo 'candidate_image_lookup=FAILED'; exit 1; fi
+          printf 'services:\n  synapse:\n    image: %s\n    pull_policy: never\n' "$candidate_image" > runtime/candidate-compose.yaml
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml -f runtime/candidate-compose.yaml config --quiet > /dev/null 2>&1
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml -f runtime/candidate-compose.yaml up -d --pull never > /dev/null 2>&1
+      - name: Verify installed candidate source before policy/SDK runtime
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          expected_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci 2>/dev/null)"
+          container_id="$(docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml -f runtime/candidate-compose.yaml ps -q synapse 2>/dev/null)"
+          actual_image="$(docker inspect --format '{{.Image}}' "$container_id" 2>/dev/null)"
+          if [ "$actual_image" != "$expected_image" ]; then echo 'actual_container_image_gate=FAILED'; exit 1; fi
+          echo 'actual_container_image_gate=PASSED'
+          expected="$(sha256sum "$RUNNER_TEMP/candidate-build/candidate.py" | cut -d' ' -f1)"
+          actual="$(docker compose -f compose.yaml exec -T synapse python -c 'import hashlib,pathlib,synapse;print(hashlib.sha256((pathlib.Path(synapse.__file__).parent/"storage/databases/main/censor_events.py").read_bytes()).hexdigest())' 2>/dev/null)"
+          if [ "$actual" != "$expected" ]; then echo 'installed_candidate_gate=FAILED'; exit 1; fi
+          echo 'installed_candidate_gate=PASSED; production_integration=false'
+      - name: Native device veto unit tests
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          if ! docker compose -f compose.yaml exec -T synapse python -m unittest discover -s /gate -p '*_test.py' > /dev/null 2>&1; then echo 'native_device_veto_tests=FAILED; details_suppressed'; exit 1; fi
+          echo 'native_device_veto_tests=PASSED'
+      - name: Actual SDK encrypted descriptor cold restore and exact rejection gates
+        timeout-minutes: 11
+        working-directory: experimental/matrix-client
+        run: |
+          set -euo pipefail
+          if ! node --input-type=module -e 'import {tmpdir} from "node:os";import assert from "node:assert/strict";assert.equal(tmpdir(),process.env.PRIVATE_FIXTURE_TMP);' > /dev/null 2>&1; then echo 'private_profile_temp_path_gate=FAILED'; exit 1; fi
+          echo 'private_profile_temp_path_gate=PASSED'
+          node serve.mjs > /dev/null 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 50); do curl -fsS http://127.0.0.1:19461/descriptor.html > /dev/null 2>&1 && break; sleep .1; done
+          log="$PRIVATE_FIXTURE_TMP/descriptor-runtime.log"
+          if ! node descriptor-composed-ci.mjs > "$log" 2>&1; then
+            node -e 'const f=require("node:fs"),t=f.readFileSync(process.argv[1],"utf8");const known=["descriptor pre-verification denied","descriptor verified peer cold delivery","descriptor corrupted ciphertext rejects before decrypt","descriptor malformed actual encrypted event rejected","descriptor actual redaction blocks subsequent use"];console.log(JSON.stringify({descriptor_runtime_failed:true,knownFailureStages:known.filter(s=>t.includes("FAIL: "+s+".")),raw_diagnostics_suppressed:true}));' "$log"
+            exit 1
+          fi
+          node -e 'const f=require("node:fs"),rows=f.readFileSync(process.argv[1],"utf8").split(/\r?\n/);const r=rows.map(s=>{try{return JSON.parse(s);}catch{return null;}}).find(r=>r?.status==="passed");if(!r||r.descriptorGates?.length!==6||r.actualSdkDescriptor!==true||r.descriptorFixtureBytes!==4096||r.mediaUpload!==false)process.exit(1);console.log("actual_sdk_descriptor_gates=6; pass=6; fail=0; fixture_bytes=4096; receiver_key_source=SDK_decrypted_event; sdk_sender_device_and_room_checks=true; whole_ciphertext_hash_before_decrypt=true; media_upload=false; browser_streaming_transfer=false; Android=false; human_OOB=false; atomic_authorization=false; physical_erasure=false; production_changes=false");' "$log"
+          rm -- "$log"
+          echo 'descriptor_runtime_gate=PASSED'
+      - name: Verify removal of synthetic runtime and private files
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          export CI_UID="${CI_UID:-$(id -u)}" CI_GID="${CI_GID:-$(id -g)}"
+          failed=0
+          docker rm -f candidate-composition-source-extraction > /dev/null 2>&1 || true
+          compose_args=(-f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml)
+          if [ -f runtime/candidate-compose.yaml ]; then compose_args+=(-f runtime/candidate-compose.yaml); fi
+          docker compose "${compose_args[@]}" down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1 || failed=1
+          rm -rf -- runtime "$RUNNER_TEMP/candidate-build" "$PRIVATE_FIXTURE_TMP" > /dev/null 2>&1 || failed=1
+          if [ -e runtime ] || [ -e "$RUNNER_TEMP/candidate-build" ] || [ -e "$PRIVATE_FIXTURE_TMP" ]; then failed=1; fi
+          remaining="$(docker ps -aq --filter label=com.docker.compose.project=matrix-server-integration 2>/dev/null)" || failed=1
+          if [ -n "$remaining" ]; then failed=1; fi
+          helper="$(docker ps -aq --filter label=aside.synthetic-candidate-composition=true 2>/dev/null)" || failed=1
+          if [ -n "$helper" ]; then failed=1; fi
+          if [ "$failed" -ne 0 ]; then echo 'candidate_composition_cleanup_verified=false; details_suppressed'; exit 1; fi
+          echo 'candidate_composition_cleanup_verified=true; private_fixture_paths_absent=true; profiles_tmp_root_absent=true; fixture_containers_absent=true'
+          # Post-actions may use OS temp; do not recreate the removed private namespace.
+          printf 'TMPDIR=/tmp\nTMP=/tmp\nTEMP=/tmp\n' >> "$GITHUB_ENV"
