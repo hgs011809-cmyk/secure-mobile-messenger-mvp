@@ -1,0 +1,127 @@
+name: Matrix cleanup native boundaries and SIGKILL (synthetic)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experimental/matrix-cleanup-candidate/**'
+      - '.github/workflows/matrix-cleanup-boundary-lab.yml'
+  pull_request:
+    paths:
+      - 'experimental/matrix-cleanup-candidate/**'
+      - '.github/workflows/matrix-cleanup-boundary-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: matrix-cleanup-boundary-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    name: candidate-${{ matrix.mode }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        mode: [crash]
+    env:
+      BASE_IMAGE: matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe and conservative clock regressions before any server starts
+        run: |
+          set -euo pipefail
+          node --check experimental/matrix-cleanup-candidate/runtime-ci.mjs
+          node --test experimental/matrix-retention-lab/measurement.spec.mjs
+          cd experimental/matrix-retention-lab
+          python3 -m unittest probe_rows_test.py
+      - name: Install exact SDK without hooks
+        working-directory: experimental/matrix-client
+        run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
+      - name: Extract and transform exact public source
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/candidate-build"
+          if ! docker pull "$BASE_IMAGE" > /dev/null 2>&1; then
+            echo 'Pinned base pull failed; no runtime result.'
+            exit 1
+          fi
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 256m --cpus 1 -e PYTHONDONTWRITEBYTECODE=1 --entrypoint python "$BASE_IMAGE" -c 'import pathlib,synapse,sys;sys.stdout.write((pathlib.Path(synapse.__file__).parent/"storage/databases/main/censor_events.py").read_text())' > "$RUNNER_TEMP/candidate-build/original.py" 2>/dev/null
+          export SYNAPSE_CENSOR_SOURCE="$RUNNER_TEMP/candidate-build/original.py"
+          node --test experimental/matrix-cleanup-candidate/source-policy.spec.mjs
+          cd experimental/matrix-cleanup-candidate
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";import {prepareCandidate,BASE_IMAGE} from "./source-policy.mjs";const t=process.env.RUNNER_TEMP+"/candidate-build/";writeFileSync(t+"candidate.py",prepareCandidate(readFileSync(t+"original.py","utf8"),{enabled:true,scope:"github-actions-synthetic",baseImage:BASE_IMAGE}));'
+      - name: Build isolated non-published candidate image
+        run: |
+          set -euo pipefail
+          cp experimental/matrix-cleanup-candidate/Candidate.Dockerfile "$RUNNER_TEMP/candidate-build/Dockerfile"
+          if ! docker build --pull=false --network=none -t matrix-cleanup-candidate:ci "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1; then
+            echo 'Pinned candidate build failed; no runtime result.'
+            exit 1
+          fi
+      - name: Nine installed-native mocked-DB and deterministic-clock boundaries
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          candidate_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci)"
+          if ! docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 512m --cpus 1 --pids-limit 64 --entrypoint python --mount "type=bind,src=$PWD/experimental/matrix-cleanup-candidate/native-boundary-test.py,dst=/native-boundary-test.py,readonly" "$candidate_image" -B /native-boundary-test.py 2>/dev/null; then
+            echo 'native_boundary_gate=FAILED; mocked_DB_not_runtime_SQL; details_suppressed'
+            exit 1
+          fi
+          echo 'native_boundary_gate=PASSED; mocked_DB_not_runtime_SQL'
+      - name: Prepare isolated disposable server with candidate image override
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          echo "CI_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "CI_GID=$(id -g)" >> "$GITHUB_ENV"
+          export CI_UID="$(id -u)" CI_GID="$(id -g)"
+          python3 configure.py
+          printf 'services:\n  synapse:\n    image: matrix-cleanup-candidate:ci\n    pull_policy: never\n' > runtime/candidate-compose.yaml
+          docker compose -f compose.yaml -f runtime/candidate-compose.yaml config --quiet
+          if ! docker compose -f compose.yaml -f runtime/candidate-compose.yaml up -d --pull never > /dev/null 2>&1; then
+            echo 'Synthetic candidate startup failed; private logs suppressed.'
+            exit 1
+          fi
+      - name: Three real encrypted samples and negative controls
+        timeout-minutes: 8
+        env:
+          CANDIDATE_MODE: ${{ matrix.mode }}
+          CANDIDATE_SOURCE: ${{ runner.temp }}/candidate-build/candidate.py
+        run: node experimental/matrix-cleanup-candidate/runtime-ci.mjs
+      - name: Resource observations are not NCP sizing
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          container="$(docker compose -f compose.yaml ps -q synapse 2>/dev/null)"
+          if [ -n "$container" ]; then
+            docker stats --no-stream --format 'memory={{.MemUsage}} cpu={{.CPUPerc}} block_io={{.BlockIO}}' "$container" 2>/dev/null
+            docker inspect --format 'oom_killed={{.State.OOMKilled}} exit_code={{.State.ExitCode}}' "$container" 2>/dev/null
+          fi
+          exit 0
+      - name: Always remove private fixture and public build files
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          export CI_UID="${CI_UID:-$(id -u)}" CI_GID="${CI_GID:-$(id -g)}"
+          failed=0
+          docker compose -f compose.yaml down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1 || failed=1
+          rm -rf -- runtime "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1 || failed=1
+          if [ -e runtime ] || [ -e "$RUNNER_TEMP/candidate-build" ]; then failed=1; fi
+          remaining="$(docker ps -aq --filter label=com.docker.compose.project=matrix-server-integration 2>/dev/null)" || failed=1
+          if [ -n "$remaining" ]; then failed=1; fi
+          if [ "$failed" -ne 0 ]; then
+            echo 'fixture_cleanup_verified=false; private details suppressed'
+            exit 1
+          fi
+          echo 'fixture_cleanup_verified=true; private_files_absent=true; fixture_containers_absent=true'
