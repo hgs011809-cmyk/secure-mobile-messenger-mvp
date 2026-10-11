@@ -1,0 +1,72 @@
+name: Synthetic attachment ciphertext preservation handoff
+on:
+  workflow_dispatch:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths:
+      - '.github/workflows/matrix-attachment-handoff-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: synthetic-attachment-handoff-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  handoff:
+    if: github.ref == 'refs/heads/lab-matrix-cleanup-followup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Owner-only disposable namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          private_root="$(mktemp -d "${RUNNER_TEMP:?}/synthetic-handoff.XXXXXX")"
+          chmod 700 "$private_root"
+          printf 'PRIVATE_ATTACHMENT_ROOT=%s\nTMPDIR=%s\n' "$private_root" "$private_root" >> "$GITHUB_ENV"
+      - name: Pinned source guards and five synthetic cases
+        shell: bash
+        working-directory: experimental/media-transfer-lab
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$GITHUB_REF" = 'refs/heads/lab-matrix-cleanup-followup'
+          test "$(git show 9892ac9443bf106bf686f6eef0676b30fb477468:experimental/media-transfer-lab/attachment-handoff.spec.mjs 2>/dev/null | sha256sum | cut -d' ' -f1)" = '51036acebbb6b93f6deff16d926b87380bb1b658ef6424f09e7d4753b4a998b5'
+          test "$(git show 218c68e:experimental/media-transfer-lab/reference/matrix-encrypt-attachment-1.0.3/nodejs.js 2>/dev/null | sha256sum | cut -d' ' -f1)" = 'bf1862f6cf249a1ac8d9c4871963be97db650a5213114b09d6a47a2269dff89e'
+          test "$(git show 218c68e:experimental/media-transfer-lab/reference/matrix-encrypt-attachment-1.0.3/LICENSE 2>/dev/null | sha256sum | cut -d' ' -f1)" = '50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a'
+          node -e 'const f=require("node:fs"),o=require("node:os"),c=require("node:crypto");const r=process.env.PRIVATE_ATTACHMENT_ROOT,s=f.lstatSync(r);if(f.realpathSync(o.tmpdir())!==f.realpathSync(r)||(s.mode&4095)!==448||s.uid!==process.getuid()||s.isSymbolicLink())process.exit(1);const expected={"attachment-handoff.spec.mjs":"51036acebbb6b93f6deff16d926b87380bb1b658ef6424f09e7d4753b4a998b5","attachment-stream.mjs":"1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6","receiver.mjs":"deb1110aa3d43cfbd9cad917f577412812fc922579e523d328bab101ade71842","reference/matrix-encrypt-attachment-1.0.3/nodejs.js":"bf1862f6cf249a1ac8d9c4871963be97db650a5213114b09d6a47a2269dff89e","reference/matrix-encrypt-attachment-1.0.3/LICENSE":"50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a"};for(const [p,h] of Object.entries(expected))if(c.createHash("sha256").update(f.readFileSync(p)).digest("hex")!==h)process.exit(1);console.log("private_namespace=verified; pinned_source_reference_license_hashes=verified");' > "$PRIVATE_ATTACHMENT_ROOT/guard.log" 2>&1 || { echo 'source_guard=failed; raw_diagnostics_suppressed=true'; exit 1; }
+          rm -- "$PRIVATE_ATTACHMENT_ROOT/guard.log"
+          echo 'source_guard=verified'
+          log="$PRIVATE_ATTACHMENT_ROOT/test-output.log"
+          if ! node --test --test-concurrency=1 attachment-handoff.spec.mjs > "$log" 2>&1; then
+            echo 'handoff_tests=failed; raw_diagnostics_suppressed=true'
+            node -e 'const f=require("node:fs"),t=f.readFileSync(process.argv[1],"utf8");console.log("failed_case_indexes="+JSON.stringify([...t.matchAll(/^not ok ([0-9]+) -/gm)].map(m=>Number(m[1]))));' "$log"
+            exit 1
+          fi
+          grep -qx '# tests 5' "$log"
+          grep -qx '# pass 5' "$log"
+          grep -qx '# fail 0' "$log"
+          grep -qx '# cancelled 0' "$log"
+          grep -qx '# skipped 0' "$log"
+          node -e 'const f=require("node:fs"),n=f.readdirSync(process.env.PRIVATE_ATTACHMENT_ROOT);if(n.length!==1||n[0]!=="test-output.log")process.exit(1);console.log("completed_fixture_namespace=empty_except_private_log");'
+          echo 'synthetic_handoff_tests=5; pass=5; fail=0; skipped=0; fixture_bytes=8388608; logical_live_ciphertext_ceiling_bytes=25165824; chunk_ceiling_bytes=262144'
+          echo 'ciphertext_preservation=verified; physical_disk_bound=false; rss_bound=false; crash_recovery=false; repair_capability=blocked; authenticated_descriptor=external_fixture_assumption; production_changes=false'
+      - name: Independently remove and verify disposable namespace
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${PRIVATE_ATTACHMENT_ROOT:-}" || "$PRIVATE_ATTACHMENT_ROOT" != "$RUNNER_TEMP"/synthetic-handoff.* ]]; then
+            echo 'private_cleanup=failed; invalid_namespace=true'
+            exit 1
+          fi
+          rm -rf -- "$PRIVATE_ATTACHMENT_ROOT"
+          test ! -e "$PRIVATE_ATTACHMENT_ROOT"
+          echo 'private_cleanup=verified; physical_erasure=false; hard_runner_loss_cleanup=unverified'
