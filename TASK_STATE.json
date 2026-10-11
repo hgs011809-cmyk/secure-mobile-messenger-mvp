@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_routine_NEW_actualSDK_authority_adapter_candidate_with_exact_initial_binding_snapshot_and_abortable_fresh_callbacks_else_cold_quota_alternative",
+  "next": "next_run_NEW_harness_driver_wiring_review_deadline_1500ms_no_core_policy_edits_else_cold_quota",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -217,6 +217,33 @@
     "containersCreated": 0,
     "reviewTask": "nx9aaScAATxMMaK0",
     "implementationTask": "A92R3SAa3nq5AGar",
-    "screenshotSaved": true
+    "screenshotSaved": true,
+    "resultsCommit": "a082491db5227ca1293e7929e02907482e0383f2"
+  },
+  "sdkProcessAuthority": {
+    "status": "source_candidate_reviewed_not_runtime",
+    "implementationTask": "W40mUzMXoCTU2ahi",
+    "reviewTask": "lAtYqHtkiflMl8Iy",
+    "initialReview": "ISSUES_sdk_native_key_crossbinding",
+    "finalReview": "PASS_source_candidate_only",
+    "files": [
+      "experimental/matrix-client/sdk-process-authority.mjs",
+      "experimental/matrix-client/sdk-process-authority-hooks.inc.mjs",
+      "experimental/matrix-client/SDK_PROCESS_AUTHORITY.md"
+    ],
+    "syntaxModules": 2,
+    "unlinkedSyntaxOnly": true,
+    "runtimeTests": 0,
+    "actualSDKIntegration": false,
+    "newCI": false,
+    "priorFilesUnchanged": 908,
+    "missingCompanionCode": "SDK_CROSS_BINDING_BLOCKED",
+    "remaining": [
+      "new_harness_registration_real_driver_wiring",
+      "owned_child_startup_close_and_observed_exit",
+      "1500ms_deadline_runtime_feasibility",
+      "independent_linux_aggregate_and_cleanup"
+    ],
+    "updatedAt": "2026-10-11T17:40:45.698Z"
   }
 }

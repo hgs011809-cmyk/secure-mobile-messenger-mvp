@@ -8,22 +8,22 @@
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
   "ownerSession": null,
-  "status": "sdk_process_foundation_linux_verified",
+  "status": "authority_adapter_candidate_reviewed",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "next_routine_NEW_actualSDK_authority_adapter_candidate_with_exact_initial_binding_snapshot_and_abortable_fresh_callbacks_else_cold_quota_alternative",
+  "next": "next_run_NEW_harness_driver_wiring_review_deadline_1500ms_no_core_policy_edits_else_cold_quota",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T17:15:56.846Z",
-  "implementationTask": "A92R3SAa3nq5AGar",
-  "independentReviewTask": "nx9aaScAATxMMaK0",
+  "updatedAt": "2026-10-11T17:40:45.698Z",
+  "implementationTask": "W40mUzMXoCTU2ahi",
+  "independentReviewTask": "lAtYqHtkiflMl8Iy",
   "completed": [
     "new_six_controlled_pending_fault_cases_linux_verified",
     "independent_cleanup_identity_fix_reviewed",
@@ -32,10 +32,11 @@
     "pre_post38_hash_guards_verified",
     "independent_always_cleanup_verified",
     "read_only_sdk_to_child_design_candidate_independently_reviewed_no_runtime",
-    "synthetic_ipc_foundation_six_linux_verified_only"
+    "synthetic_ipc_foundation_six_linux_verified_only",
+    "new_sdk_authority_candidate_crossbinding_source_review_only"
   ],
   "pending": [
-    "results_checkpoint_branch_backup"
+    "branch_backup_authority_candidate"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -85,8 +86,8 @@
     "screenshotSaved": true,
     "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
-  "lastOwnerSession": "4hVha2NRWs9veURt",
-  "checkpointCommit": "5eb813568de53a123236512c10df1b9ae5261ff3",
+  "lastOwnerSession": "tGkZlk2kU6Ti2Py6",
+  "checkpointCommit": "a082491db5227ca1293e7929e02907482e0383f2",
   "investigationTask": "bZcgUyvsP90GFDUL",
   "sdkProcessFeasibility": {
     "status": "conditional_candidate_not_established",
@@ -134,6 +135,33 @@
     "containersCreated": 0,
     "reviewTask": "nx9aaScAATxMMaK0",
     "implementationTask": "A92R3SAa3nq5AGar",
-    "screenshotSaved": true
+    "screenshotSaved": true,
+    "resultsCommit": "a082491db5227ca1293e7929e02907482e0383f2"
+  },
+  "sdkProcessAuthority": {
+    "status": "source_candidate_reviewed_not_runtime",
+    "implementationTask": "W40mUzMXoCTU2ahi",
+    "reviewTask": "lAtYqHtkiflMl8Iy",
+    "initialReview": "ISSUES_sdk_native_key_crossbinding",
+    "finalReview": "PASS_source_candidate_only",
+    "files": [
+      "experimental/matrix-client/sdk-process-authority.mjs",
+      "experimental/matrix-client/sdk-process-authority-hooks.inc.mjs",
+      "experimental/matrix-client/SDK_PROCESS_AUTHORITY.md"
+    ],
+    "syntaxModules": 2,
+    "unlinkedSyntaxOnly": true,
+    "runtimeTests": 0,
+    "actualSDKIntegration": false,
+    "newCI": false,
+    "priorFilesUnchanged": 908,
+    "missingCompanionCode": "SDK_CROSS_BINDING_BLOCKED",
+    "remaining": [
+      "new_harness_registration_real_driver_wiring",
+      "owned_child_startup_close_and_observed_exit",
+      "1500ms_deadline_runtime_feasibility",
+      "independent_linux_aggregate_and_cleanup"
+    ],
+    "updatedAt": "2026-10-11T17:40:45.698Z"
   }
 }
