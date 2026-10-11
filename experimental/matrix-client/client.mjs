@@ -1,6 +1,7 @@
 import {createClient,MemoryStore,MatrixEvent} from 'matrix-js-sdk';
 import {DeletionLedger} from './deletion-ledger.mjs';
 import {EncryptedConversation} from './conversation.mjs';
+import {validateBoundRoomState} from './room-state-policy.mjs';
 const silentLogger={trace(){},debug(){},info(){},warn(){},error(){},getChild(){return this;}};
 // Development-only factory. Production admission/Matrix account mapping is NOT implemented.
 export async function createLabClient({baseUrl,userId,deviceId,accessToken}){
@@ -26,9 +27,7 @@ export async function bindLabConversation({client,roomId,peerUserId,peerDeviceId
   // Fetch authoritative state through the SAME current-lease, fixed-room read-only ingress.
   // Never synthesize policy content or modify crypto/device verification state.
   const room=client.getRoom(roomId),state=await client.roomState(roomId);
-  if(!room||!Array.isArray(state)||state.length>512||state.some(e=>!e||typeof e.type!=='string'||typeof e.state_key!=='string'||typeof e.event_id!=='string'||e.room_id&&e.room_id!==roomId))throw new Error('invalid_bound_room_state');
-  const creation=state.find(e=>e.type==='m.room.create'&&e.state_key===''),current=room.currentState.getStateEvents('m.room.create','');
-  if(!creation||creation.content?.['m.federate']!==false||current&&(current.isRedacted()||current.getId()!==creation.event_id))throw new Error('invalid_bound_room_creation');
+  validateBoundRoomState({room,roomId,state});
   room.currentState.setStateEvents(state.map(e=>new MatrixEvent({...e,room_id:roomId})));
   const ledger=new DeletionLedger({name:'direct-matrix-lab-deletions-'+encodeURIComponent(client.getUserId()+'|'+client.getDeviceId())});
   const conversation=new EncryptedConversation({client,roomId,peerUserId,peerDeviceId,ledger,onUpdate});
