@@ -1,6 +1,6 @@
 # Restart cleanup: source-grounded next experiment
 
-Status: source investigation complete; candidate NOT runtime-validated. Existing retention run stays FAILED. No production/NCP changes or authorization.
+Status: source investigation and isolated Linux source checks complete. Candidate NOT runtime-validated. Existing retention run stays FAILED. No production/NCP changes or authorization.
 
 ## Verified v1.162.0 implementation
 
@@ -11,7 +11,7 @@ This supplies a concrete restart-delay mechanism consistent with observed 343.65
 
 ## Minimal isolated candidate, not approved runtime code
 
-A pure, default-disabled source transformer and nine source-guard test cases have been prepared locally under experimental/matrix-cleanup-candidate. They are NOT committed here as validated code and have not modified any server. Proposed change is only the pinned scheduler expression:
+A pure, default-disabled source transformer and nine source-guard test cases are committed under experimental/matrix-cleanup-candidate (d2e03c0). The separate source-check workflow is committed at 3856e38. No server has been modified. Proposed change is only the pinned scheduler expression:
 
 - Old: looping_call(self._censor_redactions, Duration(minutes=5))
 - Candidate: looping_call_now(self._censor_redactions, Duration(seconds=30))
@@ -28,8 +28,8 @@ This is a private implementation customization, NOT a supported homeserver confi
 4. Negative controls: unredacted encrypted messages remain unchanged; unauthorized and wrong-room redactions cannot erase them; policy-state redactions remain blocked by the ingress boundary. Cache/API/SDK display behavior must agree after cleanup.
 5. Keep target at 300000ms, preserve confirmed misses and unknown boundaries, and record bounded callback/index/queue timing without event IDs, bodies, keys or tokens. Long outages and repeated restarts may still miss the target; never reset deadlines or claim unconditional guarantees.
 
-## Current execution block
+## Resolved validation route and remaining local limitation
 
-No new test pass is claimed. The short new Node test call reported file-not-found before any TAP output. A read-only probe confirmed the file exists. Switching from discovery to direct ESM loading produced EPERM on lstat C:\ at Node module resolution, before the test module ran. Both calls exited 1; no further retries or permission bypass. This identifies a local ancestor-path permission block. It does not retroactively explain the earlier daemon restart or exit 1223 cancellation.
+No local test pass is claimed. The earlier short Node test call reported file-not-found before any TAP output. A read-only probe confirmed the file exists. Switching from discovery to direct ESM loading produced EPERM on lstat C:\ at Node module resolution, before the test module ran. Both calls exited 1; no further retries or permission bypass. This identifies a local ancestor-path permission block. It does not retroactively explain the earlier daemon restart or exit 1223 cancellation.
 
-Smallest next validation path: isolated GitHub Actions source checks using repository/public-source inputs. Do not broaden local drive access simply to run a test. Until runtime gates and operational approval, rollout, resource purchases, public staging changes and NCP deployment remain BLOCKED. WAL/backup/media/Android/human-OOB obligations remain unchanged.
+The validation route is now working: [GitHub Actions source-check run 38123669253](https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38123669253), commit 3856e38, succeeded in 25 seconds on Node22/Linux. It extracted the exact pinned-image source, passed all nine source guards (0 failures/cancellations/skips), generated a temporary candidate and passed Python syntax parsing with runtime_executed=false. Temporary source cleanup passed. This resolves the task validation blockage without expanding local filesystem permission; the local Windows EPERM limitation remains. Next step is a separately bounded candidate-runtime startup/index/authorization experiment, not another unchanged source-test retry. Until runtime gates and operational approval, rollout, resource purchases, public staging changes and NCP deployment remain BLOCKED. WAL/backup/media/Android/human-OOB obligations remain unchanged.
