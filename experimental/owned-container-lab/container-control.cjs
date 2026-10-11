@@ -11,8 +11,8 @@ const IMAGE = /^sha256:[a-f0-9]{64}$/;
 const WORKER = '/opt/fixture/container-worker.mjs';
 const MODES = ['graceful', 'linger'];
 // Diagnostics exist only in CLI mode; exported validation remains a pure data contract.
-const STAGES = new Set(['rootcheck', 'runempty', 'imageinspect', 'image_env_admission', 'intentspersisted', 'create', 'IDpersisted', 'created_security_admission', 'recordpersisted', 'start', 'gracefulwait', 'lingerready', 'probe', 'stop', 'cleanup_load', 'cleanup_stop', 'cleanup_remove', 'cleanup_absence', 'cleanup_residual', 'cleanup_rootremove']);
-const GATES = new Set(['root', 'image_env', 'saved_record', 'absence', 'docker_cli', 'identity_config', 'env', 'namespace_config', 'bounds', 'tmpfs', 'host_mounts', 'ports', 'image_volumes', 'mounts', 'network_map', 'image_identity', 'create_id', 'created_state', 'workload_output', 'workload_state', 'persistence', 'private_file', 'cleanup_residual', 'root_absence', 'cli_args', 'intent']);
+const STAGES = new Set(['rootcheck', 'runempty', 'engineinspect', 'imageinspect', 'image_env_admission', 'intentspersisted', 'create', 'IDpersisted', 'created_security_admission', 'recordpersisted', 'start', 'gracefulwait', 'lingerready', 'probe', 'stop', 'cleanup_load', 'cleanup_stop', 'cleanup_remove', 'cleanup_absence', 'cleanup_residual', 'cleanup_rootremove']);
+const GATES = new Set(['root', 'image_env', 'saved_record', 'absence', 'docker_cli', 'identity_config', 'env', 'namespace_config', 'bounds', 'oom_killer', 'tmpfs', 'host_mounts', 'ports', 'image_volumes', 'mounts', 'network_map', 'image_identity', 'create_id', 'created_state', 'workload_output', 'workload_state', 'persistence', 'private_file', 'cleanup_residual', 'root_absence', 'cli_args', 'intent']);
 // Fixed public Docker schema names only. Unknown diff keys project to the literal 'other'.
 // NetworkSettings is a container-inspect object, not Config/HostConfig; its shape has a separate observation.
 const CONFIG_FIELDS = new Set(['Hostname', 'Domainname', 'User', 'AttachStdin', 'AttachStdout', 'AttachStderr', 'ExposedPorts', 'Tty', 'OpenStdin', 'StdinOnce', 'Env', 'Cmd', 'Healthcheck', 'ArgsEscaped', 'Image', 'Volumes', 'WorkingDir', 'Entrypoint', 'NetworkDisabled', 'MacAddress', 'OnBuild', 'Labels', 'StopSignal', 'StopTimeout', 'Shell']);
@@ -36,9 +36,17 @@ function context(stage, gate) {
   if (diagnostic && STAGES.has(stage) && GATES.has(gate)) { diagnostic.stage = stage; diagnostic.gate = gate; }
 }
 function gate(code) { if (diagnostic && GATES.has(code)) diagnostic.gate = code; }
+function oomShape(h) {
+  if (!h || typeof h !== 'object' || Array.isArray(h)) return 'malformed';
+  if (!Object.hasOwn(h, 'OomKillDisable')) return 'missing';
+  if (h.OomKillDisable === false) return 'explicit_enabled';
+  if (h.OomKillDisable === true) return 'disable_requested';
+  if (h.OomKillDisable === null) return 'unset_null';
+  return 'malformed';
+}
 function failureProjection() {
   const count = key => Number.isInteger(diagnostic?.[key]) && diagnostic[key] >= 0 && diagnostic[key] <= 2 ? diagnostic[key] : 0;
-  return { status: 'failed', reason: 'containment_unverified', stage: STAGES.has(diagnostic?.stage) ? diagnostic.stage : 'rootcheck', gate: GATES.has(diagnostic?.gate) ? diagnostic.gate : 'root', createdCount: count('createdCount'), startedCount: count('startedCount'), completedCount: count('completedCount'), networkMapObservation: ['empty', 'none_only', 'other', 'missing'].includes(diagnostic?.networkMapObservation) ? diagnostic.networkMapObservation : 'missing', imageEnvExpectedKeys: diagnostic?.imageEnvExpectedKeys === true, configComparison: ['not_observed', 'equal', 'different'].includes(diagnostic?.configComparison) ? diagnostic.configComparison : 'not_observed', hostConfigComparison: ['not_observed', 'equal', 'different'].includes(diagnostic?.hostConfigComparison) ? diagnostic.hostConfigComparison : 'not_observed', stateShape: ['not_observed', 'valid', 'invalid'].includes(diagnostic?.stateShape) ? diagnostic.stateShape : 'not_observed', changedConfigFields: projectFields(diagnostic?.changedConfigFields, CONFIG_FIELDS), changedHostConfigFields: projectFields(diagnostic?.changedHostConfigFields, HOST_FIELDS) };
+  return { status: 'failed', reason: 'containment_unverified', stage: STAGES.has(diagnostic?.stage) ? diagnostic.stage : 'rootcheck', gate: GATES.has(diagnostic?.gate) ? diagnostic.gate : 'root', createdCount: count('createdCount'), startedCount: count('startedCount'), completedCount: count('completedCount'), networkMapObservation: ['empty', 'none_only', 'other', 'missing'].includes(diagnostic?.networkMapObservation) ? diagnostic.networkMapObservation : 'missing', imageEnvExpectedKeys: diagnostic?.imageEnvExpectedKeys === true, configComparison: ['not_observed', 'equal', 'different'].includes(diagnostic?.configComparison) ? diagnostic.configComparison : 'not_observed', hostConfigComparison: ['not_observed', 'equal', 'different'].includes(diagnostic?.hostConfigComparison) ? diagnostic.hostConfigComparison : 'not_observed', stateShape: ['not_observed', 'valid', 'invalid'].includes(diagnostic?.stateShape) ? diagnostic.stateShape : 'not_observed', changedConfigFields: projectFields(diagnostic?.changedConfigFields, CONFIG_FIELDS), changedHostConfigFields: projectFields(diagnostic?.changedHostConfigFields, HOST_FIELDS), oomKillDisableShape: ['explicit_enabled', 'disable_requested', 'unset_null', 'missing', 'malformed', 'not_observed'].includes(diagnostic?.oomKillDisableShape) ? diagnostic.oomKillDisableShape : 'not_observed', cgroupVersionClass: ['v1', 'v2', 'unknown', 'not_observed'].includes(diagnostic?.cgroupVersionClass) ? diagnostic.cgroupVersionClass : 'not_observed', oomDisableCapabilityClass: ['supported', 'unsupported', 'unknown', 'not_observed'].includes(diagnostic?.oomDisableCapabilityClass) ? diagnostic.oomDisableCapabilityClass : 'not_observed', engineVersionClass: ['source_28_5_1', 'source_29_0_0', 'other_version', 'not_observed'].includes(diagnostic?.engineVersionClass) ? diagnostic.engineVersionClass : 'not_observed' };
 }
 const reject = code => { if (code) gate(code); throw new Error('containment_unverified'); };
 function keys(value, expected) {
@@ -96,7 +104,10 @@ function security(s, i) {
   gate('namespace_config');
   if (h.Privileged !== false || h.ReadonlyRootfs !== true || h.NetworkMode !== 'none' || h.PidMode !== '' || h.IpcMode !== 'private' || h.UsernsMode !== '' || h.UTSMode !== '' || h.CgroupnsMode !== 'private' || h.AutoRemove !== false || h.Init !== false || h.PublishAllPorts !== false) reject();
   gate('bounds');
-  if (!equal(h.CapDrop, ['ALL']) || (h.CapAdd != null && !equal(h.CapAdd, [])) || !equal(h.SecurityOpt, ['no-new-privileges']) || h.Memory !== 1073741824 || h.MemorySwap !== 1073741824 || h.NanoCpus !== 1000000000 || h.PidsLimit !== 128 || h.ShmSize !== 134217728 || h.OomKillDisable !== false) reject();
+  if (!equal(h.CapDrop, ['ALL']) || (h.CapAdd != null && !equal(h.CapAdd, [])) || !equal(h.SecurityOpt, ['no-new-privileges']) || h.Memory !== 1073741824 || h.MemorySwap !== 1073741824 || h.NanoCpus !== 1000000000 || h.PidsLimit !== 128 || h.ShmSize !== 134217728) reject();
+  // Separate fixed gate: same strict false predicate, no resource admission relaxation.
+  gate('oom_killer');
+  if (h.OomKillDisable !== false) reject();
   gate('tmpfs');
   if (!equal(h.Tmpfs, { '/tmp': 'rw,noexec,nosuid,nodev,size=256m,mode=1777' })) reject();
   gate('host_mounts');
@@ -116,27 +127,30 @@ function security(s, i) {
 function validateRecord(record, observed, intent, exactId) {
   if (diagnostic) {
     diagnostic.configComparison = 'not_observed'; diagnostic.hostConfigComparison = 'not_observed'; diagnostic.stateShape = 'not_observed';
-    diagnostic.changedConfigFields = []; diagnostic.changedHostConfigFields = [];
+    diagnostic.changedConfigFields = []; diagnostic.changedHostConfigFields = []; diagnostic.oomKillDisableShape = 'not_observed';
   }
   validateIntent(intent);
   gate('saved_record');
   keys(record, ['version', 'id', 'intent', 'image', 'config', 'securityConfig']);
   if (record.version !== 1 || !ID.test(record.id) || !ID.test(exactId) || record.id !== exactId || !equal(record.intent, intent) || record.image !== intent.image) reject();
   if (!observed || observed.Id !== exactId) reject();
-  security(observed, intent);
-  security({ ...observed, Image: record.image, Config: record.config, HostConfig: record.securityConfig }, intent);
-  gate('saved_record');
-  // Observe before either full equality or state rejection, without changing acceptance.
-  const validState = !!observed.State && typeof observed.State.Running === 'boolean' && Number.isInteger(observed.State.ExitCode);
-  const configEqual = equal(record.config, observed.Config);
-  const hostConfigEqual = equal(record.securityConfig, observed.HostConfig);
+  if (diagnostic) diagnostic.oomKillDisableShape = oomShape(observed?.HostConfig);
+  // Diagnose full-record comparison before resource admission can fail. No acceptance
+  // depends on this projection; all original security/equality/state checks remain below.
+  const validState = !!observed?.State && typeof observed.State.Running === 'boolean' && Number.isInteger(observed.State.ExitCode);
+  const configEqual = equal(record.config, observed?.Config);
+  const hostConfigEqual = equal(record.securityConfig, observed?.HostConfig);
   if (diagnostic) {
     diagnostic.stateShape = validState ? 'valid' : 'invalid';
     diagnostic.configComparison = configEqual ? 'equal' : 'different';
     diagnostic.hostConfigComparison = hostConfigEqual ? 'equal' : 'different';
-    diagnostic.changedConfigFields = diffFields(record.config, observed.Config, CONFIG_FIELDS);
-    diagnostic.changedHostConfigFields = diffFields(record.securityConfig, observed.HostConfig, HOST_FIELDS);
+    const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+    diagnostic.changedConfigFields = isObject(record.config) && isObject(observed?.Config) ? diffFields(record.config, observed.Config, CONFIG_FIELDS) : ['other'];
+    diagnostic.changedHostConfigFields = isObject(record.securityConfig) && isObject(observed?.HostConfig) ? diffFields(record.securityConfig, observed.HostConfig, HOST_FIELDS) : ['other'];
   }
+  security(observed, intent);
+  security({ ...observed, Image: record.image, Config: record.config, HostConfig: record.securityConfig }, intent);
+  gate('saved_record');
   if (!configEqual || !hostConfigEqual) reject();
   if (!validState) reject();
   return true;
@@ -270,6 +284,14 @@ async function stop(root, owned) {
 async function run(root) {
   context('runempty', 'root');
   if ((await fs.readdir(root)).length !== 0 || !IMAGE.test(process.env.CONTAINMENT_IMAGE_ID || '')) reject();
+  // Private read-only daemon observation: fixed classifications only, never raw info.
+  context('engineinspect', 'docker_cli');
+  const infoResult = await docker(root, ['info', '--format', '{{json .}}']);
+  const info = JSON.parse(success(infoResult));
+  if (!info || typeof info !== 'object' || Array.isArray(info)) reject('docker_cli');
+  diagnostic.cgroupVersionClass = info.CgroupVersion === '2' ? 'v2' : info.CgroupVersion === '1' ? 'v1' : 'unknown';
+  diagnostic.oomDisableCapabilityClass = info.OomKillDisable === true ? 'supported' : info.OomKillDisable === false ? 'unsupported' : 'unknown';
+  diagnostic.engineVersionClass = info.ServerVersion === '28.5.1' ? 'source_28_5_1' : info.ServerVersion === '29.0.0' ? 'source_29_0_0' : 'other_version';
   // Inspect the exact immutable image before any intent or container creation.
   context('imageinspect', 'image_identity');
   const imageResult = await docker(root, ['image', 'inspect', process.env.CONTAINMENT_IMAGE_ID]);
@@ -384,6 +406,10 @@ async function cleanup(root) {
     diagnostic.stateShape = firstFailure.stateShape;
     diagnostic.changedConfigFields = [...firstFailure.changedConfigFields];
     diagnostic.changedHostConfigFields = [...firstFailure.changedHostConfigFields];
+    diagnostic.oomKillDisableShape = firstFailure.oomKillDisableShape;
+    diagnostic.cgroupVersionClass = firstFailure.cgroupVersionClass;
+    diagnostic.oomDisableCapabilityClass = firstFailure.oomDisableCapabilityClass;
+    diagnostic.engineVersionClass = firstFailure.engineVersionClass;
     reject();
   }
   // Root removal only after exact-ID absence and residual scan proof.
@@ -395,7 +421,7 @@ async function cleanup(root) {
   console.log(JSON.stringify({ status: 'cleanup_verified', containersAbsent: true, privateRootAbsent: true }));
 }
 async function main() {
-  diagnostic = { stage: 'rootcheck', gate: 'cli_args', createdCount: 0, startedCount: 0, completedCount: 0, networkMapObservation: 'missing', imageEnvExpectedKeys: false, configComparison: 'not_observed', hostConfigComparison: 'not_observed', stateShape: 'not_observed', changedConfigFields: [], changedHostConfigFields: [] };
+  diagnostic = { stage: 'rootcheck', gate: 'cli_args', createdCount: 0, startedCount: 0, completedCount: 0, networkMapObservation: 'missing', imageEnvExpectedKeys: false, configComparison: 'not_observed', hostConfigComparison: 'not_observed', stateShape: 'not_observed', changedConfigFields: [], changedHostConfigFields: [], oomKillDisableShape: 'not_observed', cgroupVersionClass: 'not_observed', oomDisableCapabilityClass: 'not_observed', engineVersionClass: 'not_observed' };
   if (process.argv.length !== 3 || !['--run', '--cleanup'].includes(process.argv[2])) reject();
   context('rootcheck', 'root');
   const root = await rootCheck();

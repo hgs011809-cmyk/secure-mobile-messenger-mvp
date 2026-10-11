@@ -175,7 +175,7 @@
       "rawDiagnosticsPublished": false
     }
   ],
-  "current": "BLOCKED_STOPPED_NO_MORE_RUNTIME_OR_AUTOMATIC_CHAIN",
+  "current": "REOPENED_ONE_REVIEWED_DIAGNOSTIC_CI_STRICT_ACCEPTANCE_UNCHANGED",
   "limits": [
     "not_actual_SDK_integration",
     "not_MXC_or_Internet_transfer",
@@ -197,5 +197,35 @@
     "independentCleanupAccepted": false,
     "actualSDKIntegrationAccepted": false
   },
-  "nextSafeStep": "Read-only review of exact Docker CLI/daemon resource representation across create/start; separately reviewed bounded design that preserves exact precreated identity and all resource/security constraints. New runtime only with renewed authorization; do not ignore bounds/full-record checks or use posthoc PID signals."
+  "nextSafeStep": "Read-only review of exact Docker CLI/daemon resource representation across create/start; separately reviewed bounded design that preserves exact precreated identity and all resource/security constraints. New runtime only with renewed authorization; do not ignore bounds/full-record checks or use posthoc PID signals.",
+  "renewedDiagnosticPhase": {
+    "authorization": "user_explicitly_approved_investigation_independent_review_and_isolated_CI",
+    "scope": "one_diagnostic_trial_under_unchanged_strict_contract",
+    "contractRevisionAuthorized": false,
+    "engineProvisioningAuthorized": false,
+    "actualSDKAuthorized": false,
+    "sourceInvestigation": {
+      "task": "uBj7m1vztRbfpJ92",
+      "result": "pinned_source_predicts_false_to_nil_on_unsupported_cgroup_v2_actual_CI_transition_unverified"
+    },
+    "staticReview": {
+      "task": "yOEJJJrbCF4U4lZY",
+      "result": "PASS_static_only"
+    },
+    "localEvidence": {
+      "nodeVersionClass": "Node26_same_process",
+      "pureContracts": 4,
+      "pass": 4,
+      "diagnosticProjectionChecks": 19,
+      "projectionPass": 19,
+      "localSourcePins": 38,
+      "DockerOrBrowserWorkloadExecuted": false
+    },
+    "localHelperLimitations": [
+      "default_main_loader_ancestor_C_root_EPERM",
+      "isolated_test_discovery_could_not_find_allowed_absolute_file",
+      "same_process_report_format_mismatch_then_existing_result_verified"
+    ],
+    "next": "run_one_approved_isolated_diagnostic_CI_do_not_relax_literal_false_or_full_equality"
+  }
 }

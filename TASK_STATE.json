@@ -1,5 +1,5 @@
 {
-  "phase": "owned_container_standalone_BLOCKED_stopped",
+  "phase": "owned_container_renewed_diagnostic_CI_ready",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Read-only review of exact Docker CLI/daemon resource representation across create/start; separately reviewed bounded design that preserves exact precreated identity and all resource/security constraints. New runtime only with renewed authorization; do not ignore bounds/full-record checks or use posthoc PID signals.",
+  "next": "run_one_approved_isolated_diagnostic_CI_do_not_relax_literal_false_or_full_equality",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -453,7 +453,7 @@
     "backupConfirmed": true
   },
   "ownedContainer": {
-    "status": "BLOCKED_STOPPED",
+    "status": "DIAGNOSTIC_READY_RUNTIME_STILL_BLOCKED",
     "actualSDKIntegration": false,
     "runtimeTests": 0,
     "proposal": "Docker_create_ID_before_start_private_PID_namespace",
@@ -622,8 +622,12 @@
     "independentCleanupAccepted": false,
     "noAdmissionRelaxation": true,
     "noPosthocHostWorkloadPIDSignals": true,
-    "noMoreRuntimeInThisBoundedPhase": true,
+    "noMoreRuntimeInThisBoundedPhase": false,
     "noScheduledChainOrWindowExtension": true,
-    "nextAuthorizationRequired": true
+    "nextAuthorizationRequired": false,
+    "renewedAuthorization": "user_explicitly_approved_investigation_independent_review_and_isolated_CI",
+    "authorizationScope": "one_diagnostic_trial_under_unchanged_strict_contract",
+    "contractRevisionRequiresNewApproval": true,
+    "engineProvisioningRequiresNewApproval": true
   }
 }

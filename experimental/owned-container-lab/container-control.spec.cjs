@@ -45,6 +45,16 @@ test('image and full security configuration mismatches fail closed', () => {
     if (oomKillDisable === undefined) { delete invalid.record.securityConfig.OomKillDisable; delete invalid.observed.HostConfig.OomKillDisable; }
     assert.throws(() => validateRecord(invalid.record, invalid.observed, invalid.intent, invalid.id), { message: 'containment_unverified' });
   }
+  // A post-start-only representation change still fails; diagnostics must not
+  // rebaseline or mutate either immutable expected data or observed data.
+  for (const value of [null, undefined, true, 'false', [], {}]) {
+    const drift = fixture();
+    drift.observed.HostConfig.OomKillDisable = value;
+    if (value === undefined) delete drift.observed.HostConfig.OomKillDisable;
+    const before = structuredClone(drift);
+    assert.throws(() => validateRecord(drift.record, drift.observed, drift.intent, drift.id), { message: 'containment_unverified' });
+    assert.deepEqual(drift, before);
+  }
   const validEnvironment = fixture().observed.Config.Env;
   for (const env of [
     [...validEnvironment, 'NODE_OPTIONS=--require=/unowned/module'],
