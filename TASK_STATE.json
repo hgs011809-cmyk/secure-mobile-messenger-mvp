@@ -1,5 +1,5 @@
 {
-  "phase": "autonomous_window_final_evidence_index_reviewed",
+  "phase": "autonomous_window_closed_final_verification_complete",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "04:15_final_verification_cleanup_backup_and_summary_only_no_new_phase_no_schedule_extension",
+  "next": "STOP_no_new_phase_no_autochain_no_schedule_extension_future_work_requires_new_authorization",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -418,6 +418,36 @@
     "priorSuitesRemainSeparate": true,
     "updatedAt": "2026-10-11T19:04:18.301Z",
     "priorFilesChecked": 933,
-    "priorFileMismatches": 0
+    "priorFileMismatches": 0,
+    "backupCommit": "ab98c4864c288c73f7208809f84357efe025556a",
+    "screenshotSaved": true
+  },
+  "finalVerification": {
+    "session": "15EzrsrF1aSyh9Ea",
+    "newRuntimeTests": 0,
+    "newCI": 0,
+    "latestRun": "38165607526",
+    "latestJob": "114547421454",
+    "aggregateReinspected": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "flat": true,
+      "runnerExit": 0
+    },
+    "independentCleanupReinspected": {
+      "ownedTestProcessesAlive": 0,
+      "ownedTestProcessesStopped": 0,
+      "containersCreated": 0,
+      "privateNamespaceAbsent": true,
+      "readOnly": true
+    },
+    "priorEvidenceBackupConfirmed": "ab98c4864c288c73f7208809f84357efe025556a",
+    "review": "IFMlLiJs99deyYVh_document_only_PASS_not_runtime_rerun",
+    "historicalFailuresRetained": true,
+    "screenshot": "C:/Users/mycom/.aside/u/0/sessions/2026-10-12_15EzrsrF1aSyh9Ea/tmp/final-ci-cleanup-proof.png",
+    "closed": true
   }
 }
