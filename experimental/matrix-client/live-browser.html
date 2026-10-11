@@ -256,6 +256,18 @@ const api = {
     }, 'receive');
     return true;
   },
+  async diagnostic({event}) {
+    const found=timelineEvent(event),crypto=client.getCrypto();
+    const peerDevices=(await crypto.getUserDeviceInfo([bound.peer],true)).get(bound.peer),device=peerDevices?.get(bound.device);
+    const info=found?await crypto.getEncryptionInfoForEvent(found):null;
+    return {eventFound:Boolean(found),decryptionFailed:found?.isDecryptionFailure()===true,
+      peerVerified:(await crypto.getDeviceVerificationStatus(bound.peer,bound.device))?.isVerified()===true,
+      peerDeviceCount:peerDevices?.size??0,senderKeyMatches:Boolean(found?.getSenderKey()&&found.getSenderKey()===device?.getIdentityKey()),
+      claimedKeyMatches:Boolean(found?.getClaimedEd25519Key()&&found.getClaimedEd25519Key()===device?.getFingerprint()),
+      shieldColour:Number.isInteger(info?.shieldColour)?info.shieldColour:-1,
+      shieldReason:Number.isInteger(info?.shieldReason)?info.shieldReason:-1,
+      visible:conversation.snapshot().some(m=>m.id===event)};
+  },
   async remove({event}) { return requireConversation().deleteForBoth(event); },
   async deleted({event}) {
     requireConversation();
