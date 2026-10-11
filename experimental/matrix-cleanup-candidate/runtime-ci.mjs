@@ -5,15 +5,18 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {waitForServer} from '../../infra/ncp/matrix-lab/ci/readiness.mjs';
 import {ScrubMeasurements} from '../matrix-retention-lab/measurement.mjs';
+import {crashPendingSequence,REPEATED_STARTUP_PLAN} from './crash-sequence.mjs';
 if(process.env.GITHUB_ACTIONS!=='true')throw new Error('ci_only');
 const mode=process.env.CANDIDATE_MODE;
-if(!['control','restart','crash'].includes(mode))throw new Error('invalid_mode');
+if(!['control','restart','crash','repeat-crash'].includes(mode))throw new Error('invalid_mode');
+const abrupt=mode==='crash'||mode==='repeat-crash',repeated=mode==='repeat-crash';
 const ci=fileURLToPath(new URL('../../infra/ncp/matrix-lab/ci/',import.meta.url));
 const source=await readFile(new URL('../matrix-retention-lab/probe_rows.py',import.meta.url),'utf8');
 const children=[],samples=[],gates=[];const measured=new ScrubMeasurements();
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const assert=v=>{if(!v)throw new Error('gate_failed');};
-let base,stage='readiness';const restartDowntimeMs=[],negativeStatuses={};
+let base,stage='readiness';const restartDowntimeMs=[],negativeStatuses={},sampleKillCounts=[],interruptionStartToKillMs=[];
+let completedKillGates=0,stoppedPendingChecks=0,startupProcessGates=0;
 function docker(args,options={}){return execFileSync('docker',['compose','-f',ci+'compose.yaml','-f',ci+'runtime/candidate-compose.yaml',...args],{encoding:'utf8',timeout:20000,stdio:['ignore','pipe','ignore'],...options});}
 async function api(route,method='GET',body,token){
  const r=await fetch(base+route,{method,redirect:'error',signal:AbortSignal.timeout(15000),headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{})});
@@ -71,17 +74,38 @@ try{
  for(let i=0;i<3;i++){
   stage='real-ciphertext-precheck';const reverse=i===1,sender=reverse?bob:alice,recipient=reverse?alice:bob,senderToken=reverse?b.access_token:a.access_token,recipientToken=reverse?a.access_token:b.access_token;
   const body='synthetic-candidate-'+randomBytes(16).toString('hex'),eventId=await sender.call('send',{roomId:room,body});const raw=await api(route(room,eventId),'GET',undefined,senderToken);assert(raw.type==='m.room.encrypted'&&raw.content?.ciphertext&&!Object.hasOwn(raw.content,'body'));await recipient.call('decrypt',{roomId:room,eventId,body});assert(rawProbe([eventId]).states[0]==='encrypted');
-  stage='ordinary-peer-redaction';const requestedAtMs=performance.now();await recipient.call('redact',{roomId:room,eventId});const acknowledgedAtMs=performance.now();const sample={eventId,cohort:mode==='crash'?'candidate-crash':mode==='restart'?'candidate-restart':'candidate-control',requestedAtMs,acknowledgedAtMs};samples.push(sample);measured.register(sample);await hidden(room,sample,recipientToken);
-  if(mode==='restart'||mode==='crash'){
+  stage='ordinary-peer-redaction';const requestedAtMs=performance.now();await recipient.call('redact',{roomId:room,eventId});const acknowledgedAtMs=performance.now();const sample={eventId,cohort:repeated?'candidate-repeat-crash':mode==='crash'?'candidate-crash':mode==='restart'?'candidate-restart':'candidate-control',requestedAtMs,acknowledgedAtMs};samples.push(sample);measured.register(sample);await hidden(room,sample,recipientToken);
+  if(mode==='restart'||abrupt){
    stage='predefined-pending-row-restart';assert(observeAll().states.at(-1)==='encrypted');const start=performance.now();
-   if(mode==='crash'){
+   if(abrupt){
     const container=docker(['ps','--all','--quiet','synapse']).trim();assert(/^[a-f0-9]{12,64}$/.test(container));
     const mount=execFileSync('docker',['inspect','--format','{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}} {{.Source}} {{.RW}}{{end}}{{end}}',container],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore']}).trim();assert(mount==='bind '+ci+'runtime true');
-    stage='sigkill';docker(['kill','--signal','SIGKILL','synapse']);
-    const exitDeadline=performance.now()+3000;let exit;
-    do{exit=execFileSync('docker',['inspect','--format','{{.State.Running}} {{.State.ExitCode}} {{.State.OOMKilled}}',container],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore']}).trim();if(exit==='false 137 false')break;assert(performance.now()<exitDeadline);await sleep(50);}while(true);
-    stage='stopped-server-pending-ciphertext';const observed=stoppedProbe(samples.map(s=>s.eventId));measured.observe(observed);assert(observed.states.at(-1)==='encrypted');
-    docker(['start','synapse']);assert(docker(['ps','--all','--quiet','synapse']).trim()===container);
+    const pendingIds=samples.map(s=>s.eventId);
+    const inspectStart=()=>{const parts=execFileSync('docker',['inspect','--format','{{.State.Running}} {{.State.Pid}} {{.State.StartedAt}}',container],{encoding:'utf8',timeout:3000,stdio:['ignore','pipe','ignore']}).trim().split(' ');assert(parts.length===3&&parts[0]==='true'&&/^\d+$/.test(parts[1])&&Number(parts[1])>0&&!Number.isNaN(Date.parse(parts[2])));return {pid:parts[1],started:parts[2]};};
+    let previousStart=inspectStart(),lastStartAttemptAt,interruptionAwaitingKill=false;
+    const sequence=await crashPendingSequence({repeated,adapter:{
+     async startSame(){stage='same-container-start';lastStartAttemptAt=performance.now();docker(['start','synapse']);assert(docker(['ps','--all','--quiet','synapse']).trim()===container);const now=inspectStart();assert(now.started!==previousStart.started&&now.pid!==previousStart.pid);previousStart=now;},
+     async requireHomeserverProcess(budget){
+      stage='restarted-main-python-homeserver-process';const processDeadline=performance.now()+budget;
+      while(true){
+       const proc=execFileSync('docker',['exec',container,'sh','-c','readlink /proc/1/exe && cat /proc/1/cmdline'],{encoding:'utf8',timeout:3000,stdio:['ignore','pipe','ignore']});assert(performance.now()<=processDeadline);
+       const separator=proc.indexOf('\n'),exe=proc.slice(0,separator),argv=proc.slice(separator+1).split('\0').filter(Boolean);
+       if(/^\/usr\/local\/bin\/python3(?:\.\d+)?$/.test(exe)&&/^(?:\/usr\/local\/bin\/)?python(?:3(?:\.\d+)?)?$/.test(argv[0]??'')&&argv[1]==='-m'&&argv[2]==='synapse.app.homeserver'){startupProcessGates++;interruptionAwaitingKill=true;break;}await sleep(25);
+      }
+     },
+     hold:ms=>sleep(ms),
+     async killAndRequire137NonOOM(){
+      stage='sigkill';docker(['kill','--signal','SIGKILL','synapse']);
+      const exitDeadline=performance.now()+3000;let exit;
+      do{exit=execFileSync('docker',['inspect','--format','{{.State.Running}} {{.State.ExitCode}} {{.State.OOMKilled}}',container],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore']}).trim();if(exit==='false 137 false')break;assert(performance.now()<exitDeadline);await sleep(50);}while(true);
+      completedKillGates++;if(interruptionAwaitingKill){interruptionStartToKillMs.push(Math.ceil(performance.now()-lastStartAttemptAt));interruptionAwaitingKill=false;}
+     },
+     async requireStoppedSameCiphertext(){
+      stage='stopped-server-pending-ciphertext';const observed=stoppedProbe(pendingIds);measured.observe(observed);
+      if(observed.states.at(-1)!=='encrypted'){stage='same-pending-startup-window-unavailable';throw new Error('gate_failed');}stoppedPendingChecks++;
+     }
+    }});
+    assert(sequence.kills===(repeated?3:1)&&sequence.startupInterruptions===(repeated?2:0));sampleKillCounts.push(sequence.kills);
    }else docker(['restart','--timeout','5','synapse'],{timeout:45000});
    const restored=await waitForServer(ci);assert(restored===base);restartDowntimeMs.push(Math.ceil(performance.now()-start));
    stage='post-restart-api-hidden';for(const s of samples)await hidden(room,s,a.access_token);assert(await indexReady());
@@ -89,8 +113,8 @@ try{
   stage='active-row-observation';const observationDeadline=acknowledgedAtMs+90000;while(!measured.completed&&performance.now()<observationDeadline){observeAll();if(!measured.completed)await sleep(500);}assert(measured.completed);assert(measured.report().passed);
   stage='sdk-redaction-hidden';await Promise.all([sender.call('deleted',{roomId:room,eventId}),recipient.call('deleted',{roomId:room,eventId})]);
  }
- gates.push('three-reciprocal-redactions-scrubbed-with-original-clocks');if(mode==='restart')gates.push('three-clean-restart-cycles-pending-before-each-and-api-hidden-after');if(mode==='crash')gates.push('three-sigkill-exit137-not-oom-same-container-volume-stopped-row-pending-api-hidden-after');
+ gates.push('three-reciprocal-redactions-scrubbed-with-original-clocks');if(mode==='restart')gates.push('three-clean-restart-cycles-pending-before-each-and-api-hidden-after');if(mode==='crash')gates.push('three-sigkill-exit137-not-oom-same-container-volume-stopped-row-pending-api-hidden-after');if(repeated){assert(completedKillGates===9&&stoppedPendingChecks===9&&startupProcessGates===6&&interruptionStartToKillMs.length===6&&sampleKillCounts.length===3&&sampleKillCounts.every(n=>n===3));gates.push('three-samples-each-three-same-pending-sigkills-two-restarted-main-python-interruptions-final-api-hidden');}
  stage='negative-controls-after-native-ticks';await sleep(35000);assert(rawProbe([sentinel]).states[0]==='encrypted');const finalSentinel=await api(route(room,sentinel),'GET',undefined,a.access_token);assert(JSON.stringify(finalSentinel.content)===sentinelContent);await bob.call('decrypt',{roomId:room,eventId:sentinel,body:sentinelBody});gates.push('unredacted-and-cross-room-target-unchanged-after-native-ticks');
- const report={status:'passed',mode,plannedSamples:3,gates,negativeStatuses,measurement:measured.report(),restartDowntimeMs,observationBudgetMs:90000,observationBudgetMeaning:'early functional gate; not a changed 300000ms acceptance target; pending is not a confirmed miss',abruptProcessKill:mode==='crash',powerLoss:false,samePendingRepeatedCrash:false,physicalErasure:false,Android:false,humanOOB:false,productionIntegration:false,batchBoundary101:false,transport:base==='http://127.0.0.1:18008'?'host-loopback':'private-internal-bridge'};console.log(JSON.stringify(report));
-}catch{console.error(JSON.stringify({status:'failed',mode,plannedSamples:3,stage,gates,negativeStatuses,measurement:measured.report(),details:'suppressed'}));process.exitCode=1;}
+ const report={status:'passed',mode,plannedSamples:3,gates,negativeStatuses,measurement:measured.report(),restartDowntimeMs,observationBudgetMs:90000,observationBudgetMeaning:'early functional gate; not a changed 300000ms acceptance target; pending is not a confirmed miss',abruptProcessKill:abrupt,powerLoss:false,samePendingRepeatedCrash:repeated,earlyStartupInterruptions:repeated,sampleKillCounts,completedKillGates,stoppedPendingChecks,startupProcessGates,interruptionStartToKillMs,intermediateHTTPReadinessMeasured:false,repeatedStartupPlan:repeated?REPEATED_STARTUP_PLAN:null,physicalErasure:false,Android:false,humanOOB:false,productionIntegration:false,batchBoundary101:false,transport:base==='http://127.0.0.1:18008'?'host-loopback':'private-internal-bridge'};console.log(JSON.stringify(report));
+}catch{console.error(JSON.stringify({status:'failed',mode,plannedSamples:3,stage,gates,negativeStatuses,sampleKillCounts,completedKillGates,stoppedPendingChecks,startupProcessGates,interruptionStartToKillMs,measurement:measured.report(),details:'suppressed'}));process.exitCode=1;}
 finally{clearTimeout(deadline);for(const c of children)c.kill('SIGTERM');await sleep(250);for(const c of children)if(c.exitCode===null)c.kill('SIGKILL');}
