@@ -1,5 +1,5 @@
 {
-  "phase": "owned_container_renewed_diagnostic_CI_ready",
+  "phase": "owned_container_CI5_diagnostic_complete_contract_revision_approval_required",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "run_one_approved_isolated_diagnostic_CI_do_not_relax_literal_false_or_full_equality",
+  "next": "Do not repeat false/omitted CLI variants. Obtain explicit approval and independent review for a NEW phase-bound contract fixture, exact planned complete snapshots before birth plus live container/cgroup identity and kernel limit correlation; solve stopped-case evidence limits. Existing strict fixture remains blocked. Engine version remains other_version, not pinned source proof.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -453,7 +453,7 @@
     "backupConfirmed": true
   },
   "ownedContainer": {
-    "status": "DIAGNOSTIC_READY_RUNTIME_STILL_BLOCKED",
+    "status": "BLOCKED_EXACT_OOM_NULL_TRANSITION_OBSERVED_CI5",
     "actualSDKIntegration": false,
     "runtimeTests": 0,
     "proposal": "Docker_create_ID_before_start_private_PID_namespace",
@@ -572,11 +572,11 @@
       "rawDiagnosticsPublished": false
     },
     "latestRun": {
-      "run": "38177830811",
-      "job": "114583871827",
-      "commit": "081a8ed3408c436f86e15ef119ff413aff87cded",
+      "run": "38181608392",
+      "job": "114595176353",
+      "commit": "ba4bd60cd962a7e9d0f52379a14e45c313717fbe",
       "status": "failed",
-      "jobDuration": "41s",
+      "jobDuration": "43s",
       "sourcePolicyPins": 38,
       "sourceGuards": "verified",
       "contracts": {
@@ -586,45 +586,63 @@
         "cancelled": 0,
         "skipped": 0
       },
-      "publicImageBuild": "verified",
+      "publicImageBuild": "verified_37s",
       "runtime": {
         "status": "failed_unverified",
         "stage": "gracefulwait",
-        "gate": "bounds",
+        "gate": "oom_killer",
         "acknowledgedCreatedCount": 1,
         "acknowledgedStartedCount": 1,
         "completedProofCount": 0,
         "countScope": "current_invocation_only",
         "networkMapObservation": "none_only",
         "imageEnvExpectedKeys": true,
-        "configComparison": "not_observed",
-        "hostConfigComparison": "not_observed",
-        "stateShape": "not_observed",
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
         "changedConfigFields": [],
-        "changedHostConfigFields": []
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ],
+        "oomKillDisableShape": "unset_null",
+        "cgroupVersionClass": "v2",
+        "oomDisableCapabilityClass": "unsupported",
+        "engineVersionClass": "other_version"
       },
       "cleanup": {
         "status": "failed_unverified",
         "stage": "cleanup_stop",
-        "gate": "bounds",
+        "gate": "oom_killer",
+        "acknowledgedCreatedCount": 0,
+        "acknowledgedStartedCount": 0,
+        "completedProofCount": 0,
         "countScope": "current_invocation_only_not_historical_resource_count",
-        "comparison": "not_observed"
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ],
+        "oomKillDisableShape": "unset_null",
+        "cgroupVersionClass": "not_observed",
+        "oomDisableCapabilityClass": "not_observed",
+        "engineVersionClass": "not_observed"
       },
-      "explicitOOMKillerEnabledRequested": true,
-      "fullConfigEqualityRetained": true,
-      "exactFailedBoundsMember": "not_disambiguated",
-      "rawDiagnosticsPublished": false
+      "strictPrestartLiteralFalsePassed": true,
+      "rawDiagnosticsPublished": false,
+      "earlierRunValuesNotInferred": true
     },
     "sourcePolicyPins": 38,
     "contracts": "4/4_separate_pure_data_class",
-    "failedCIRuns": 4,
+    "failedCIRuns": 5,
     "acceptedLifecycleCases": 0,
     "independentCleanupAccepted": false,
     "noAdmissionRelaxation": true,
     "noPosthocHostWorkloadPIDSignals": true,
-    "noMoreRuntimeInThisBoundedPhase": false,
+    "noMoreRuntimeInThisBoundedPhase": true,
     "noScheduledChainOrWindowExtension": true,
-    "nextAuthorizationRequired": false,
+    "nextAuthorizationRequired": true,
     "renewedAuthorization": "user_explicitly_approved_investigation_independent_review_and_isolated_CI",
     "authorizationScope": "one_diagnostic_trial_under_unchanged_strict_contract",
     "contractRevisionRequiresNewApproval": true,

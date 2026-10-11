@@ -173,9 +173,71 @@
       "fullConfigEqualityRetained": true,
       "exactFailedBoundsMember": "not_disambiguated",
       "rawDiagnosticsPublished": false
+    },
+    {
+      "run": "38181608392",
+      "job": "114595176353",
+      "commit": "ba4bd60cd962a7e9d0f52379a14e45c313717fbe",
+      "status": "failed",
+      "jobDuration": "43s",
+      "sourcePolicyPins": 38,
+      "sourceGuards": "verified",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified_37s",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "oom_killer",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true,
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ],
+        "oomKillDisableShape": "unset_null",
+        "cgroupVersionClass": "v2",
+        "oomDisableCapabilityClass": "unsupported",
+        "engineVersionClass": "other_version"
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "oom_killer",
+        "acknowledgedCreatedCount": 0,
+        "acknowledgedStartedCount": 0,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only_not_historical_resource_count",
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ],
+        "oomKillDisableShape": "unset_null",
+        "cgroupVersionClass": "not_observed",
+        "oomDisableCapabilityClass": "not_observed",
+        "engineVersionClass": "not_observed"
+      },
+      "strictPrestartLiteralFalsePassed": true,
+      "rawDiagnosticsPublished": false,
+      "earlierRunValuesNotInferred": true
     }
   ],
-  "current": "REOPENED_ONE_REVIEWED_DIAGNOSTIC_CI_STRICT_ACCEPTANCE_UNCHANGED",
+  "current": "DIAGNOSTIC_CAUSE_NARROWED_STRICT_CONTAINMENT_STILL_BLOCKED_PENDING_NEW_CONTRACT_APPROVAL",
   "limits": [
     "not_actual_SDK_integration",
     "not_MXC_or_Internet_transfer",
@@ -197,7 +259,7 @@
     "independentCleanupAccepted": false,
     "actualSDKIntegrationAccepted": false
   },
-  "nextSafeStep": "Read-only review of exact Docker CLI/daemon resource representation across create/start; separately reviewed bounded design that preserves exact precreated identity and all resource/security constraints. New runtime only with renewed authorization; do not ignore bounds/full-record checks or use posthoc PID signals.",
+  "nextSafeStep": "Do not repeat false/omitted CLI variants. Obtain explicit approval and independent review for a NEW phase-bound contract fixture, exact planned complete snapshots before birth plus live container/cgroup identity and kernel limit correlation; solve stopped-case evidence limits. Existing strict fixture remains blocked. Engine version remains other_version, not pinned source proof.",
   "renewedDiagnosticPhase": {
     "authorization": "user_explicitly_approved_investigation_independent_review_and_isolated_CI",
     "scope": "one_diagnostic_trial_under_unchanged_strict_contract",
@@ -226,6 +288,7 @@
       "isolated_test_discovery_could_not_find_allowed_absolute_file",
       "same_process_report_format_mismatch_then_existing_result_verified"
     ],
-    "next": "run_one_approved_isolated_diagnostic_CI_do_not_relax_literal_false_or_full_equality"
+    "next": "run_one_approved_isolated_diagnostic_CI_do_not_relax_literal_false_or_full_equality",
+    "result": "diagnostic_complete_actual_run_failed_no_contract_revision"
   }
 }
