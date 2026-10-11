@@ -12,3 +12,6 @@ Remaining[blocked]: actual admitted encrypted-room file descriptor/media transpo
 Next bounded development: standard Matrix-v2 streaming encrypted attachment primitive +strict descriptor/malformed/tamper/interrupt tests, synthetic only. Require authenticated trusted descriptor assumption explicitly; AES-CTR+public hash alone is NOT authentication. No broadening production/admission/ingress or disabling encryption for SDK calls. Keep source/keys distinction, minimum necessary privileges, resource cleanup and independent review.
 
 Offline Windows loader: authored direct-offline-runner.cjs in Node main context with --test-reporter=lcov and explicit authorized session temp root; nested runner deprecated and VM import callback unsupported. Do not repeat interrupted/failed paths unchanged.
+
+## Latest attachment milestone
+Final45/45Linux38146403716,a51e91f/source9868544;Core/ref40+newroundtrip5. Independentcleanupverified;source/licensehashguardsverified. Model16MiBstandalone+8MiBroundtrip. DESTRUCTIVEhandoffNOTcrashsafe; nextnon-destructive8MiBfixture<=24MiBliveciphertextplanned. Authenticatedroomdescriptorstillfixture; actualSDKmedia/Android/browser/GB/RSS/erasure/operations remainunverified. RoutinezAPhQviMivWCZoJp once2026-10-11T14:30:29Z,guardedsynthetic-only,noautochain.
