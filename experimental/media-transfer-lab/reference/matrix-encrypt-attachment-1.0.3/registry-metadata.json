@@ -1,0 +1,22 @@
+{
+  "name": "matrix-encrypt-attachment",
+  "version": "1.0.3",
+  "repository": {
+    "url": "git+https://github.com/matrix-org/matrix-encrypt-attachment.git",
+    "type": "git"
+  },
+  "dist": {
+    "shasum": "6e016587728c396549c833985f39cbf6c07ee97b",
+    "tarball": "https://registry.npmjs.org/matrix-encrypt-attachment/-/matrix-encrypt-attachment-1.0.3.tgz",
+    "fileCount": 16,
+    "integrity": "sha512-NwfoDY/yHL9Zo8KrY5GP8ymAoZJpEFKEK+IgJKdWf5xtsIFf7KIU2pbw8+Eq592j//nSDOC+/Ff4Fk8gVvDZpw==",
+    "signatures": [
+      {
+        "sig": "MEYCIQC027gsow/GrZD2XJ9B9qBY4I/WfmR9dJqMEVpE5TLj1AIhAOzXJOn4qKAk4KSyOAcaAr1Tzhx1defg72yB4ZiVWQPd",
+        "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+      }
+    ],
+    "unpackedSize": 331585,
+    "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v4.10.10\r\nComment: https://openpgpjs.org\r\n\r\nwsFzBAEBCAAGBQJiRxJwACEJED1NWxICdlZqFiEECWMYAoorWMhJKdjhPU1b\r\nEgJ2VmrG5Q//SiHB92/2ogyKBtEExbxYjBi1Ut4u1fQlX+5WPG/tSjgfK3Ox\r\njHY1nbfz1BJES1vSVKyRWHbGIBlyq81PB3WX8lEZyJzc5hCBmc5N0ZSKn/bC\r\nH2ItW+tShKw54N9Jd1pc3cUDJd4ijj8EOeccScigXTHyNvYuYqJB8DBdV7Pv\r\nYEV+mv9vlUhDs50WN/AE7Wt/f3o80DGRcoV+WQKz7xv9kgLB+4Pr1ZCWgXAY\r\nG0/hK7kgAvtsGleXQwhSkz8CX7K5fsLY9YrL+yowGIi4QgWefbhM1pyVVoOu\r\nr96uGgt08/mKNV0Fvd/diTXjFpDEQDqd2N8Fvf615C8AZKDLk9LzTheE2vTF\r\n+IaeQc4HJG4PRnm8WQ5XgmYabt2aGaXf/LOlrPxMd6wltwn6QWcsxTtq2aF7\r\nss7sVRn2idviVLYAihrbDL/MzosXRz7jKldwJCMGjP6BfMkesoUDqppW9ALS\r\nku/ULZNK8iz6Pkv0ZRIyIuLLfKKCV2KHvYi8biiRPuNOrF/YmxXsrnW6viDb\r\nAt9JZ5E8Z1O3Mm3RNw7iAwejNLdIPCHsNLDzDMdetOGkQLvTF9UP0KqH/kxl\r\nOlvIi3hu4ZrNVvGwzaduRz9iAmznosul42fKavc39lyBoE3XTnqDX8ET8vJc\r\nDXKs6ODowroTNCLSUzjijAM9qrh12ryNYfA=\r\n=Ok/G\r\n-----END PGP SIGNATURE-----\r\n"
+  }
+}

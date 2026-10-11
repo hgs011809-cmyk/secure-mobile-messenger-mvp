@@ -1,0 +1,30 @@
+{
+  "registryIntegrityMatch": true,
+  "publishScriptsExecuted": false,
+  "files": [
+    {
+      "name": "LICENSE",
+      "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a"
+    },
+    {
+      "name": "index.js",
+      "sha256": "e46f5275ef8b9d97d4fa0797afe575c3a9990290044f87ee8a0b6f46431ed8e2"
+    },
+    {
+      "name": "nodejs.js",
+      "sha256": "bf1862f6cf249a1ac8d9c4871963be97db650a5213114b09d6a47a2269dff89e"
+    },
+    {
+      "name": "webcrypto.js",
+      "sha256": "eda31286bbceb374aa3acc9201518edab62e2c3f4819e4d55b316800b704db9c"
+    },
+    {
+      "name": "package.json",
+      "sha256": "4065799885976986b7e7082f8bdaf1f4984edf74ac5cca97dc1d488957fa0d64"
+    },
+    {
+      "name": "README.md",
+      "sha256": "a9b2fba49e119e8b9dd55256aa19decf7dfe7950388c7e0febf02e12eb41073a"
+    }
+  ]
+}
