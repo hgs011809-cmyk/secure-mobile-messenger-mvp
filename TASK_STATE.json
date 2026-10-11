@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
+  "next": "logical_budget_independent_review_then_single_isolated_linux_CI",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -327,6 +327,24 @@
       "INDEPENDENT_CONTAINMENT_NOT_ESTABLISHED"
     ],
     "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
-    "updatedAt": "2026-10-11T18:19:02.344Z"
+    "updatedAt": "2026-10-11T18:19:02.344Z",
+    "backupCommit": "72d37b5a2945f05cb0fbf4bf3da94409977a35f8"
+  },
+  "logicalBudget": {
+    "status": "source_reviewed_revised_cleanup_review_pending",
+    "runtimeProof": false,
+    "expectedTests": 6,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "accounting": "application_logical_file_length_only",
+    "nativeFilesystemQuota": false,
+    "actualSDKIntegration": false,
+    "implementationTask": "o7S4x9Ii9GiXS6wu",
+    "ownerSession": "oGsZGEuxVnzePWPk",
+    "reviewTask": "hjdadNlDTZLTVTcQ",
+    "initialReview": "PASS_prior_source_but_parent_rejected_posthoc_signaling",
+    "cleanup": "readonly_scan_no_signals_failclosed",
+    "sourcePolicyPins": 39,
+    "priorFilesUnchanged": 917
   }
 }

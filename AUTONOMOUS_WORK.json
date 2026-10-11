@@ -7,23 +7,23 @@
   "routineId": "fBhYJ5G17fGs6JU9",
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
-  "ownerSession": "ili7VyPmppBALkEX",
-  "status": "startup_source_reviewed_runtime_blocked",
+  "ownerSession": "oGsZGEuxVnzePWPk",
+  "status": "logical_budget_implementation",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
+  "next": "logical_budget_independent_review_then_single_isolated_linux_CI",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T18:19:02.344Z",
-  "implementationTask": "AoDsAv7AlpsPjZge",
-  "independentReviewTask": "Txww4PHQqAlPd7Xn",
+  "updatedAt": "2026-10-11T18:30:37.263Z",
+  "implementationTask": "o7S4x9Ii9GiXS6wu",
+  "independentReviewTask": "hjdadNlDTZLTVTcQ",
   "completed": [
     "new_six_controlled_pending_fault_cases_linux_verified",
     "independent_cleanup_identity_fix_reviewed",
@@ -39,7 +39,8 @@
     "new_startup_ownership_static_audit_independently_reviewed_no_runtime"
   ],
   "pending": [
-    "startup_ownership_checkpoint_branch_backup"
+    "logical_budget_source_backup",
+    "logical_budget_linux_CI"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -90,8 +91,8 @@
     "screenshotSaved": true,
     "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
-  "lastOwnerSession": "2AKAKDoeQ1wQ03Od",
-  "checkpointCommit": "db15de1934836a02788f596e54fc0d4b3f40996e",
+  "lastOwnerSession": "ili7VyPmppBALkEX",
+  "checkpointCommit": "72d37b5a2945f05cb0fbf4bf3da94409977a35f8",
   "investigationTask": "bZcgUyvsP90GFDUL",
   "sdkProcessFeasibility": {
     "status": "conditional_candidate_not_established",
@@ -249,6 +250,24 @@
       "INDEPENDENT_CONTAINMENT_NOT_ESTABLISHED"
     ],
     "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
-    "updatedAt": "2026-10-11T18:19:02.344Z"
+    "updatedAt": "2026-10-11T18:19:02.344Z",
+    "backupCommit": "72d37b5a2945f05cb0fbf4bf3da94409977a35f8"
+  },
+  "logicalBudget": {
+    "status": "source_reviewed_revised_cleanup_review_pending",
+    "runtimeProof": false,
+    "expectedTests": 6,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "accounting": "application_logical_file_length_only",
+    "nativeFilesystemQuota": false,
+    "actualSDKIntegration": false,
+    "implementationTask": "o7S4x9Ii9GiXS6wu",
+    "ownerSession": "oGsZGEuxVnzePWPk",
+    "reviewTask": "hjdadNlDTZLTVTcQ",
+    "initialReview": "PASS_prior_source_but_parent_rejected_posthoc_signaling",
+    "cleanup": "readonly_scan_no_signals_failclosed",
+    "sourcePolicyPins": 39,
+    "priorFilesUnchanged": 917
   }
 }
