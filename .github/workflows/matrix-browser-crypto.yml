@@ -26,7 +26,7 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
       - name: Receiver and sender fail-closed regression tests
         working-directory: experimental/matrix-client
-        run: npm test
+        run: node --test conversation.test.mjs room-state-policy.spec.mjs
       - name: Build loopback-only browser harness
         working-directory: experimental/matrix-client
         run: npm run build
