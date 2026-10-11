@@ -1,3 +1,11 @@
+# Current reviewed checkpoint
+
+After independent review, receiver tests expanded to28: local Windows26 pass,2 Linux-only skip,0 fail; voice20/20 and unchanged ingress18/18 remain separate. Combined portable64 pass+2 skip. Added initial manifest pending recovery, descriptor-only primitive snapshot validation, invalid/rollback clock rejection, actual post-write and post-hash revocation tests, callback-triggered terminal deletion recheck.
+
+Baseline Linux run38138348223 at6bcc36c passed59/59, including Linux owner-only mode/symlink cases. That run precedes these seven review regressions and does NOT certify the corrected version. Corrected Linux66 test run is pending. The callback checks are not atomic cross-process/lease transactions; same-owner concurrent filesystem mutation and multi-instance behavior remain excluded. Tombstone persistence is tested across object reconstruction, not power-loss durability.
+
+## Earlier baseline report (preserved)
+
 # Synthetic ciphertext transport results
 
 Local Windows Node v22.23.0: 21 tests, 19 passed, 0 failed, 2 Linux-only mode/symlink tests skipped. The pathname test runner could not resolve the permitted file path; successful execution loaded the exact module/test contents through data URLs using built-in modules, without expanding filesystem permissions. Linux CI must independently run the unchanged files normally.

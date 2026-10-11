@@ -6,23 +6,30 @@ export const MAX_BYTES = 2 ** 31; // Lab parser cap, NOT a deployed product limi
 const hash = b => createHash('sha256').update(b).digest('hex');
 const fail = c => { throw new Error(c); };
 const exists = async p => { try { await fs.lstat(p); return true; } catch(e) { if(e.code === 'ENOENT')return false; throw e; } };
-const shape = m => m && Object.getPrototypeOf(m) === Object.prototype && Object.keys(m).sort().join(',') === 'bindingId,chunkBytes,expiresAt,sha256,totalBytes,transferId,version';
-export function validateManifest(m) {
-  if(!shape(m) || m.version!==1 || !/^[a-f0-9]{32}$/.test(m.transferId) || !/^[a-f0-9]{64}$/.test(m.bindingId) || !/^[a-f0-9]{64}$/.test(m.sha256) || !Number.isSafeInteger(m.totalBytes) || m.totalBytes<1 || m.totalBytes>MAX_BYTES || !Number.isSafeInteger(m.chunkBytes) || m.chunkBytes<65536 || m.chunkBytes>1048576 || !Number.isSafeInteger(m.expiresAt) || m.expiresAt<1)fail('invalid_manifest');
-  return Object.freeze({...m});
+export function validateManifest(input) {
+  if(!input || Object.getPrototypeOf(input)!==Object.prototype)fail('invalid_manifest');
+  const d=Object.getOwnPropertyDescriptors(input),keys=Reflect.ownKeys(d);
+  if(keys.some(k=>typeof k!=='string')||keys.sort().join(',')!=='bindingId,chunkBytes,expiresAt,sha256,totalBytes,transferId,version'||keys.some(k=>!Object.hasOwn(d[k],'value')))fail('invalid_manifest');
+  // Read primitive data descriptors once; no getter invocation, coercion or mutable nested values.
+  const m=Object.fromEntries(Object.keys(d).map(k=>[k,d[k].value]));
+  if(m.version!==1 || typeof m.transferId!=='string' || !/^[a-f0-9]{32}$/.test(m.transferId) || typeof m.bindingId!=='string' || !/^[a-f0-9]{64}$/.test(m.bindingId) || typeof m.sha256!=='string' || !/^[a-f0-9]{64}$/.test(m.sha256) || !Number.isSafeInteger(m.totalBytes) || m.totalBytes<1 || m.totalBytes>MAX_BYTES || !Number.isSafeInteger(m.chunkBytes) || m.chunkBytes<65536 || m.chunkBytes>1048576 || !Number.isSafeInteger(m.expiresAt) || m.expiresAt<1)fail('invalid_manifest');
+  return Object.freeze(m);
 }
 export class SyntheticReceiver {
   constructor({root,manifest,authorize,clock=Date.now}) {
     if(typeof root!=='string'||!path.isAbsolute(root)||typeof authorize!=='function'||typeof clock!=='function')fail('invalid_config');
-    this.m=validateManifest(manifest);this.root=root;this.dir=path.join(root,this.m.transferId);this.tomb=path.join(root,this.m.transferId+'.deleted');this.authorize=authorize;this.clock=clock;this.tail=Promise.resolve();this.maxPayloadBytes=0;this.pending=0;
+    this.m=validateManifest(manifest);this.root=root;this.dir=path.join(root,this.m.transferId);this.tomb=path.join(root,this.m.transferId+'.deleted');this.authorize=authorize;this.clock=clock;this.tail=Promise.resolve();this.maxPayloadBytes=0;this.pending=0;this.lastTime=-Infinity;
   }
   serial(fn){if(this.pending>=2)return Promise.reject(new Error('backpressure'));this.pending++;const p=this.tail.then(fn).finally(()=>{this.pending--;});this.tail=p.catch(()=>{});return p;}
+  checkTime(){let now;try{now=this.clock();}catch{fail('invalid_clock');}if(!Number.isSafeInteger(now)||now<0||now<this.lastTime)fail('invalid_clock');this.lastTime=now;if(now>=this.m.expiresAt)fail('expired');}
+  async checkAuth(){let allowed;try{allowed=await this.authorize(this.m.bindingId);}catch{fail('not_authorized');}if(allowed!==true)fail('not_authorized');}
   async guard(){
-    if(this.clock()>=this.m.expiresAt)fail('expired');
-    if(await this.authorize(this.m.bindingId)!==true)fail('not_authorized');
+    this.checkTime();await this.checkAuth();
     const st=await fs.lstat(this.root);if(!st.isDirectory()||st.isSymbolicLink())fail('unsafe_root');
     if(await exists(this.tomb))fail('deleted');
-    if(await this.authorize(this.m.bindingId)!==true||this.clock()>=this.m.expiresAt)fail('not_authorized');
+    await this.checkAuth();this.checkTime();
+    // Callback-triggered deletion must win even at the final authorization boundary.
+    if(await exists(this.tomb))fail('deleted');this.checkTime();
   }
   size(i){if(!Number.isSafeInteger(i)||i<0||i>=Math.ceil(this.m.totalBytes/this.m.chunkBytes))fail('invalid_index');return Math.min(this.m.chunkBytes,this.m.totalBytes-i*this.m.chunkBytes);}
   file(i){this.size(i);return path.join(this.dir,'chunk-'+i+'.bin');}
@@ -31,11 +38,13 @@ export class SyntheticReceiver {
   async atomic(file,data){const temp=file+'.pending';const h=await fs.open(temp,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);try{await h.writeFile(data);await h.sync();}finally{await h.close();}await fs.rename(temp,file);}
   async setup(){
     await this.guard();await fs.mkdir(this.dir,{mode:0o700}).catch(e=>{if(e.code!=='EEXIST')throw e;});await this.safeDir();
+    // Reclaim an interrupted initial manifest write BEFORE attempting O_EXCL creation.
+    // Initialization assumes exclusive owner/single-instance operation, not cross-process locking.
+    for(const e of await fs.readdir(this.dir))if(/^(chunk-\d+\.bin|checkpoint\.json|manifest\.json)\.pending$/.test(e))await fs.unlink(path.join(this.dir,e));
     const p=path.join(this.dir,'manifest.json');
     if(await exists(p)){const h=await fs.open(p,constants.O_RDONLY|constants.O_NOFOLLOW);try{const st=await h.stat();if(st.size>2048)fail('manifest_changed');const old=JSON.parse(await h.readFile('utf8'));if(JSON.stringify(old)!==JSON.stringify(this.m))fail('manifest_changed');}finally{await h.close();}}
     else await this.atomic(p,JSON.stringify(this.m));
     // Partial writes never count as acknowledgements. Re-scan actual chunk files on resume.
-    for(const e of await fs.readdir(this.dir))if(/^(chunk-\d+\.bin|checkpoint\.json|manifest\.json)\.pending$/.test(e))await fs.unlink(path.join(this.dir,e));
     await this.guard();
   }
   initialize(){return this.serial(()=>this.setup());}
