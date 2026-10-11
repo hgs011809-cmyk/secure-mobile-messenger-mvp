@@ -1,0 +1,71 @@
+name: Matrix broker ingress SDK composition (synthetic)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experimental/auth-bridge/**'
+      - 'experimental/matrix-client/**'
+      - '.github/workflows/matrix-composed-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: matrix-composed-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  composed:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Auth broker, bounded SDK ingress and pin regression tests
+        run: node --test experimental/auth-bridge/*.spec.mjs
+      - name: Install pinned browser dependencies
+        working-directory: experimental/matrix-client
+        run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
+      - name: Fail-closed client regression tests
+        working-directory: experimental/matrix-client
+        run: npm test
+      - name: Build private synthetic browser harness
+        working-directory: experimental/matrix-client
+        run: npm run build
+      - name: Install synthetic Chromium
+        working-directory: experimental/matrix-client
+        run: npx playwright install --with-deps chromium > /dev/null 2>&1
+      - name: Pull pinned official Synapse
+        run: docker pull matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311 > /dev/null 2>&1
+      - name: Prepare unpublished bounded backend and native veto
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          export CI_UID="$(id -u)" CI_GID="$(id -g)"
+          echo "CI_UID=$CI_UID" >> "$GITHUB_ENV"
+          echo "CI_GID=$CI_GID" >> "$GITHUB_ENV"
+          python3 configure.py
+          node --input-type=module -e "import{appendFile}from'node:fs/promises';await appendFile('runtime/homeserver.yaml','\nsession_lifetime: 10m\n');"
+          node ../../../../experimental/auth-bridge/prepare-policy.mjs
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml config --quiet
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml up -d --pull never > /dev/null 2>&1
+      - name: Native device veto unit tests
+        working-directory: infra/ncp/matrix-lab/ci
+        run: docker compose -f compose.yaml exec -T synapse python -m unittest discover -s /gate -p '*_test.py'
+      - name: P256 broker to ingress to actual Rust SAS and cold restore
+        timeout-minutes: 11
+        working-directory: experimental/matrix-client
+        run: |
+          set -euo pipefail
+          node serve.mjs > /dev/null 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 50); do curl -fsS http://127.0.0.1:19461/live.html > /dev/null 2>&1 && break; sleep .1; done
+          node composed-ci.mjs
+      - name: Destroy synthetic runtime and private secrets
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1 || true
+          rm -rf -- runtime
