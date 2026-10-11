@@ -1,0 +1,27 @@
+// Inserted after actual cold-restore text proof, before original destructive tests.
+stage='descriptor verified peer cold delivery';
+await close(bob);
+const fileEvent=await call(alice,'descriptorSend',{descriptor:fileFixture.descriptor});
+const fileRaw=await api('/_matrix/client/v3/rooms/'+encodeURIComponent(room)+'/event/'+encodeURIComponent(fileEvent),'GET',undefined,a.accessToken);
+assert(fileRaw.type==='m.room.encrypted'&&!fileRaw.content.file&&!fileRaw.content.body&&!JSON.stringify(fileRaw).includes(fileFixture.descriptor.key.k));
+b={...await renew(ids[1]),legacyId:ids[1]};bob=await launch(pb,b);
+assert(JSON.stringify(await call(bob,'keys'))===JSON.stringify(bk));
+await call(bob,'bind',{room,peer:a.userId,device:a.deviceId});await call(bob,'verified');
+const receivedFile=await call(bob,'descriptorReceive',{event:fileEvent,ciphertext:Array.from(fileFixture.ciphertext),expectedDigest:fileFixture.expectedDigest});
+assert(receivedFile.sdkDerivedDescriptor&&receivedFile.wholeHashBeforeDecrypt&&receivedFile.plaintextDigestMatches&&receivedFile.textRendererExcluded&&receivedFile.fixtureBytes===4096);
+descriptorGates.push('actual-SDK-Rust-decrypted-peer-descriptor-after-cold-reauth');
+descriptorGates.push('SDK-derived-file-key-WebCrypto-plaintext-digest-and-hash-before-decrypt');
+stage='descriptor corrupted ciphertext rejects before decrypt';
+const corrupt=Array.from(fileFixture.ciphertext);corrupt[0]^=1;
+const corruptedFile=await call(bob,'descriptorDenied',{event:fileEvent,ciphertext:corrupt,expectedDigest:fileFixture.expectedDigest,expectedError:'descriptor_ciphertext_hash_mismatch'});
+assert(corruptedFile.rejected&&corruptedFile.noDecrypt&&corruptedFile.intendedEventState);descriptorGates.push('corrupted-ciphertext-no-decrypt');
+stage='descriptor malformed actual encrypted event rejected';
+const malformedEvent=await call(alice,'descriptorSend',{descriptor:fileFixture.descriptor,invalid:true});
+const malformedRaw=await api('/_matrix/client/v3/rooms/'+encodeURIComponent(room)+'/event/'+encodeURIComponent(malformedEvent),'GET',undefined,a.accessToken);
+assert(malformedRaw.type==='m.room.encrypted'&&!malformedRaw.content.file&&!malformedRaw.content.body);
+const malformedFile=await call(bob,'descriptorDenied',{event:malformedEvent,ciphertext:Array.from(fileFixture.ciphertext),expectedDigest:fileFixture.expectedDigest,expectedError:'INVALID_DESCRIPTOR'});
+assert(malformedFile.rejected&&malformedFile.noDecrypt&&malformedFile.intendedEventState);descriptorGates.push('malformed-actual-encrypted-descriptor-no-decrypt');
+stage='descriptor actual redaction blocks subsequent use';
+await call(bob,'remove',{event:fileEvent});await call(bob,'deleted',{event:fileEvent});
+const redactedFile=await call(bob,'descriptorDenied',{event:fileEvent,ciphertext:Array.from(fileFixture.ciphertext),expectedDigest:fileFixture.expectedDigest,expectedError:'REDACTED'});
+assert(redactedFile.rejected&&redactedFile.noDecrypt&&redactedFile.intendedEventState);descriptorGates.push('actual-target-redaction-no-decrypt');
