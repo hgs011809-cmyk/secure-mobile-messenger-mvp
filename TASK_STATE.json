@@ -1,5 +1,5 @@
 {
-  "phase": "receiver_real_process_idle_boundaries_verified",
+  "phase": "controlled_pending_write_process_faults_verified",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,9 +60,9 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "checkpoint_stop_no_autochain",
+  "next": "phase2_new_persisted_ciphertext_corruption_and_conflicting_retry_tests",
   "resultsCommit": "f3f084c",
-  "previousPhase": "authenticated_transport_synthetic_verified",
+  "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
     "status": "linux_verified",
     "run": "38153855816",
@@ -90,5 +90,41 @@
     "productionChanges": false,
     "localWindowsSyntaxHelper": "unresponsive_terminated_no_pass_claim",
     "resultsCommit": "15ff7ad"
+  },
+  "autonomousWindow": {
+    "start": "2026-10-12T01:10:45+09:00",
+    "lastScheduledRun": "2026-10-12T04:15:00+09:00",
+    "timezone": "Asia/Seoul"
+  },
+  "autonomousRoutineId": "fBhYJ5G17fGs6JU9",
+  "processWriteFault": {
+    "status": "linux_verified",
+    "run": "38155290344",
+    "job": "114516900781",
+    "sourceCommit": "e55abce833b9b478c26c2e40d334c112aa12ac07",
+    "workflowCommit": "a22c8f69d7a75a5bdf95e5517619c77262adfd8a",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flatTopLevel": 6,
+    "nested": 0,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "partialPendingBytes": 131072,
+    "fullPendingBytes": 262144,
+    "sourcePolicyGuards": 34,
+    "independentCleanupVerified": true,
+    "forcedWorkerCleanupCount": 0,
+    "containersCreated": 0,
+    "independentReadOnlyReview": true,
+    "authorization": "mock_fixture_only",
+    "parentSurvives": true,
+    "keys": "parent_RAM_only",
+    "powerLossDurability": false,
+    "wholeAppRecovery": false,
+    "screenshotSaved": true,
+    "policyCoreChanges": false
   }
 }

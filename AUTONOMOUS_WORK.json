@@ -1,0 +1,68 @@
+{
+  "window": {
+    "start": "2026-10-12T01:10:45+09:00",
+    "lastScheduledRun": "2026-10-12T04:15:00+09:00",
+    "timezone": "Asia/Seoul"
+  },
+  "routineId": "fBhYJ5G17fGs6JU9",
+  "schedule": "every15minutes13runs_start01:15_end04:15",
+  "branch": "lab-matrix-cleanup-followup",
+  "ownerSession": null,
+  "status": "phase1_complete",
+  "pendingCI": null,
+  "baseline": {
+    "processRun": "38153855816",
+    "checkpoint": "dc8b97a",
+    "sdkTransportRun": "38152247874"
+  },
+  "next": "phase2_new_persisted_ciphertext_corruption_and_conflicting_retry_tests",
+  "noQuestionsRequested": true,
+  "existingPolicyAndCoreImplementationsUnchanged": true,
+  "productionAndCloudChanges": false,
+  "scope": "synthetic_bounded_new_files_branch_only",
+  "previousWindow": null,
+  "updatedAt": "2026-10-11T16:25:36.699Z",
+  "implementationTask": "Gg72wsamM4S4DhnG",
+  "independentReviewTask": "9RRcmmYa373J3so7",
+  "completed": [
+    "new_six_controlled_pending_fault_cases_linux_verified",
+    "independent_cleanup_identity_fix_reviewed",
+    "source_policy34_guards_verified"
+  ],
+  "pending": [],
+  "blocked": [
+    "actual_MXC_ingress",
+    "production_and_cloud_actions"
+  ],
+  "lastResult": {
+    "status": "linux_verified",
+    "run": "38155290344",
+    "job": "114516900781",
+    "sourceCommit": "e55abce833b9b478c26c2e40d334c112aa12ac07",
+    "workflowCommit": "a22c8f69d7a75a5bdf95e5517619c77262adfd8a",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flatTopLevel": 6,
+    "nested": 0,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "partialPendingBytes": 131072,
+    "fullPendingBytes": 262144,
+    "sourcePolicyGuards": 34,
+    "independentCleanupVerified": true,
+    "forcedWorkerCleanupCount": 0,
+    "containersCreated": 0,
+    "independentReadOnlyReview": true,
+    "authorization": "mock_fixture_only",
+    "parentSurvives": true,
+    "keys": "parent_RAM_only",
+    "powerLossDurability": false,
+    "wholeAppRecovery": false,
+    "screenshotSaved": true,
+    "policyCoreChanges": false
+  },
+  "lastOwnerSession": "be943R0x8LAfMZRP"
+}
