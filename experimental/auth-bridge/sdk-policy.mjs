@@ -21,12 +21,14 @@ function canonical(x, depth = 0) {
   if (!obj(x)) throw new Error('json');
   return '{' + Object.keys(x).sort().map(k => JSON.stringify(k) + ':' + canonical(x[k], depth + 1)).join(',') + '}';
 }
-function signed(x, own) {
-  const kid = `ed25519:${own.matrixDeviceId}`;
-  if (!fields(x.signatures, [own.userId], [own.userId]) || !fields(x.signatures[own.userId], [kid], [kid]) || !b64(x.signatures[own.userId][kid], 64)) return false;
+function signed(x, own, binding) {
+  const kid = `ed25519:${own.matrixDeviceId}`, ss=binding?.ownerSigning?.[own.userId]?.selfSigning, pubs=obj(ss?.keys)?Object.values(ss.keys):[], selfPub=pubs.length===1&&b64(pubs[0],32)?pubs[0]:null, selfId=selfPub?'ed25519:'+selfPub:null;
+  if (!fields(x.signatures, [own.userId], [own.userId]) || !fields(x.signatures[own.userId], selfId?[kid,selfId]:[kid], [kid]) || !b64(x.signatures[own.userId][kid], 64)) return false;
   const unsigned = Object.fromEntries(Object.entries(x).filter(([k]) => k !== 'signatures' && k !== 'unsigned'));
   const key = createPublicKey({ key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), Buffer.from(own.ed25519, 'base64')]), format: 'der', type: 'spki' });
-  return verify(null, Buffer.from(canonical(unsigned)), key, Buffer.from(x.signatures[own.userId][kid], 'base64'));
+  const data=Buffer.from(canonical(unsigned));if(!verify(null,data,key,Buffer.from(x.signatures[own.userId][kid],'base64')))return false;
+  if(selfId&&Object.hasOwn(x.signatures[own.userId],selfId)){const sig=x.signatures[own.userId][selfId];if(!b64(sig,64))return false;const selfKey=createPublicKey({key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),Buffer.from(selfPub,'base64')]),format:'der',type:'spki'});if(!verify(null,data,selfKey,Buffer.from(sig,'base64')))return false;}
+  return true;
 }
 function forcedFilter(binding) {
   const senders = binding.devices.map(d => d.userId);
@@ -65,17 +67,17 @@ function queries(q, rules) {
   return [...q].every(([k, v]) => Object.hasOwn(rules, k) && rules[k](v));
 }
 const decimal = (v, max) => /^(0|[1-9]\d*)$/.test(v) && Number(v) <= max;
-function keyUpload(body, own) {
+function keyUpload(body, own, binding) {
   if (!fields(body, ['device_keys', 'one_time_keys', 'fallback_keys']) || !Object.keys(body).length) return false;
   if (Object.hasOwn(body, 'device_keys')) {
     const d = body.device_keys, ed = `ed25519:${own.matrixDeviceId}`, curve = `curve25519:${own.matrixDeviceId}`;
-    if (!fields(d, ['user_id', 'device_id', 'algorithms', 'keys', 'signatures'], ['user_id', 'device_id', 'algorithms', 'keys', 'signatures']) || d.user_id !== own.userId || d.device_id !== own.matrixDeviceId || !Array.isArray(d.algorithms) || d.algorithms.length !== 2 || new Set(d.algorithms).size !== 2 || !d.algorithms.every(a => ALGORITHMS.includes(a)) || !fields(d.keys, [ed, curve], [ed, curve]) || d.keys[ed] !== own.ed25519 || d.keys[curve] !== own.curve25519 || !signed(d, own)) return false;
+    if (!fields(d, ['user_id', 'device_id', 'algorithms', 'keys', 'signatures'], ['user_id', 'device_id', 'algorithms', 'keys', 'signatures']) || d.user_id !== own.userId || d.device_id !== own.matrixDeviceId || !Array.isArray(d.algorithms) || d.algorithms.length !== 2 || new Set(d.algorithms).size !== 2 || !d.algorithms.every(a => ALGORITHMS.includes(a)) || !fields(d.keys, [ed, curve], [ed, curve]) || d.keys[ed] !== own.ed25519 || d.keys[curve] !== own.curve25519 || !signed(d, own, binding)) return false;
   }
   for (const name of ['one_time_keys', 'fallback_keys']) {
     if (!Object.hasOwn(body, name)) continue;
     const keys = body[name]; if (!obj(keys) || Object.keys(keys).length > (name === 'fallback_keys' ? 1 : 100)) return false;
     for (const [id, value] of Object.entries(keys)) {
-      if (!/^signed_curve25519:[A-Za-z0-9_-]{1,128}$/.test(id) || !fields(value, ['key', 'signatures', 'fallback'], ['key', 'signatures']) || !b64(value.key, 32) || (name === 'fallback_keys' ? value.fallback !== true : Object.hasOwn(value, 'fallback')) || !signed(value, own)) return false;
+      if (!/^signed_curve25519:[A-Za-z0-9_-]{1,128}$/.test(id) || !fields(value, ['key', 'signatures', 'fallback'], ['key', 'signatures']) || !b64(value.key, 32) || (name === 'fallback_keys' ? value.fallback !== true : Object.hasOwn(value, 'fallback')) || !signed(value, own, binding)) return false;
     }
   }
   return true;
@@ -110,7 +112,7 @@ function sasContent(type, c, own) {
 /** Returns a detached, canonical upstream descriptor or null. Missing GET body is normalized to null.
  * Bindings must be two distinct users/devices with pre-admitted 32-byte Ed25519/Curve25519 pins.
  * identity.deviceId is the bridge session device ID; matrixDeviceId selects the Matrix pin.
- * ownerSigning is deliberately unused: cross-signing remains default-denied.
+ * ownerSigning permits a verified additional owner self-signature; replacement/upload remains denied.
  */
 export function authorizeSdkRequest({ method, target, body, identity, binding } = {}) {
   try {
@@ -142,7 +144,7 @@ export function authorizeSdkRequest({ method, target, body, identity, binding } 
     }
     if (q.size || !obj(body)) return null;
     if (method === 'POST') {
-      if (route.join('/') === 'keys/upload' && keyUpload(body, own)) return result(body);
+      if (route.join('/') === 'keys/upload' && keyUpload(body, own, binding)) return result(body);
       if (['keys/query', 'keys/claim'].includes(route.join('/')) && keyLookup(body, binding, route[1] === 'claim')) {
         if (route[1] === 'claim') return binding.devices.some(d => d.active === false) ? null : result(body);
         // SDK43 uses [] to mean all devices. Never forward that wildcard: pin explicitly.

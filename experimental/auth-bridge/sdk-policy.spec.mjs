@@ -140,3 +140,12 @@ test('inactive peer prevents claims and sends but active caller retains reads/re
   assert.equal(request('PUT',root+'/sendToDevice/m.key.verification.done/txn',toDevice({transaction_id:'t1'}),options),null);
   assert.equal(request('GET',root+'/devices',null,{binding:{...binding,devices:[{...binding.devices[0],active:false},binding.devices[1]]}}),null);
 });
+
+test('additional owner self-signature requires pinned signer plus mandatory device signature',()=>{
+ const ss=generateKeyPairSync('ed25519'),p=pub(ss),d=deviceKeys(),frame=Object.fromEntries(Object.entries(d).filter(([k])=>k!=='signatures'));
+ d.signatures[identity.userId]['ed25519:'+p]=sign(null,Buffer.from(canonical(frame)),ss.privateKey).toString('base64').replace(/=+$/,'');
+ const pins={...binding,ownerSigning:{[identity.userId]:{selfSigning:{keys:{['ed25519:'+p]:p}}}}};
+ assert.ok(request('POST',root+'/keys/upload',{device_keys:d},{binding:pins}));assert.equal(request('POST',root+'/keys/upload',{device_keys:d}),null);
+ const bad=structuredClone(d);bad.signatures[identity.userId]['ed25519:'+p]=Buffer.alloc(64).toString('base64').replace(/=+$/,'');assert.equal(request('POST',root+'/keys/upload',{device_keys:bad},{binding:pins}),null);
+ delete d.signatures[identity.userId]['ed25519:A'];assert.equal(request('POST',root+'/keys/upload',{device_keys:d},{binding:pins}),null);
+});
