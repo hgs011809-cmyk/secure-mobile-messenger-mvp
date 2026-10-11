@@ -155,3 +155,12 @@ test('fixed-room sync timeline preserves policy state and never plaintext room m
  for(const type of ['m.room.create','m.room.encryption','m.room.history_visibility','m.room.join_rules','m.room.member','m.room.power_levels'])assert.ok(f.room.timeline.types.includes(type));
  assert.deepEqual(f.room.timeline.rooms,[binding.roomId]);assert.equal(f.room.timeline.types.includes('m.room.message'),false);assert.equal(f.room.timeline.types.includes('*'),false);
 });
+
+test('SDK to-device optional message id stays bounded without widening recipients or content',()=>{
+ const path=root+'/sendToDevice/m.key.verification.request/tx1',c={from_device:'A',methods:['m.sas.v1'],timestamp:1,transaction_id:'tx1','org.matrix.msgid':'sdk-message-1'};
+ assert.ok(request('PUT',path,toDevice(c)));
+ for(const value of ['',42,'x'.repeat(129),'unsafe/id'])assert.equal(request('PUT',path,toDevice({...c,'org.matrix.msgid':value})),null);
+ assert.equal(request('PUT',path,toDevice({...c,plaintext:'forbidden'})),null);assert.equal(request('PUT',path,{messages:{'@b:lab':{'*':c}}}),null);
+ const encrypted={algorithm:'m.olm.v1.curve25519-aes-sha2',sender_key:b64(1),ciphertext:{[b64(2)]:{type:0,body:b64(3)}},'org.matrix.msgid':'sdk-message-2'};
+ assert.ok(request('PUT',root+'/sendToDevice/m.room.encrypted/tx2',toDevice(encrypted)));assert.equal(request('PUT',root+'/sendToDevice/m.room.encrypted/tx2',toDevice({...encrypted,'org.matrix.msgid':null})),null);
+});

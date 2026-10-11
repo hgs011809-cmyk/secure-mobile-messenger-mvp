@@ -101,7 +101,7 @@ function sasContent(type, c, own) {
     accept: ['method', 'key_agreement_protocol', 'hash', 'message_authentication_code', 'short_authentication_string', 'commitment', 'transaction_id'],
     key: ['key', 'transaction_id'], mac: ['mac', 'keys', 'transaction_id'], done: ['transaction_id'], cancel: ['code', 'reason', 'transaction_id']
   };
-  if (!fields(c, schemas[name], schemas[name]) || !text(c.transaction_id, 128) || (Object.hasOwn(c, 'from_device') && c.from_device !== own.matrixDeviceId)) return false;
+  if (!fields(c, [...schemas[name], 'org.matrix.msgid'], schemas[name]) || Object.hasOwn(c,'org.matrix.msgid')&&!text(c['org.matrix.msgid'],128) || !text(c.transaction_id, 128) || (Object.hasOwn(c, 'from_device') && c.from_device !== own.matrixDeviceId)) return false;
   const list = (x, values) => Array.isArray(x) && x.length > 0 && x.length <= 8 && new Set(x).size === x.length && x.every(v => values.includes(v));
   if (name === 'request' || name === 'ready') return list(c.methods, ['m.sas.v1']) && (name !== 'request' || Number.isSafeInteger(c.timestamp) && c.timestamp >= 0);
   if (name === 'start') return c.method === 'm.sas.v1' && list(c.key_agreement_protocols, ['curve25519-hkdf-sha256', 'curve25519']) && list(c.hashes, ['sha256']) && list(c.message_authentication_codes, ['hkdf-hmac-sha256.v2', 'hkdf-hmac-sha256']) && list(c.short_authentication_string, ['decimal', 'emoji']);
@@ -162,7 +162,7 @@ export function authorizeSdkRequest({ method, target, body, identity, binding } 
       if (!recipient || !fields(body.messages[recipient.userId], [recipient.matrixDeviceId], [recipient.matrixDeviceId])) return null;
       const c = body.messages[recipient.userId][recipient.matrixDeviceId];
       if (SAS.includes(route[1]) && sasContent(route[1], c, own)) return result(body);
-      if (route[1] === 'm.room.encrypted' && fields(c, ['algorithm', 'sender_key', 'ciphertext'], ['algorithm', 'sender_key', 'ciphertext']) && c.algorithm === ALGORITHMS[0] && c.sender_key === own.curve25519 && fields(c.ciphertext, [recipient.curve25519], [recipient.curve25519])) {
+      if (route[1] === 'm.room.encrypted' && fields(c, ['algorithm', 'sender_key', 'ciphertext', 'org.matrix.msgid'], ['algorithm', 'sender_key', 'ciphertext']) && (!Object.hasOwn(c,'org.matrix.msgid')||text(c['org.matrix.msgid'],128)) && c.algorithm === ALGORITHMS[0] && c.sender_key === own.curve25519 && fields(c.ciphertext, [recipient.curve25519], [recipient.curve25519])) {
         const envelope = c.ciphertext[recipient.curve25519];
         if (fields(envelope, ['type', 'body'], ['type', 'body']) && [0, 1].includes(envelope.type) && b64(envelope.body)) return result(body);
       }
