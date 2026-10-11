@@ -1,5 +1,5 @@
 {
-  "phase": "controlled_pending_write_process_faults_verified",
+  "phase": "persisted_ciphertext_corruption_verified",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "phase2_new_persisted_ciphertext_corruption_and_conflicting_retry_tests",
+  "next": "phase3_read_only_feasibility_actual_SDK_receipt_current_two_native_leases_two_active_bindings_to_private_IPC_receiver_no_mock_substitution",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -125,6 +125,49 @@
     "powerLossDurability": false,
     "wholeAppRecovery": false,
     "screenshotSaved": true,
-    "policyCoreChanges": false
+    "policyCoreChanges": false,
+    "resultsCommit": "fbc3cbb044f676fa92146e702dc84ba2934f08c1"
+  },
+  "persistedCorruption": {
+    "status": "linux_verified",
+    "sourceCommit": "3421bc8dfb831df235e780384f97334c1e87d5cd",
+    "workflowCommit": "e6aa9d93021f7a491f93530c623e92ac2bd8aea0",
+    "expectedTests": 6,
+    "executedTests": 6,
+    "runtimeProof": true,
+    "immutableGuards": 34,
+    "totalGuards": 38,
+    "independentReadOnlyReview": true,
+    "implementationTask": "BCARqP3aYUnSeJBa",
+    "reviewTask": "vaiH1ur5fWbRXV4y",
+    "codes": [
+      "invalid_stored_chunk",
+      "integrity_failed",
+      "conflicting_retry",
+      "HASH_MISMATCH",
+      "not_authorized",
+      "AUTHORIZATION_DENIED",
+      "manifest_changed"
+    ],
+    "authorization": "mock_only",
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "coreChanged": false,
+    "run": "38156343209",
+    "job": "114520000959",
+    "cleanupRuntimeVerified": true,
+    "updatedAt": "2026-10-11T16:43:52.609Z",
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flatTopLevel": 6,
+    "nested": 0,
+    "ownedTestProcessesAlive": 0,
+    "ownedTestProcessesStopped": 0,
+    "suiteChildrenCreated": 0,
+    "containersCreated": 0,
+    "privateNamespaceAbsent": true,
+    "screenshotSaved": true
   }
 }
