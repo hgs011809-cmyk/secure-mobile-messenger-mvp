@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "pending_budget_source_review_then_single_isolated_Linux_CI",
+  "next": "next_scheduled_run_consolidate_exact_separate_suite_evidence_and_remaining_blockers_no_repetitive_new_phase_no_phase_after0415",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -369,9 +369,9 @@
     "resultsCommit": "752a1059d8865502fff47db4318f252c72961639"
   },
   "pendingBudget": {
-    "status": "source_candidate_pending_independent_review",
+    "status": "linux_verified_read_only_synthetic_projection_only",
     "expectedTests": 6,
-    "runtimeProof": false,
+    "runtimeProof": true,
     "fixtureBytes": 8388608,
     "chunkBytes": 262144,
     "partialPendingBytes": 131072,
@@ -383,6 +383,28 @@
     "reviewTask": "bZtE1kRz6IgwfwNj",
     "actualSDKIntegration": false,
     "nativeFilesystemQuota": false,
-    "sourceReview": "PASS_source_only"
+    "sourceReview": "PASS_source_only",
+    "sourceCommit": "0cc2358a9585bb327c92ca35e523432f335d68d2",
+    "workflowCommit": "37c1fd5bfc36ff4a6d4f6d5486d8ced33e47952a",
+    "run": "38165607526",
+    "job": "114547421454",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flat": true,
+    "runnerExit": 0,
+    "prePostPins": 44,
+    "independentAlwaysCleanupVerified": true,
+    "ownedTestProcessesAlive": 0,
+    "ownedTestProcessesStopped": 0,
+    "ownedChildrenCreated": 0,
+    "containersCreated": 0,
+    "privateNamespaceAbsent": true,
+    "readOnlyCleanupNoSignals": true,
+    "screenshotSaved": true,
+    "totalSeconds": 8,
+    "jobSeconds": 6
   }
 }

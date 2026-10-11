@@ -8,20 +8,20 @@
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
   "ownerSession": "IoVs7axrIftTT2PO",
-  "status": "pending_peak_accounting_implementation",
+  "status": "pending_budget_linux_verified_phase_complete_backup_pending",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "next_scheduled_run_bounded_logical_budget_pending_bytes_peak_accounting_feasibility_no_core_changes",
+  "next": "next_scheduled_run_consolidate_exact_separate_suite_evidence_and_remaining_blockers_no_repetitive_new_phase_no_phase_after0415",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T18:45:35.852Z",
+  "updatedAt": "2026-10-11T18:53:14.270Z",
   "implementationTask": "LKuGiIawEevwXyUA",
   "independentReviewTask": "bZtE1kRz6IgwfwNj",
   "completed": [
@@ -37,10 +37,11 @@
     "new_actual_SDK_process_driver_source_candidate_reviewed_only",
     "new_live_CI_feasibility_blocker_source_review_only",
     "new_startup_ownership_static_audit_independently_reviewed_no_runtime",
-    "new_six_logical_ciphertext_length_budget_cases_linux_verified_separate_helper_only"
+    "new_six_logical_ciphertext_length_budget_cases_linux_verified_separate_helper_only",
+    "new_six_pending_peak_length_projection_cases_linux_verified_separate_readonly_helper_only"
   ],
   "pending": [
-    "pending_budget_linux_CI"
+    "pending_budget_results_backup"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -292,9 +293,9 @@
     "resultsCommit": "752a1059d8865502fff47db4318f252c72961639"
   },
   "pendingBudget": {
-    "status": "source_candidate_pending_independent_review",
+    "status": "linux_verified_read_only_synthetic_projection_only",
     "expectedTests": 6,
-    "runtimeProof": false,
+    "runtimeProof": true,
     "fixtureBytes": 8388608,
     "chunkBytes": 262144,
     "partialPendingBytes": 131072,
@@ -306,6 +307,28 @@
     "reviewTask": "bZtE1kRz6IgwfwNj",
     "actualSDKIntegration": false,
     "nativeFilesystemQuota": false,
-    "sourceReview": "PASS_source_only"
+    "sourceReview": "PASS_source_only",
+    "sourceCommit": "0cc2358a9585bb327c92ca35e523432f335d68d2",
+    "workflowCommit": "37c1fd5bfc36ff4a6d4f6d5486d8ced33e47952a",
+    "run": "38165607526",
+    "job": "114547421454",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "flat": true,
+    "runnerExit": 0,
+    "prePostPins": 44,
+    "independentAlwaysCleanupVerified": true,
+    "ownedTestProcessesAlive": 0,
+    "ownedTestProcessesStopped": 0,
+    "ownedChildrenCreated": 0,
+    "containersCreated": 0,
+    "privateNamespaceAbsent": true,
+    "readOnlyCleanupNoSignals": true,
+    "screenshotSaved": true,
+    "totalSeconds": 8,
+    "jobSeconds": 6
   }
 }

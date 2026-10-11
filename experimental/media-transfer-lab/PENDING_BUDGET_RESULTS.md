@@ -27,3 +27,10 @@ Generator is idempotent only for equal existing workflow content; refuses differ
 Main-context `vm.SourceTextModule` (unlinked) for two ESM files and `vm.Script` for two CJS files accepted syntax: 4 syntax modules, linked=false, tests_executed=0. This is not import/runtime or Linux pass evidence.
 
 Independent review bZtE1kRz6IgwfwNj: PASS source-only;44pre/post maps identical/current hashes match,923priorfiles unchanged. Linux pending.
+
+## Inspected Linux runtime proof
+- https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38165607526 ; job114547421454, total8s/job6s. Source`0cc2358a9585bb327c92ca35e523432f335d68d2`,workflow`37c1fd5bfc36ff4a6d4f6d5486d8ced33e47952a`. Workflow display name inherits prior logical-budget title; actual workflow matrix-pending-budget-lab.yml/jobpending-budget and37c1fd5 pins identify this NEW suite, not prior run.
+- Directly inspected aggregate6tests6pass0fail0cancelled0skipped,flat=true,runner_exit=0.44pre/post guards verified. Exact negatives LOGICAL_BUDGET_EXCEEDED/conflicting_retry/INVALID_CIPHERTEXT_LENGTH.
+- Independent always cleanup ownedtestalive0/stopped0,children0,containers0,private_namespace_absent=true,read-onlyinspection,NOsignals. Physicalerasure=false. All6 are separate from prior logical budget6 and receiverprocess/SDK suites.
+- Earlier local EPERM remains recorded. ActionsNode20deprecation/forced24warning is separate from Node22tests. No failures/cancels/skips in this Linux suite. Source-only independent reviewer did not independently rerun runtime.
+- This bounded phase complete, results backup pending; next scheduled run consolidate exact separate evidence and blockers, no repetitive fake-progress phase.
