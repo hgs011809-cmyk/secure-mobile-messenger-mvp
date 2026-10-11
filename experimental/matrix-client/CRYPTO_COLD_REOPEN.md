@@ -8,7 +8,7 @@ Decryption alone does not authorize UI display. The adapter now requires the exa
 
 ## Intended live gates (pending until inspected CI passes)
 
-1. Real Chromium clients initialize Rust crypto and sync with isolated Synapse v1.162.0; unverified sends fail closed.
+1. Real Chromium clients initialize Rust crypto and sync with isolated Synapse v1.162.0. Each initial synthetic profile bootstraps its own cross-signing identity via supported SDK API/private synthetic UIA; this is never auto-run on reopen or key loss. Peer auto-trust remains disabled; unverified sends fail closed.
 2. Actual to-device SAS request cancellation does not grant trust.
 3. SDK43 requestDeviceVerification/accept/startVerification('m.sas.v1')/show_sas produce equal complete decimal tuples, followed by explicit confirmation on both sides. No setDeviceVerified shortcut.
 4. Recipient's whole persistent Chromium context/process closes. Sender creates only an encrypted server event while recipient is absent.

@@ -129,6 +129,20 @@ const api = {
     progress.textContent = 'Ready';
     return true;
   },
+  async bootstrap({password}) {
+    // Synthetic initial-profile setup only. Never called on reopen or crypto loss.
+    const crypto=requireClient().getCrypto();
+    await crypto.bootstrapCrossSigning({setupNewCrossSigning:true,
+      authUploadDeviceSigningKeys:async makeRequest=>{
+        try{await makeRequest(null);}catch(error){
+          if(error.httpStatus!==401||typeof error.data?.session!=='string')throw new Error('synthetic_cross_signing_auth_failed');
+          await makeRequest({type:'m.login.password',session:error.data.session,
+            identifier:{type:'m.id.user',user:client.getUserId()},password});
+        }
+      }});
+    if(!await crypto.isCrossSigningReady())throw new Error('synthetic_cross_signing_not_ready');
+    return true;
+  },
   async keys() { return requireClient().getCrypto().getOwnDeviceKeys(); },
   async create({peer}) {
     const me = requireClient().getUserId();
