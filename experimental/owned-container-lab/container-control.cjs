@@ -96,7 +96,7 @@ function security(s, i) {
   gate('namespace_config');
   if (h.Privileged !== false || h.ReadonlyRootfs !== true || h.NetworkMode !== 'none' || h.PidMode !== '' || h.IpcMode !== 'private' || h.UsernsMode !== '' || h.UTSMode !== '' || h.CgroupnsMode !== 'private' || h.AutoRemove !== false || h.Init !== false || h.PublishAllPorts !== false) reject();
   gate('bounds');
-  if (!equal(h.CapDrop, ['ALL']) || (h.CapAdd != null && !equal(h.CapAdd, [])) || !equal(h.SecurityOpt, ['no-new-privileges']) || h.Memory !== 1073741824 || h.MemorySwap !== 1073741824 || h.NanoCpus !== 1000000000 || h.PidsLimit !== 128 || h.ShmSize !== 134217728) reject();
+  if (!equal(h.CapDrop, ['ALL']) || (h.CapAdd != null && !equal(h.CapAdd, [])) || !equal(h.SecurityOpt, ['no-new-privileges']) || h.Memory !== 1073741824 || h.MemorySwap !== 1073741824 || h.NanoCpus !== 1000000000 || h.PidsLimit !== 128 || h.ShmSize !== 134217728 || h.OomKillDisable !== false) reject();
   gate('tmpfs');
   if (!equal(h.Tmpfs, { '/tmp': 'rw,noexec,nosuid,nodev,size=256m,mode=1777' })) reject();
   gate('host_mounts');
@@ -290,7 +290,7 @@ async function run(root) {
     context('create', 'saved_record');
     const intent = JSON.parse(await privateRead(root, mode + '.intent.json'));
     validateIntent(intent);
-    const args = ['container', 'create', '--init=false', '--network', 'none', '--ipc', 'private', '--cgroupns', 'private', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,noexec,nosuid,nodev,size=256m,mode=1777', '--shm-size', '128m', '--memory', '1g', '--memory-swap', '1g', '--cpus', '1', '--pids-limit', '128', '--user', '10001:10001', '--env', 'HOST_PID_NAMESPACE=' + hostNamespace];
+    const args = ['container', 'create', '--init=false', '--oom-kill-disable=false', '--network', 'none', '--ipc', 'private', '--cgroupns', 'private', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,noexec,nosuid,nodev,size=256m,mode=1777', '--shm-size', '128m', '--memory', '1g', '--memory-swap', '1g', '--cpus', '1', '--pids-limit', '128', '--user', '10001:10001', '--env', 'HOST_PID_NAMESPACE=' + hostNamespace];
     for (const [key, value] of Object.entries(labels(intent))) args.push('--label', key + '=' + value);
     args.push(intent.image, mode);
     gate('create_id');

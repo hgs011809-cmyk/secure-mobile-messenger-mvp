@@ -78,9 +78,56 @@
       },
       "cause": "not_yet_identified",
       "rawDiagnosticsPublished": false
+    },
+    {
+      "run": "38177472167",
+      "job": "114582791379",
+      "commit": "f9e6e2caade8692ad85adf2e473a6db24196f332",
+      "status": "failed",
+      "jobDuration": "52s",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "saved_record",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true,
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ]
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "saved_record",
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ]
+      },
+      "actualPreviousOrNewFieldValuesPublished": false,
+      "rawDiagnosticsPublished": false
     }
   ],
-  "current": "one_bounded_field_shape_diagnostic_pending_no_admission_relaxation",
+  "current": "explicit_enabled_OOM_killer_false_fixture_flag_pending_review_no_comparison_relaxation",
   "limits": [
     "not_actual_SDK_integration",
     "not_MXC_or_Internet_transfer",

@@ -9,7 +9,7 @@ function fixture() {
   const observed = {
     Id: id, Image: intent.image,
     Config: { Labels: { 'owned-containment.run': intent.run, 'owned-containment.nonce': intent.nonce, 'owned-containment.mode': intent.mode }, User: '10001:10001', Entrypoint: ['node', '/opt/fixture/container-worker.mjs'], Cmd: ['graceful'], WorkingDir: '/opt/fixture', Tty: false, OpenStdin: false, Env: [...intent.imageEnvironment, 'HOST_PID_NAMESPACE=pid:[123]'], Volumes: null },
-    HostConfig: { Privileged: false, ReadonlyRootfs: true, NetworkMode: 'none', PidMode: '', IpcMode: 'private', UsernsMode: '', UTSMode: '', CgroupnsMode: 'private', AutoRemove: false, Init: false, PublishAllPorts: false, CapDrop: ['ALL'], CapAdd: null, SecurityOpt: ['no-new-privileges'], Memory: 1073741824, MemorySwap: 1073741824, NanoCpus: 1000000000, PidsLimit: 128, ShmSize: 134217728, Tmpfs: { '/tmp': 'rw,noexec,nosuid,nodev,size=256m,mode=1777' }, Binds: null, Devices: [], DeviceRequests: null, VolumesFrom: null, Links: null, ExtraHosts: null, PortBindings: {}, Mounts: [] },
+    HostConfig: { Privileged: false, ReadonlyRootfs: true, NetworkMode: 'none', PidMode: '', IpcMode: 'private', UsernsMode: '', UTSMode: '', CgroupnsMode: 'private', AutoRemove: false, Init: false, PublishAllPorts: false, CapDrop: ['ALL'], CapAdd: null, SecurityOpt: ['no-new-privileges'], Memory: 1073741824, MemorySwap: 1073741824, NanoCpus: 1000000000, PidsLimit: 128, ShmSize: 134217728, OomKillDisable: false, Tmpfs: { '/tmp': 'rw,noexec,nosuid,nodev,size=256m,mode=1777' }, Binds: null, Devices: [], DeviceRequests: null, VolumesFrom: null, Links: null, ExtraHosts: null, PortBindings: {}, Mounts: [] },
     Mounts: [], NetworkSettings: { Networks: { none: {} } }, State: { Running: false, ExitCode: 0 }
   };
   const record = { version: 1, id, intent: structuredClone(intent), image: intent.image, config: structuredClone(observed.Config), securityConfig: structuredClone(observed.HostConfig) };
@@ -36,6 +36,13 @@ test('image and full security configuration mismatches fail closed', () => {
     invalid.record.securityConfig.Init = init;
     invalid.observed.HostConfig.Init = init;
     if (init === undefined) { delete invalid.record.securityConfig.Init; delete invalid.observed.HostConfig.Init; }
+    assert.throws(() => validateRecord(invalid.record, invalid.observed, invalid.intent, invalid.id), { message: 'containment_unverified' });
+  }
+  for (const oomKillDisable of [null, undefined, 'false', 'true', 0, {}, true]) {
+    const invalid = fixture();
+    invalid.record.securityConfig.OomKillDisable = oomKillDisable;
+    invalid.observed.HostConfig.OomKillDisable = oomKillDisable;
+    if (oomKillDisable === undefined) { delete invalid.record.securityConfig.OomKillDisable; delete invalid.observed.HostConfig.OomKillDisable; }
     assert.throws(() => validateRecord(invalid.record, invalid.observed, invalid.intent, invalid.id), { message: 'containment_unverified' });
   }
   const validEnvironment = fixture().observed.Config.Env;
