@@ -1,3 +1,15 @@
+# Linux final40/40 verified
+
+Run https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38145268441 ; workflow b6a9745, reviewed source29a5dbb, reference218c68e;11s total/9s job.
+
+Inspected accepted aggregates:40 tests,40 pass,0fail,0skip; generated streaming fixture16777216 bytes,65536-byte fixture segments,262144-byte API segment cap. Unmodified reference source and complete LICENSE hash verified; completed fixture namespace empty except private log; independent private_cleanup=verified,physical_erasure=false,hard_runner_loss_cleanup=unverified.
+
+Small bidirectional officialNode1.0.3 interoperability and full-hash-before-plaintext verified. authenticated_room_descriptor=external_fixture_assumption; browser_or_android_file_transfer=false;actual_sdk_media_integration=false;gb_scale=false;rss_bound=false;production_changes=false. Action-runtime deprecation warning is not a failed gate.
+
+This40-case run does NOT cover the new pending attachment-roundtrip.spec.mjs. Existing74 suite and browser-tone positive/negative remain separate evidence.
+
+## Earlier checkpoint and limitations (preserved)
+
 # New Matrix-v2 streaming primitive results
 
 ## Current checkpoint

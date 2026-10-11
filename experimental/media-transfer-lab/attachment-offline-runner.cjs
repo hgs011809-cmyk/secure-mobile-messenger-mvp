@@ -4,7 +4,7 @@ const fsA=require('node:fs'), pathA=require('node:path'), cryptoA=require('node:
 const rootA=process.env.ATTACHMENT_LAB_ROOT, tempA=process.env.ATTACHMENT_LAB_TMP;
 if(!rootA||!tempA)throw new Error('explicit_roots_required');
 const uriA=text=>'data:text/javascript;base64,'+Buffer.from(text).toString('base64');
-const filesA=['attachment-stream.mjs','attachment-stream.spec.mjs','attachment-interop.spec.mjs'];
+const filesA=['attachment-stream.mjs','receiver.mjs','attachment-stream.spec.mjs','attachment-interop.spec.mjs','attachment-roundtrip.spec.mjs'];
 const textsA=Object.fromEntries(filesA.map(n=>[n,fsA.readFileSync(pathA.join(rootA,n),'utf8')]));
 const referenceA=fsA.readFileSync(pathA.join(rootA,'reference/matrix-encrypt-attachment-1.0.3/nodejs.js'),'utf8');
 const hashA=s=>cryptoA.createHash('sha256').update(s).digest('hex');
@@ -18,6 +18,7 @@ const recordA={phase:'prepared',node:process.version,platform:process.platform,r
 fsA.writeFileSync(statusFileA,JSON.stringify(recordA,null,2));
 process.on('exit',code=>{let removed=false;try{fsA.rmSync(namespaceA,{recursive:true,force:true});removed=!fsA.existsSync(namespaceA);}catch{}recordA.phase=code===0&&removed?'exited_zero':'failed';recordA.exitCode=code;recordA.temporaryNamespaceRemoved=removed;fsA.writeFileSync(statusFileA,JSON.stringify(recordA,null,2));if(!removed)process.exitCode=1;console.log('attachment_namespace_removed='+removed);});
 const coreURI_A=uriA(textsA['attachment-stream.mjs']);
+const receiverURI_A=uriA(textsA['receiver.mjs']);
 // Source bytes remain unmodified inside a CJS-compatible wrapper. Only built-in crypto required.
 const refURI_A=uriA('import crypto from "node:crypto";const referenceExports={};(function(exports,require){\n'+referenceA+'\n})(referenceExports,name=>{if(name!=="crypto")throw new Error("reference_dependency_rejected");return crypto;});export default referenceExports;');
-Promise.all(filesA.filter(n=>n.endsWith('.spec.mjs')).map(n=>import(uriA(textsA[n].replaceAll('./attachment-stream.mjs',coreURI_A).replaceAll('./reference/matrix-encrypt-attachment-1.0.3/nodejs.js',refURI_A))))).catch(()=>{recordA.importFailed=true;process.exitCode=1;console.log('attachment_import_failed=true; raw_error_suppressed=true');});
+Promise.all(filesA.filter(n=>n.endsWith('.spec.mjs')).map(n=>import(uriA(textsA[n].replaceAll('./attachment-stream.mjs',coreURI_A).replaceAll('./receiver.mjs',receiverURI_A).replaceAll('./reference/matrix-encrypt-attachment-1.0.3/nodejs.js',refURI_A))))).catch(()=>{recordA.importFailed=true;process.exitCode=1;console.log('attachment_import_failed=true; raw_error_suppressed=true');});

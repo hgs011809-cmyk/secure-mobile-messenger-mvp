@@ -1,5 +1,5 @@
-# New streaming primitive checkpoint
+# Attachment streaming checkpoint
 
-Parent manually resumed at22:18KST; one-shot routine paused before execution to avoid duplicate writes. Previous74 Node tests and browser-tone results remain unchanged. New implementation/spec is delegated with exclusive two-file scope. No new execution or interoperability result yet.
+Linux40/40 run38145268441/b6a9745 independently inspected; source29a5dbb,reference218c68e. Source/LICENSE hash guards, owner-only private namespace, empty fixture residue check and independent cleanup passed.16MiB generated fixture,64KiB chunks; not RSS/GB/product guarantee.
 
-Format evidence: official matrix-spec sending-encrypted-attachments section; crypto descriptor subsetv2, fresh256-bit key,random64-bit nonce +zero64-bit counter,complete ciphertext SHA256. Spec/reference/source interoperability still separate from authenticated room descriptor and actual SDK integration. No unauthorized plaintext before complete hash verification; ciphertext-only private quarantine and chunk revalidation required.
+Next separate new5-case pipeline composition under development: encryption ->ciphertext receiver resume/retry ->trusted complete hash ->plaintext digest. No existing module changes. New cases are not covered by40 or prior74. Routine paused to avoid duplicate; no production/main/NCP/cost changes.
