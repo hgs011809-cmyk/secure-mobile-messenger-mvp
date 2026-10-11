@@ -68,3 +68,9 @@ Source9892ac9443bf106bf686f6eef0676b30fb477468, exactly5 new POSIX-only8MiB fixt
 
 ## Preserving handoff5 verified, bounded task STOPPED
 New5 only Linux38148000046:5pass,0fail,0skip;source9892ac9443bf106bf686f6eef0676b30fb477468/workflowe89e750ce324e0b1c2e455e23635a7accb6bba8d. Acceptance guards/private cleanup inspected;exact branch,noartifacts.8MiB fixture,<=24MiB logical live ciphertext;sender/cache preserved until explicitcleanup. Existing modules unchanged. Prior45 destructive handoff,40 standalone,74/tone evidence separate. Repair/crash/physical/RSS/actualauth/SDK/GB/Android/OOB/staging/operations blocked. One CI run only,noautochain. See ATTACHMENT_HANDOFF_RESULTS.md for Windows50 and initialpathnameEPERM failure.
+
+## Usernext authorized: actualSDKdescriptorcandidate
+Newdescriptor-* variant12unitWindowspassed,6actualSDKgatesnotexecuted. Existingconversation/client/admission/ingress/policy unchanged11sourceguards. Independentreviewfalsepositive negativecatch correctedexactcode+actualeventstate. Seeexperimental/matrix-client/DESCRIPTOR_RESULTS.md; independentfix/workflowreviewpending andLinuxCIpending. No mediafetch/upload/Android/production.
+
+## ActualSDK encrypted descriptor milestone VERIFIED
+OneLinuxrun38149969509,b48dbd2/sourceccff0bd;12fixtureunitspassWindows/Linux plus6actualSDKdescriptor gatespassed separately.14newsource/unchangedboundaryhashes inspected;independentprofile/runtime/containercleanupverified. GenuineE2EEdescriptor->peerkey/authenticity/roomchecks->WebCrypto4KiBdigest;exactcorrupt/schema/redactionrejectionsbeforedecrypt. NoactualMXC transport/browserstream/Android/humanOOB/atomicserverauthority. Oldreceiver/handoffstillnotwired tothisactualSDKtrustedsource. Priorproofs/failurespreserved; nooperationalchanges,noautochain. Seeexperimental/matrix-client/DESCRIPTOR_RESULTS.md.
