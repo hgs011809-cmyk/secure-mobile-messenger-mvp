@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
+  "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -300,6 +300,33 @@
       "foundation_cleanup_nested_receiver_root_incompatible"
     ],
     "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
-    "updatedAt": "2026-10-11T18:06:59.708Z"
+    "updatedAt": "2026-10-11T18:06:59.708Z",
+    "inspectionUnknownFailClosedFix": true,
+    "backupCommit": "db15de1934836a02788f596e54fc0d4b3f40996e",
+    "finalReview": "PASS_revised_source_blocker_only"
+  },
+  "sdkProcessStartupOwnership": {
+    "status": "static_source_audit_reviewed_runtime_blocked",
+    "implementationTask": "8e6rbieZ2fq7czlC",
+    "reviewTask": "AFQfaOT3f7PLBuRu",
+    "sourceReview": "PASS_static_only",
+    "files": [
+      "experimental/matrix-client/sdk-process-startup-audit.cjs",
+      "experimental/matrix-client/SDK_PROCESS_STARTUP_OWNERSHIP.md"
+    ],
+    "sourcePins": 6,
+    "exactOnceAnchors": 10,
+    "textualOrderChecks": 3,
+    "runtimeTests": 0,
+    "newCI": false,
+    "actualSDKIntegration": false,
+    "priorFilesUnchanged": 919,
+    "blockers": [
+      "CHILD_SPAWN_BEFORE_BIRTH_MARKER",
+      "BROWSER_BIRTH_IDENTITY_UNAVAILABLE",
+      "INDEPENDENT_CONTAINMENT_NOT_ESTABLISHED"
+    ],
+    "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
+    "updatedAt": "2026-10-11T18:19:02.344Z"
   }
 }

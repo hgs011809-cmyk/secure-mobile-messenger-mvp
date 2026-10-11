@@ -7,21 +7,21 @@
   "routineId": "fBhYJ5G17fGs6JU9",
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
-  "ownerSession": null,
-  "status": "blocked_before_runtime_source_reviewed",
+  "ownerSession": "ili7VyPmppBALkEX",
+  "status": "startup_source_reviewed_runtime_blocked",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
+  "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T18:07:17.029Z",
+  "updatedAt": "2026-10-11T18:19:02.344Z",
   "implementationTask": "AoDsAv7AlpsPjZge",
   "independentReviewTask": "Txww4PHQqAlPd7Xn",
   "completed": [
@@ -35,10 +35,11 @@
     "synthetic_ipc_foundation_six_linux_verified_only",
     "new_sdk_authority_candidate_crossbinding_source_review_only",
     "new_actual_SDK_process_driver_source_candidate_reviewed_only",
-    "new_live_CI_feasibility_blocker_source_review_only"
+    "new_live_CI_feasibility_blocker_source_review_only",
+    "new_startup_ownership_static_audit_independently_reviewed_no_runtime"
   ],
   "pending": [
-    "branch_backup_reviewed_blocker"
+    "startup_ownership_checkpoint_branch_backup"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -90,7 +91,7 @@
     "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
   "lastOwnerSession": "2AKAKDoeQ1wQ03Od",
-  "checkpointCommit": "14746056e41c18b240f5809046181ce3078ade37",
+  "checkpointCommit": "db15de1934836a02788f596e54fc0d4b3f40996e",
   "investigationTask": "bZcgUyvsP90GFDUL",
   "sdkProcessFeasibility": {
     "status": "conditional_candidate_not_established",
@@ -222,6 +223,32 @@
     ],
     "next": "next_run_NEW_exact_startup_ownership_wrapper_feasibility_no_existing_source_edits_or_cold_quota_alternative",
     "updatedAt": "2026-10-11T18:06:59.708Z",
-    "inspectionUnknownFailClosedFix": true
+    "inspectionUnknownFailClosedFix": true,
+    "backupCommit": "db15de1934836a02788f596e54fc0d4b3f40996e",
+    "finalReview": "PASS_revised_source_blocker_only"
+  },
+  "sdkProcessStartupOwnership": {
+    "status": "static_source_audit_reviewed_runtime_blocked",
+    "implementationTask": "8e6rbieZ2fq7czlC",
+    "reviewTask": "AFQfaOT3f7PLBuRu",
+    "sourceReview": "PASS_static_only",
+    "files": [
+      "experimental/matrix-client/sdk-process-startup-audit.cjs",
+      "experimental/matrix-client/SDK_PROCESS_STARTUP_OWNERSHIP.md"
+    ],
+    "sourcePins": 6,
+    "exactOnceAnchors": 10,
+    "textualOrderChecks": 3,
+    "runtimeTests": 0,
+    "newCI": false,
+    "actualSDKIntegration": false,
+    "priorFilesUnchanged": 919,
+    "blockers": [
+      "CHILD_SPAWN_BEFORE_BIRTH_MARKER",
+      "BROWSER_BIRTH_IDENTITY_UNAVAILABLE",
+      "INDEPENDENT_CONTAINMENT_NOT_ESTABLISHED"
+    ],
+    "next": "next_scheduled_run_NEW_8MiB_256KiB_logical_ciphertext_length_budget_fixtures_review_linux_no_native_quota_claim",
+    "updatedAt": "2026-10-11T18:19:02.344Z"
   }
 }
