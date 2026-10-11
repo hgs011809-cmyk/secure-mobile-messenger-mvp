@@ -1,5 +1,5 @@
 {
-  "phase": "autonomous_window_closed_final_verification_complete",
+  "phase": "owned_container_standalone_BLOCKED_stopped",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "STOP_no_new_phase_no_autochain_no_schedule_extension_future_work_requires_new_authorization",
+  "next": "Read-only review of exact Docker CLI/daemon resource representation across create/start; separately reviewed bounded design that preserves exact precreated identity and all resource/security constraints. New runtime only with renewed authorization; do not ignore bounds/full-record checks or use posthoc PID signals.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -448,6 +448,182 @@
     "review": "IFMlLiJs99deyYVh_document_only_PASS_not_runtime_rerun",
     "historicalFailuresRetained": true,
     "screenshot": "C:/Users/mycom/.aside/u/0/sessions/2026-10-12_15EzrsrF1aSyh9Ea/tmp/final-ci-cleanup-proof.png",
-    "closed": true
+    "closed": true,
+    "backupCommit": "f8b91b2e6682ca79c1c3e53fe900a9badec3b51b",
+    "backupConfirmed": true
+  },
+  "ownedContainer": {
+    "status": "BLOCKED_STOPPED",
+    "actualSDKIntegration": false,
+    "runtimeTests": 0,
+    "proposal": "Docker_create_ID_before_start_private_PID_namespace",
+    "authority": "exact_container_ID_image_labels_revalidated_not_posthoc_PID_signals",
+    "productionChanges": false,
+    "existingPoliciesChanged": false,
+    "firstRun": {
+      "run": "38175781795",
+      "job": "114577758655",
+      "commit": "d78221f556bfd4e87ae9c36418f64e389dfd94b3",
+      "status": "failed",
+      "duration": "42s",
+      "sourcePolicyPins": 38,
+      "sourceGuards": "verified",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": "failed_unverified",
+      "cleanup": "failed_unverified",
+      "acknowledgedCreatedCount": "unknown",
+      "acknowledgedStartedCount": "unknown",
+      "completedLifecycleCases": "unknown",
+      "rawDiagnosticsPublished": false
+    },
+    "staticReview": "PASS_after_fixes",
+    "localContracts": "4/4",
+    "secondRun": {
+      "run": "38176756354",
+      "job": "114580660018",
+      "commit": "aaa1928747358301cc63d5a19f0d617863fd04c7",
+      "status": "failed",
+      "jobDuration": "41s",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "saved_record",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "saved_record",
+        "acknowledgedCreatedCount": 0,
+        "acknowledgedStartedCount": 0,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only_not_historical_resource_count",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true
+      },
+      "cause": "not_yet_identified",
+      "rawDiagnosticsPublished": false
+    },
+    "thirdRun": {
+      "run": "38177472167",
+      "job": "114582791379",
+      "commit": "f9e6e2caade8692ad85adf2e473a6db24196f332",
+      "status": "failed",
+      "jobDuration": "52s",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "saved_record",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true,
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ]
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "saved_record",
+        "configComparison": "equal",
+        "hostConfigComparison": "different",
+        "stateShape": "valid",
+        "changedConfigFields": [],
+        "changedHostConfigFields": [
+          "OomKillDisable"
+        ]
+      },
+      "actualPreviousOrNewFieldValuesPublished": false,
+      "rawDiagnosticsPublished": false
+    },
+    "latestRun": {
+      "run": "38177830811",
+      "job": "114583871827",
+      "commit": "081a8ed3408c436f86e15ef119ff413aff87cded",
+      "status": "failed",
+      "jobDuration": "41s",
+      "sourcePolicyPins": 38,
+      "sourceGuards": "verified",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "bounds",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true,
+        "configComparison": "not_observed",
+        "hostConfigComparison": "not_observed",
+        "stateShape": "not_observed",
+        "changedConfigFields": [],
+        "changedHostConfigFields": []
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "bounds",
+        "countScope": "current_invocation_only_not_historical_resource_count",
+        "comparison": "not_observed"
+      },
+      "explicitOOMKillerEnabledRequested": true,
+      "fullConfigEqualityRetained": true,
+      "exactFailedBoundsMember": "not_disambiguated",
+      "rawDiagnosticsPublished": false
+    },
+    "sourcePolicyPins": 38,
+    "contracts": "4/4_separate_pure_data_class",
+    "failedCIRuns": 4,
+    "acceptedLifecycleCases": 0,
+    "independentCleanupAccepted": false,
+    "noAdmissionRelaxation": true,
+    "noPosthocHostWorkloadPIDSignals": true,
+    "noMoreRuntimeInThisBoundedPhase": true,
+    "noScheduledChainOrWindowExtension": true,
+    "nextAuthorizationRequired": true
   }
 }
