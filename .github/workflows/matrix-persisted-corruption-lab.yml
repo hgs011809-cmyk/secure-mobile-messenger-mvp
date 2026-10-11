@@ -1,0 +1,77 @@
+name: Synthetic persisted ciphertext corruption and conflicting retry
+on:
+  workflow_dispatch:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths:
+      - '.github/workflows/matrix-persisted-corruption-lab.yml'
+      - 'experimental/media-transfer-lab/persisted-corruption.spec.mjs'
+      - 'experimental/media-transfer-lab/persisted-corruption-prepare.cjs'
+      - 'experimental/media-transfer-lab/persisted-corruption-cleanup.cjs'
+permissions:
+  contents: read
+concurrency:
+  group: synthetic-persisted-corruption-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  persisted-corruption:
+    if: github.ref == 'refs/heads/lab-matrix-cleanup-followup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Owner-only private namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          private_root="$(mktemp -d "${RUNNER_TEMP:?}/synthetic-persisted-corruption.XXXXXX")"
+          chmod 700 "$private_root"
+          printf 'PRIVATE_ATTACHMENT_ROOT=%s\nTMPDIR=%s\n' "$private_root" "$private_root" >> "$GITHUB_ENV"
+      - name: Immutable34 and additional file guards before tests
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$GITHUB_REF" = 'refs/heads/lab-matrix-cleanup-followup'
+          node -e 'const f=require("node:fs"),c=require("node:crypto"),o=require("node:os"),p=require("node:path"),r=process.env.PRIVATE_ATTACHMENT_ROOT;if(process.platform!=="linux")process.exit(1);const s=f.lstatSync(r);if(!s.isDirectory()||s.isSymbolicLink()||(s.mode&4095)!==448||s.uid!==process.getuid()||f.realpathSync(o.tmpdir())!==f.realpathSync(r))process.exit(1);const pins={"experimental/matrix-client/descriptor-hooks.inc.mjs":"141c222b64b02e336950aa9dd8acb5cfca757a3b351d4aebcb10d8b0c5514554","experimental/matrix-client/descriptor-driver.inc.mjs":"92c18995a76d507f5d056428b9087954e06a9027bbc3083ca933517370585ae8","experimental/matrix-client/descriptor-fixture.inc.mjs":"9358cd1dc9c2b4bdcb997aa246d4324749f4bfd1e80c457037041c7d14fe4582","experimental/matrix-client/descriptor-browser.html":"f6b4418a21eb653bfc4e7893dea90f3cae10a2e6cbd8c66cb9f6cb6f1a8936c9","experimental/matrix-client/descriptor-build.mjs":"84729488b5adc137e4b131fe469609b18cd449ddf3ba374afbb6ff5307f6942e","experimental/matrix-client/descriptor-composed-ci.mjs":"402ef61d8d7f52e121d3a4409bffadb079f4291424631126c65346f049ce51fc","experimental/matrix-client/descriptor-receipt.mjs":"44e5f862245629caf83f080430c47cfd9a77cac148a6f5f6d70cce9e10a84fb4","experimental/matrix-client/descriptor-receipt.spec.mjs":"7a8505bf52983671fcfbc086ce226c1289b82f45e1916d042ff99a3705c51b18","experimental/media-transfer-lab/attachment-stream.mjs":"1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6","experimental/matrix-client/conversation.mjs":"5703ee41c6de769d65427621ec1d771a58a492e145c7a66cf3ff5648724cbb98","experimental/matrix-client/client.mjs":"f9f29e0b6ba52f297003673bc1a6f481bb29d9f6cc6c37a9842b12f9c3acc5d5","experimental/auth-bridge/sdk-binding.mjs":"e505214ec1020d676a310da283f5d3387c48086dbf507e3f8fedbbd2dd281503","experimental/auth-bridge/sdk-policy.mjs":"e6b9bf86b45cb38d8829e9ac35c7f1534783bf9b9077ddad862681261db3a4d3","experimental/auth-bridge/sdk-ingress.mjs":"d2c415e09cc10662ba84984e719ff277b6a6f0eae537bcda58d93b6a18b1a735","experimental/matrix-client/transport-pipeline.mjs":"07cafe5952aaf48839810b881674a44d2778111dc5c9e36e33f7a33dd2e6656d","experimental/matrix-client/transport-pipeline.spec.mjs":"fc6f3e1e144a121748118c10ac7fa20a95aa47dc5cded58eeedfd939bdfd3094","experimental/matrix-client/transport-hooks.inc.mjs":"bf201dea666c5d1111a0ab3d10df6468b5934d5c97050735983a837b8d682876","experimental/matrix-client/transport-browser.html":"8dd69fccc470ff1ed08c53ec4fd06e819db650878ef8757b085d32dee093ea18","experimental/matrix-client/transport-build.mjs":"1f25714516cb8341279fb7f779fee26a4b3ce7fc20237011e3ed2156d4806059","experimental/matrix-client/transport-prefix.inc.mjs":"7666a81d76d8a16dfd0ad6c161de73d94a9ee74cb39ee7d0f05be1cd2e8a2c39","experimental/matrix-client/transport-driver.inc.mjs":"af04cb26658fa228581f84754349cf76a5d5f07c55eb59cabc0e02ffb0569422","experimental/matrix-client/transport-revoke.inc.mjs":"b1a81c2f1726f1689da309b61e42d5348d6a053909a114d828333692c1712183","experimental/matrix-client/transport-composed-ci.mjs":"f13f7b42278e8448e4ed97e056473ca01c59afa21785456b3eb3a84d3d1dab88","experimental/media-transfer-lab/receiver.mjs":"deb1110aa3d43cfbd9cad917f577412812fc922579e523d328bab101ade71842","experimental/auth-bridge/broker.mjs":"837b7a35d36b75552c220afb835444f7c994a771bde16336c28117ef69907916","experimental/auth-bridge/lifecycle.mjs":"19df008875b8cb2569bb79dbfc3ab3ec0ec83051578cd31656371114e0e05512","experimental/auth-bridge/store.mjs":"1daf59dc1710b902280fa3eee16cdfd74e5ea1511ad12614ea08d875a0607c89","experimental/auth-bridge/synapse-lab-issuer.mjs":"69e469d64675edbdf7695a0aab7012b1c7adb80684ab62617ec584c36f315277","experimental/media-transfer-lab/process-restart-worker.mjs":"68e724111aeecff964f586a498b8248972421e0647e19007b9aa5c284e03130f","experimental/media-transfer-lab/process-restart.spec.mjs":"3fb97f356325cc48975a798722dfff13ae20599dc2ad373f04178e3fc6568992","experimental/media-transfer-lab/process-restart-cleanup.cjs":"14878ea6b21231f06c6c485ecf466ba623ae45866836c1a41ef3466e16f9e36d","experimental/media-transfer-lab/process-write-fault-worker.mjs":"ca3187a43ae1d165c0bb6c18d22c81299cc14ab6f57be5ac512f651af26e36ac","experimental/media-transfer-lab/process-write-fault.spec.mjs":"3e7d0cb97c8a159da908b266d4a9bdc6058296d8de9d64795fcd76fada32d0e0","experimental/media-transfer-lab/process-write-fault-cleanup.cjs":"f3c3e45fea6505976af2873e2c1fe1d386d65f171bf33fce38932712cfe3d66d","experimental/media-transfer-lab/persisted-corruption.spec.mjs":"acc87dde8a20c9d0d46cee6ee7ce99835f9a2dcd1c69f063949a9f9ddccce8a4","experimental/media-transfer-lab/persisted-corruption-cleanup.cjs":"10d138d57d14e82124ac6bbe12de58065c48e73f77634f82e3e1221cf9f78c39","experimental/media-transfer-lab/persisted-corruption-prepare.cjs":"abc5654cd3cfc29e0e3e27524b7bf25c46350ea95a2cd93f30f3848e78240e31",".github/workflows/matrix-process-write-fault-lab.yml":"b5caec7d23a1290c65239776471a986b5bad5a6fd53a179483c1eae74ce6d8eb"};for(const [n,h]of Object.entries(pins))if(c.createHash("sha256").update(f.readFileSync(p.join(process.env.GITHUB_WORKSPACE,n))).digest("hex")!==h)process.exit(1);' > "$PRIVATE_ATTACHMENT_ROOT/guard.log" 2>&1 || { echo 'source_policy_guards=failed; raw_diagnostics_suppressed=true'; exit 1; }
+          rm -- "$PRIVATE_ATTACHMENT_ROOT/guard.log"
+          echo 'immutable_source_guards=34; new_file_guards=3; prior_workflow_guards=1; imported_custom_dependencies=2; all_custom_imports_pinned=true; verified=true'
+      - name: Exactly six new flat corruption tests only
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          log="$PRIVATE_ATTACHMENT_ROOT/test-output.log"
+          set +e
+          timeout --kill-after=5s 180s node --test --test-reporter=tap --test-concurrency=1 persisted-corruption.spec.mjs > "$log" 2>&1
+          result=$?
+          set -e
+          node -e 'const f=require("node:fs"),t=f.readFileSync(process.argv[1],"utf8"),names=["tests","pass","fail","cancelled","skipped"],counts=Object.fromEntries(names.map(n=>{const m=[...t.matchAll(new RegExp("^# "+n+" ([0-9]+)$","gm"))];return [n,m.length===1?Number(m[0][1]):null];}));const flat=[...t.matchAll(/^ok [0-9]+ -/gm)].length===6&&!/^not ok |^    (?:ok |not ok |# Subtest:)/m.test(t);const verified=counts.tests===6&&counts.pass===6&&counts.fail===0&&counts.cancelled===0&&counts.skipped===0&&flat&&process.argv[2]==="0";console.log(JSON.stringify({expected_tests:6,...counts,flat,runner_exit:Number(process.argv[2]),verified,raw_diagnostics_suppressed:true}));if(!verified)process.exit(1);' "$log" "$result"
+          node persisted-corruption-cleanup.cjs --check-only
+          node -e 'const f=require("node:fs"),n=f.readdirSync(process.env.PRIVATE_ATTACHMENT_ROOT);if(n.length!==1||n[0]!=="test-output.log")process.exit(1);console.log("fixture_namespaces_absent_after_tests=true");'
+          echo 'new_flat_tests=6; fixture_ciphertext_bytes=8388608; chunk_bytes=262144; extension_probe_bytes=1; exact_negative_codes=invalid_stored_chunk,integrity_failed,conflicting_retry,HASH_MISMATCH,not_authorized,AUTHORIZATION_DENIED,manifest_changed; instrumented_parent_negative_plaintext_callbacks=0; instrumented_parent_negative_plaintext_bytes=0; positive_parent_sink_control=true'
+          echo 'resume_length_only=true; manifest_denial_not_latched_by_core=true; initialization_denial_only_claim=true; snapshots_after_injection=true; pending_reclamation_not_in_scope=true; source_and_cache_read_retry_immutability=true; containers_created=0; suite_owned_children=0; authorization=mock_only; no_process_restart_proof=true; prior_suite_proof=separate; SDK_Android_network=false; filesystem_repair=false; physical_erasure=false; durability=false; production_changes=false; hard_runner_loss_cleanup=unverified'
+      - name: Immutable guards after new tests
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          node -e 'const f=require("node:fs"),c=require("node:crypto"),o=require("node:os"),p=require("node:path"),r=process.env.PRIVATE_ATTACHMENT_ROOT;if(process.platform!=="linux")process.exit(1);const s=f.lstatSync(r);if(!s.isDirectory()||s.isSymbolicLink()||(s.mode&4095)!==448||s.uid!==process.getuid()||f.realpathSync(o.tmpdir())!==f.realpathSync(r))process.exit(1);const pins={"experimental/matrix-client/descriptor-hooks.inc.mjs":"141c222b64b02e336950aa9dd8acb5cfca757a3b351d4aebcb10d8b0c5514554","experimental/matrix-client/descriptor-driver.inc.mjs":"92c18995a76d507f5d056428b9087954e06a9027bbc3083ca933517370585ae8","experimental/matrix-client/descriptor-fixture.inc.mjs":"9358cd1dc9c2b4bdcb997aa246d4324749f4bfd1e80c457037041c7d14fe4582","experimental/matrix-client/descriptor-browser.html":"f6b4418a21eb653bfc4e7893dea90f3cae10a2e6cbd8c66cb9f6cb6f1a8936c9","experimental/matrix-client/descriptor-build.mjs":"84729488b5adc137e4b131fe469609b18cd449ddf3ba374afbb6ff5307f6942e","experimental/matrix-client/descriptor-composed-ci.mjs":"402ef61d8d7f52e121d3a4409bffadb079f4291424631126c65346f049ce51fc","experimental/matrix-client/descriptor-receipt.mjs":"44e5f862245629caf83f080430c47cfd9a77cac148a6f5f6d70cce9e10a84fb4","experimental/matrix-client/descriptor-receipt.spec.mjs":"7a8505bf52983671fcfbc086ce226c1289b82f45e1916d042ff99a3705c51b18","experimental/media-transfer-lab/attachment-stream.mjs":"1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6","experimental/matrix-client/conversation.mjs":"5703ee41c6de769d65427621ec1d771a58a492e145c7a66cf3ff5648724cbb98","experimental/matrix-client/client.mjs":"f9f29e0b6ba52f297003673bc1a6f481bb29d9f6cc6c37a9842b12f9c3acc5d5","experimental/auth-bridge/sdk-binding.mjs":"e505214ec1020d676a310da283f5d3387c48086dbf507e3f8fedbbd2dd281503","experimental/auth-bridge/sdk-policy.mjs":"e6b9bf86b45cb38d8829e9ac35c7f1534783bf9b9077ddad862681261db3a4d3","experimental/auth-bridge/sdk-ingress.mjs":"d2c415e09cc10662ba84984e719ff277b6a6f0eae537bcda58d93b6a18b1a735","experimental/matrix-client/transport-pipeline.mjs":"07cafe5952aaf48839810b881674a44d2778111dc5c9e36e33f7a33dd2e6656d","experimental/matrix-client/transport-pipeline.spec.mjs":"fc6f3e1e144a121748118c10ac7fa20a95aa47dc5cded58eeedfd939bdfd3094","experimental/matrix-client/transport-hooks.inc.mjs":"bf201dea666c5d1111a0ab3d10df6468b5934d5c97050735983a837b8d682876","experimental/matrix-client/transport-browser.html":"8dd69fccc470ff1ed08c53ec4fd06e819db650878ef8757b085d32dee093ea18","experimental/matrix-client/transport-build.mjs":"1f25714516cb8341279fb7f779fee26a4b3ce7fc20237011e3ed2156d4806059","experimental/matrix-client/transport-prefix.inc.mjs":"7666a81d76d8a16dfd0ad6c161de73d94a9ee74cb39ee7d0f05be1cd2e8a2c39","experimental/matrix-client/transport-driver.inc.mjs":"af04cb26658fa228581f84754349cf76a5d5f07c55eb59cabc0e02ffb0569422","experimental/matrix-client/transport-revoke.inc.mjs":"b1a81c2f1726f1689da309b61e42d5348d6a053909a114d828333692c1712183","experimental/matrix-client/transport-composed-ci.mjs":"f13f7b42278e8448e4ed97e056473ca01c59afa21785456b3eb3a84d3d1dab88","experimental/media-transfer-lab/receiver.mjs":"deb1110aa3d43cfbd9cad917f577412812fc922579e523d328bab101ade71842","experimental/auth-bridge/broker.mjs":"837b7a35d36b75552c220afb835444f7c994a771bde16336c28117ef69907916","experimental/auth-bridge/lifecycle.mjs":"19df008875b8cb2569bb79dbfc3ab3ec0ec83051578cd31656371114e0e05512","experimental/auth-bridge/store.mjs":"1daf59dc1710b902280fa3eee16cdfd74e5ea1511ad12614ea08d875a0607c89","experimental/auth-bridge/synapse-lab-issuer.mjs":"69e469d64675edbdf7695a0aab7012b1c7adb80684ab62617ec584c36f315277","experimental/media-transfer-lab/process-restart-worker.mjs":"68e724111aeecff964f586a498b8248972421e0647e19007b9aa5c284e03130f","experimental/media-transfer-lab/process-restart.spec.mjs":"3fb97f356325cc48975a798722dfff13ae20599dc2ad373f04178e3fc6568992","experimental/media-transfer-lab/process-restart-cleanup.cjs":"14878ea6b21231f06c6c485ecf466ba623ae45866836c1a41ef3466e16f9e36d","experimental/media-transfer-lab/process-write-fault-worker.mjs":"ca3187a43ae1d165c0bb6c18d22c81299cc14ab6f57be5ac512f651af26e36ac","experimental/media-transfer-lab/process-write-fault.spec.mjs":"3e7d0cb97c8a159da908b266d4a9bdc6058296d8de9d64795fcd76fada32d0e0","experimental/media-transfer-lab/process-write-fault-cleanup.cjs":"f3c3e45fea6505976af2873e2c1fe1d386d65f171bf33fce38932712cfe3d66d","experimental/media-transfer-lab/persisted-corruption.spec.mjs":"acc87dde8a20c9d0d46cee6ee7ce99835f9a2dcd1c69f063949a9f9ddccce8a4","experimental/media-transfer-lab/persisted-corruption-cleanup.cjs":"10d138d57d14e82124ac6bbe12de58065c48e73f77634f82e3e1221cf9f78c39","experimental/media-transfer-lab/persisted-corruption-prepare.cjs":"abc5654cd3cfc29e0e3e27524b7bf25c46350ea95a2cd93f30f3848e78240e31",".github/workflows/matrix-process-write-fault-lab.yml":"b5caec7d23a1290c65239776471a986b5bad5a6fd53a179483c1eae74ce6d8eb"};for(const [n,h]of Object.entries(pins))if(c.createHash("sha256").update(f.readFileSync(p.join(process.env.GITHUB_WORKSPACE,n))).digest("hex")!==h)process.exit(1);' > "$PRIVATE_ATTACHMENT_ROOT/guard.log" 2>&1 || { echo 'post_source_policy_guards=failed; raw_diagnostics_suppressed=true'; exit 1; }
+          rm -- "$PRIVATE_ATTACHMENT_ROOT/guard.log"
+          echo 'post_immutable_source_guards=34; additional_guards=4; verified=true'
+      - name: Independent always owned-process exit and private namespace cleanup
+        if: always()
+        working-directory: experimental/media-transfer-lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          node persisted-corruption-cleanup.cjs
