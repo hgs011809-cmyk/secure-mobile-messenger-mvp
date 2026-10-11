@@ -1,5 +1,5 @@
 {
-  "phase": "synthetic_sdk_process_foundation_linux_verified",
+  "phase": "autonomous_window_final_evidence_index_reviewed",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_scheduled_run_consolidate_exact_separate_suite_evidence_and_remaining_blockers_no_repetitive_new_phase_no_phase_after0415",
+  "next": "04:15_final_verification_cleanup_backup_and_summary_only_no_new_phase_no_schedule_extension",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -405,6 +405,19 @@
     "readOnlyCleanupNoSignals": true,
     "screenshotSaved": true,
     "totalSeconds": 8,
-    "jobSeconds": 6
+    "jobSeconds": 6,
+    "resultsCommit": "eb53edb7f33c5049bf2bfff874b25acb16302fc4"
+  },
+  "finalEvidenceIndex": {
+    "document": "experimental/AUTONOMOUS_WINDOW_EVIDENCE.md",
+    "status": "PASS_document_evidence_only_not_runtime_rerun",
+    "implementationTask": "114hsrEKu8A8hwn1",
+    "reviewTask": "IFMlLiJs99deyYVh",
+    "newRuntimeTests": 0,
+    "newCI": 0,
+    "priorSuitesRemainSeparate": true,
+    "updatedAt": "2026-10-11T19:04:18.301Z",
+    "priorFilesChecked": 933,
+    "priorFileMismatches": 0
   }
 }
