@@ -180,6 +180,10 @@ const api = {
     bound = {room,peer,device};
     bindFailure = 'none';
     try {
+      // PREPARED/SYNCING alone does not prove the fixed room has been restored.
+      // Wait for the real SDK room/membership; never fabricate state or grant trust.
+      bindPhase = 'room-readiness';
+      await wait(() => client.getRoom(room)?.getMyMembership() === 'join', 'room_ready');
       conversation = await bindLabConversation({client,roomId:room,peerUserId:peer,peerDeviceId:device,
         onBindPhase:phase => { bindPhase = phase; },
         onUpdate:() => { progress.textContent = 'Running'; }});
