@@ -28,6 +28,9 @@ export function createSdkIngress({enabled=false,upstreamBase,resolveSession,getB
    const allowed=authorizeSdkRequest(input)||authorizePinnedSignatures(input);
    if(!allowed){reject(res,identity?403:401);return;}
    if(!allowed.public&&!identity){reject(res,401);return;}
+   // Redaction is also a state mutation: never let an event-ID route erase room policy.
+   const redaction=allowed.method==='PUT'&&allowed.path.match(/^\/_matrix\/client\/(v3|r0)\/rooms\/([^/]+)\/redact\/([^/]+)\/[^/]+$/);
+   if(redaction){const er=await fetchImpl(upstream.origin+'/_matrix/client/v3/rooms/'+redaction[2]+'/event/'+redaction[3],{method:'GET',redirect:'error',signal:AbortSignal.timeout(10000),headers:{Authorization:'Bearer '+token}});if(!er.ok){await er.body?.cancel();reject(res,403);return;}const rd=er.body.getReader(),ps=[];let n=0;while(true){const x=await rd.read();if(x.done)break;n+=x.value.length;if(n>131072){await rd.cancel();throw new Error('redaction_target_oversized');}ps.push(x.value);}const ev=JSON.parse(Buffer.concat(ps).toString('utf8'));if(ev.type!=='m.room.encrypted'||ev.room_id&&ev.room_id!==binding.roomId||!binding.devices.some(d=>d.userId===ev.sender)||ev.content?.algorithm!=='m.megolm.v1.aes-sha2'&&!ev.unsigned?.redacted_because){reject(res,403);return;}}
    // Recheck before issuing writes. Already in-flight native writes cannot be atomically undone.
    if(!allowed.public){const again=await resolveSession(token);if(!again||again.deviceId!==identity.deviceId||again.userId!==identity.userId||again.matrixDeviceId!==identity.matrixDeviceId){reject(res,401);return;}}
    const r=await fetchImpl(upstream.origin+allowed.path,{method:allowed.method,redirect:'error',signal:AbortSignal.timeout(65000),headers:{'Content-Type':'application/json',...(allowed.public?{}:{Authorization:'Bearer '+token})},...(allowed.method==='GET'||allowed.body===undefined||allowed.body===null?{}:{body:JSON.stringify(allowed.body)})});
