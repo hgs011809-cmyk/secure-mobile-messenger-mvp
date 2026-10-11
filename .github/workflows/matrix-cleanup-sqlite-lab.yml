@@ -1,0 +1,94 @@
+name: Matrix cleanup native SQLite boundaries (synthetic hybrid only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experimental/matrix-cleanup-candidate/**'
+      - '.github/workflows/matrix-cleanup-sqlite-lab.yml'
+  pull_request:
+    paths:
+      - 'experimental/matrix-cleanup-candidate/**'
+      - '.github/workflows/matrix-cleanup-sqlite-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: matrix-cleanup-sqlite-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    name: native-sqlite-hybrid
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      BASE_IMAGE: matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Extract and transform exact public source
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/candidate-build"
+          if ! docker pull "$BASE_IMAGE" > /dev/null 2>&1; then
+            echo 'Pinned base pull failed; no runtime result.'
+            exit 1
+          fi
+          docker run --rm --name native-sqlite-source-extraction --label aside.synthetic-sqlite-boundary=true --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 256m --cpus 1 -e PYTHONDONTWRITEBYTECODE=1 --entrypoint python "$BASE_IMAGE" -c 'import pathlib,synapse,sys;sys.stdout.write((pathlib.Path(synapse.__file__).parent/"storage/databases/main/censor_events.py").read_text())' > "$RUNNER_TEMP/candidate-build/original.py" 2>/dev/null
+          export SYNAPSE_CENSOR_SOURCE="$RUNNER_TEMP/candidate-build/original.py"
+          if ! node --test experimental/matrix-cleanup-candidate/source-policy.spec.mjs > /dev/null 2>&1; then
+            echo 'source_guards=FAILED; details_suppressed'; exit 1
+          fi
+          echo 'source_guards=PASSED; details_suppressed'
+          cd experimental/matrix-cleanup-candidate
+          if ! node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";import {prepareCandidate,BASE_IMAGE} from "./source-policy.mjs";const t=process.env.RUNNER_TEMP+"/candidate-build/";writeFileSync(t+"candidate.py",prepareCandidate(readFileSync(t+"original.py","utf8"),{enabled:true,scope:"github-actions-synthetic",baseImage:BASE_IMAGE}));' > /dev/null 2>&1; then
+            echo 'source_transform_gate=FAILED; details_suppressed'; exit 1
+          fi
+          echo 'source_transform_gate=PASSED'
+      - name: Build isolated non-published candidate image
+        run: |
+          set -euo pipefail
+          cp experimental/matrix-cleanup-candidate/Candidate.Dockerfile "$RUNNER_TEMP/candidate-build/Dockerfile"
+          if ! docker build --pull=false --network=none -t matrix-cleanup-candidate:ci "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1; then
+            echo 'Pinned candidate build failed; no runtime result.'
+            exit 1
+          fi
+      - name: Nine installed-native mocked-DB and deterministic-clock boundaries
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          if ! candidate_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci 2>/dev/null)"; then echo 'candidate_image_lookup=FAILED'; exit 1; fi
+          if ! docker run --rm --name native-sqlite-mocked-control --label aside.synthetic-sqlite-boundary=true --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 512m --cpus 1 --pids-limit 64 --entrypoint python --mount "type=bind,src=$PWD/experimental/matrix-cleanup-candidate/native-boundary-test.py,dst=/native-boundary-test.py,readonly" "$candidate_image" -B /native-boundary-test.py 2>/dev/null; then
+            echo 'native_boundary_gate=FAILED; mocked_DB_not_runtime_SQL; details_suppressed'
+            exit 1
+          fi
+          echo 'native_boundary_gate=PASSED; mocked_DB_not_runtime_SQL'
+      - name: Actual SQLite hybrid boundary cases without server listener or SDK
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          if ! candidate_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci 2>/dev/null)"; then echo 'candidate_image_lookup=FAILED'; exit 1; fi
+          if ! docker run --rm --name native-sqlite-boundary --label aside.synthetic-sqlite-boundary=true --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 512m --cpus 1 --pids-limit 64 --tmpfs /tmp:rw,noexec,nosuid,size=32m,mode=1777 --entrypoint python --mount "type=bind,src=$PWD/experimental/matrix-cleanup-candidate/native-sqlite-boundary-test.py,dst=/native-sqlite-boundary-test.py,readonly" "$candidate_image" -B /native-sqlite-boundary-test.py 2>/dev/null; then
+            echo 'native_sqlite_hybrid_gate=FAILED; no_encrypted_client_or_admission_claim; details_suppressed'
+            exit 1
+          fi
+          echo 'native_sqlite_hybrid_gate=PASSED; no_encrypted_client_or_admission_claim'
+      - name: Verify temporary build files and SQL fixture container absent
+        if: always()
+        run: |
+          set +e
+          failed=0
+          remaining="$(docker ps -aq --filter label=aside.synthetic-sqlite-boundary=true 2>/dev/null)" || failed=1
+          if [ -n "$remaining" ]; then
+            failed=1
+            docker rm -f native-sqlite-boundary native-sqlite-source-extraction native-sqlite-mocked-control > /dev/null 2>&1 || true
+          fi
+          rm -rf -- "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1 || failed=1
+          if [ -e "$RUNNER_TEMP/candidate-build" ]; then failed=1; fi
+          if [ "$failed" -ne 0 ]; then echo 'sql_fixture_cleanup_verified=false; details_suppressed'; exit 1; fi
+          echo 'sql_fixture_cleanup_verified=true; build_files_absent=true; sql_fixture_container_absent=true; tmpfs_not_physical_erasure'
