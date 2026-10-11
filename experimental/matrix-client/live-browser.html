@@ -132,6 +132,10 @@ const api = {
     requireClient();await client.startClient({initialSyncLimit:50});
     await wait(()=>['PREPARED','SYNCING'].includes(client.getSyncState()),'sync');return true;
   },
+  async gateStatus() {
+    let gate='not_bound';if(conversation)try{await conversation.assertSendAllowed();gate='allowed';}catch(e){gate=['not_initialized','not_joined','encryption_required','private_history_required','invite_only_required','non_federated_room_required','two_participants_required','crypto_required','unverified_device_block_required','one_bound_device_per_participant_required','peer_device_verification_required'].includes(e.message)?e.message:'unclassified';}
+    const r=bound?client.getRoom(bound.room):null,content=t=>r?.currentState.getStateEvents(t,'')?.getContent();return {gate,joined:r?.getMyMembership()==='join',members:r?.getJoinedMembers().length??0,encrypted:content('m.room.encryption')?.algorithm==='m.megolm.v1.aes-sha2',privateHistory:content('m.room.history_visibility')?.history_visibility==='joined',inviteOnly:content('m.room.join_rules')?.join_rule==='invite',nonFederated:content('m.room.create')?.['m.federate']===false};
+  },
   async ownerStatus() {
     const c=requireClient().getCrypto(),s=await c.getCrossSigningStatus();return {public:Boolean(s.publicKeysOnDevice),privateMaster:Boolean(s.privateKeysCachedLocally?.masterKey),privateSelf:Boolean(s.privateKeysCachedLocally?.selfSigningKey),privateUser:Boolean(s.privateKeysCachedLocally?.userSigningKey),ready:await c.isCrossSigningReady()};
   },
