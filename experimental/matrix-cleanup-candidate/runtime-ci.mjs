@@ -7,7 +7,7 @@ import {waitForServer} from '../../infra/ncp/matrix-lab/ci/readiness.mjs';
 import {ScrubMeasurements} from '../matrix-retention-lab/measurement.mjs';
 if(process.env.GITHUB_ACTIONS!=='true')throw new Error('ci_only');
 const mode=process.env.CANDIDATE_MODE;
-if(!['control','restart'].includes(mode))throw new Error('invalid_mode');
+if(!['control','restart','crash'].includes(mode))throw new Error('invalid_mode');
 const ci=fileURLToPath(new URL('../../infra/ncp/matrix-lab/ci/',import.meta.url));
 const source=await readFile(new URL('../matrix-retention-lab/probe_rows.py',import.meta.url),'utf8');
 const children=[],samples=[],gates=[];const measured=new ScrubMeasurements();
@@ -39,6 +39,11 @@ function rawProbe(eventIds){
  assert(result&&Object.keys(result).length===1&&Array.isArray(result.states)&&result.states.length===eventIds.length&&result.states.every(s=>['encrypted','scrubbed'].includes(s)));
  return {eventIds,states:result.states,probeStartedAtMs:started,probeFinishedAtMs:finished};
 }
+function stoppedProbe(eventIds){
+ const started=performance.now();const result=JSON.parse(execFileSync('docker',['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','256m','--cpus','1','--pids-limit','64','--label','com.docker.compose.project=matrix-server-integration','--mount','type=bind,source='+ci+'runtime,target=/data,readonly','--entrypoint','python','-i','matrix-cleanup-candidate:ci','-c',source],{input:JSON.stringify({event_ids:eventIds}),encoding:'utf8',timeout:10000,stdio:['pipe','pipe','ignore']}));const finished=performance.now();
+ assert(result&&Object.keys(result).length===1&&Array.isArray(result.states)&&result.states.length===eventIds.length&&result.states.every(s=>['encrypted','scrubbed'].includes(s)));
+ return {eventIds,states:result.states,probeStartedAtMs:started,probeFinishedAtMs:finished};
+}
 function observeAll(){const observed=rawProbe(samples.map(s=>s.eventId));measured.observe(observed);return observed;}
 async function limited(items,fn,limit=4){let index=0;await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(index<items.length){const i=index++;await fn(items[i],i);}}));}
 const route=(room,id)=>'/_matrix/client/v3/rooms/'+encodeURIComponent(room)+'/event/'+encodeURIComponent(id);
@@ -65,16 +70,26 @@ try{
  for(let i=0;i<3;i++){
   stage='real-ciphertext-precheck';const reverse=i===1,sender=reverse?bob:alice,recipient=reverse?alice:bob,senderToken=reverse?b.access_token:a.access_token,recipientToken=reverse?a.access_token:b.access_token;
   const body='synthetic-candidate-'+randomBytes(16).toString('hex'),eventId=await sender.call('send',{roomId:room,body});const raw=await api(route(room,eventId),'GET',undefined,senderToken);assert(raw.type==='m.room.encrypted'&&raw.content?.ciphertext&&!Object.hasOwn(raw.content,'body'));await recipient.call('decrypt',{roomId:room,eventId,body});assert(rawProbe([eventId]).states[0]==='encrypted');
-  stage='ordinary-peer-redaction';const requestedAtMs=performance.now();await recipient.call('redact',{roomId:room,eventId});const acknowledgedAtMs=performance.now();const sample={eventId,cohort:mode==='restart'?'candidate-restart':'candidate-control',requestedAtMs,acknowledgedAtMs};samples.push(sample);measured.register(sample);await hidden(room,sample,recipientToken);
-  if(mode==='restart'){
-   stage='predefined-pending-row-restart';assert(observeAll().states.at(-1)==='encrypted');const start=performance.now();docker(['restart','--timeout','5','synapse'],{timeout:45000});const restored=await waitForServer(ci);assert(restored===base);restartDowntimeMs.push(Math.ceil(performance.now()-start));
+  stage='ordinary-peer-redaction';const requestedAtMs=performance.now();await recipient.call('redact',{roomId:room,eventId});const acknowledgedAtMs=performance.now();const sample={eventId,cohort:mode==='crash'?'candidate-crash':mode==='restart'?'candidate-restart':'candidate-control',requestedAtMs,acknowledgedAtMs};samples.push(sample);measured.register(sample);await hidden(room,sample,recipientToken);
+  if(mode==='restart'||mode==='crash'){
+   stage='predefined-pending-row-restart';assert(observeAll().states.at(-1)==='encrypted');const start=performance.now();
+   if(mode==='crash'){
+    const container=docker(['ps','--all','--quiet','synapse']).trim();assert(/^[a-f0-9]{12,64}$/.test(container));
+    const mount=execFileSync('docker',['inspect','--format','{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}} {{.Source}} {{.RW}}{{end}}{{end}}',container],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore']}).trim();assert(mount==='bind '+ci+'runtime true');
+    stage='sigkill';docker(['kill','--signal','SIGKILL','synapse']);
+    const exitDeadline=performance.now()+3000;let exit;
+    do{exit=execFileSync('docker',['inspect','--format','{{.State.Running}} {{.State.ExitCode}} {{.State.OOMKilled}}',container],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore']}).trim();if(exit==='false 137 false')break;assert(performance.now()<exitDeadline);await sleep(50);}while(true);
+    stage='stopped-server-pending-ciphertext';const observed=stoppedProbe(samples.map(s=>s.eventId));measured.observe(observed);assert(observed.states.at(-1)==='encrypted');
+    docker(['start','synapse']);assert(docker(['ps','--all','--quiet','synapse']).trim()===container);
+   }else docker(['restart','--timeout','5','synapse'],{timeout:45000});
+   const restored=await waitForServer(ci);assert(restored===base);restartDowntimeMs.push(Math.ceil(performance.now()-start));
    stage='post-restart-api-hidden';for(const s of samples)await hidden(room,s,a.access_token);assert(await indexReady());
   }
   stage='active-row-observation';const observationDeadline=acknowledgedAtMs+90000;while(!measured.completed&&performance.now()<observationDeadline){observeAll();if(!measured.completed)await sleep(500);}assert(measured.completed);assert(measured.report().passed);
   stage='sdk-redaction-hidden';await Promise.all([sender.call('deleted',{roomId:room,eventId}),recipient.call('deleted',{roomId:room,eventId})]);
  }
- gates.push('three-reciprocal-redactions-scrubbed-with-original-clocks');if(mode==='restart')gates.push('three-clean-restart-cycles-pending-before-each-and-api-hidden-after');
+ gates.push('three-reciprocal-redactions-scrubbed-with-original-clocks');if(mode==='restart')gates.push('three-clean-restart-cycles-pending-before-each-and-api-hidden-after');if(mode==='crash')gates.push('three-sigkill-exit137-not-oom-same-container-volume-stopped-row-pending-api-hidden-after');
  stage='negative-controls-after-native-ticks';await sleep(35000);assert(rawProbe([sentinel]).states[0]==='encrypted');const finalSentinel=await api(route(room,sentinel),'GET',undefined,a.access_token);assert(JSON.stringify(finalSentinel.content)===sentinelContent);await bob.call('decrypt',{roomId:room,eventId:sentinel,body:sentinelBody});gates.push('unredacted-and-cross-room-target-unchanged-after-native-ticks');
- const report={status:'passed',mode,plannedSamples:3,gates,negativeStatuses,measurement:measured.report(),restartDowntimeMs,observationBudgetMs:90000,observationBudgetMeaning:'early functional gate; not a changed 300000ms acceptance target; pending is not a confirmed miss',physicalErasure:false,Android:false,humanOOB:false,productionIntegration:false,batchBoundary101:false,transport:base==='http://127.0.0.1:18008'?'host-loopback':'private-internal-bridge'};console.log(JSON.stringify(report));
+ const report={status:'passed',mode,plannedSamples:3,gates,negativeStatuses,measurement:measured.report(),restartDowntimeMs,observationBudgetMs:90000,observationBudgetMeaning:'early functional gate; not a changed 300000ms acceptance target; pending is not a confirmed miss',abruptProcessKill:mode==='crash',powerLoss:false,samePendingRepeatedCrash:false,physicalErasure:false,Android:false,humanOOB:false,productionIntegration:false,batchBoundary101:false,transport:base==='http://127.0.0.1:18008'?'host-loopback':'private-internal-bridge'};console.log(JSON.stringify(report));
 }catch{console.error(JSON.stringify({status:'failed',mode,plannedSamples:3,stage,gates,negativeStatuses,measurement:measured.report(),details:'suppressed'}));process.exitCode=1;}
 finally{clearTimeout(deadline);for(const c of children)c.kill('SIGTERM');await sleep(250);for(const c of children)if(c.exitCode===null)c.kill('SIGKILL');}
