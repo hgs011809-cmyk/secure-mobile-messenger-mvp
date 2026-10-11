@@ -1,5 +1,5 @@
 {
-  "phase": "sdk_process_readonly_candidate_reviewed",
+  "phase": "sdk_process_foundation_reviewed_pending_linux",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_routine_bounded_NEW_sdk_process_wrapper_candidate_review_no_core_policy_changes_else_cold_quota_alternative",
+  "next": "inspect_single_foundation_CI_aggregate_cleanup_then_actualSDK_adapter_bounded_candidate",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -187,6 +187,17 @@
       "fresh_real_parent_authority_each_child_callback",
       "new_wrapper_initialize_denial_latch",
       "timeout_disconnect_owned_child_exit_before_cleanup"
-    ]
+    ],
+    "backupCommit": "5eb813568de53a123236512c10df1b9ae5261ff3"
+  },
+  "sdkProcessFoundation": {
+    "status": "reviewed_syntax_only",
+    "actualSDKIntegration": false,
+    "runtimeTests": 0,
+    "expectedTests": 6,
+    "priorFilesUnchanged": 895,
+    "workflow": "matrix-sdk-process-lab.yml",
+    "reviewTask": "nx9aaScAATxMMaK0",
+    "implementationTask": "A92R3SAa3nq5AGar"
   }
 }
