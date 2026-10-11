@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "next_scheduled_run_bounded_logical_budget_pending_bytes_peak_accounting_feasibility_no_core_changes",
+  "next": "pending_budget_source_review_then_single_isolated_Linux_CI",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -365,6 +365,24 @@
     "containersCreated": 0,
     "privateNamespaceAbsent": true,
     "readOnlyCleanupNoSignals": true,
-    "screenshotSaved": true
+    "screenshotSaved": true,
+    "resultsCommit": "752a1059d8865502fff47db4318f252c72961639"
+  },
+  "pendingBudget": {
+    "status": "source_candidate_pending_independent_review",
+    "expectedTests": 6,
+    "runtimeProof": false,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "partialPendingBytes": 131072,
+    "fullPendingBytes": 262144,
+    "readOnlyProjection": true,
+    "sourcePolicyPins": 44,
+    "priorFilesUnchanged": 923,
+    "implementationTask": "LKuGiIawEevwXyUA",
+    "reviewTask": "bZtE1kRz6IgwfwNj",
+    "actualSDKIntegration": false,
+    "nativeFilesystemQuota": false,
+    "sourceReview": "PASS_source_only"
   }
 }

@@ -122,3 +122,6 @@ Six flat Linux cases expected, runtime0 until inspected CI.8MiB synthetic cipher
 
 ## Logical budget6 Linux VERIFIED, separate helper only
 Run38164502992/job114544128863/sourceb959d12/workflowcee9b90:6pass0fail/cancel/skip,flat exit0,39pre/postpins.8MiB/256KiB complete source+cache16MiB logical regularfilelengths.Independent readonly cleanup live0/stopped0/children0/containers0/privateabsent.Parent removed posthoc signaling beforeCI;reviewPASS.917priorfilesunchanged.No receiver/SDK/nativequota/security/concurrency/crash/GB/RSS/physicalerase claim.Onephasecomplete,nextscheduledrunonly.
+
+## 2026-10-12 03:49 KST pending peak source candidate
+New independent read-only helper counts source+committed+partial/full pending file LENGTH, projects only remaining growth, six bounded Linux cases. No receiver wiring/repair/quota/SDK/security claim. 923 prior files unchanged,44pins; source review and single isolated CI pending. Owner IoVs7axrIftTT2PO.

@@ -7,8 +7,8 @@
   "routineId": "fBhYJ5G17fGs6JU9",
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
-  "ownerSession": "oGsZGEuxVnzePWPk",
-  "status": "logical_budget_linux_verified_backup_pending",
+  "ownerSession": "IoVs7axrIftTT2PO",
+  "status": "pending_peak_accounting_implementation",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
@@ -21,9 +21,9 @@
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T18:37:09.401Z",
-  "implementationTask": "o7S4x9Ii9GiXS6wu",
-  "independentReviewTask": "hjdadNlDTZLTVTcQ",
+  "updatedAt": "2026-10-11T18:45:35.852Z",
+  "implementationTask": "LKuGiIawEevwXyUA",
+  "independentReviewTask": "bZtE1kRz6IgwfwNj",
   "completed": [
     "new_six_controlled_pending_fault_cases_linux_verified",
     "independent_cleanup_identity_fix_reviewed",
@@ -40,7 +40,7 @@
     "new_six_logical_ciphertext_length_budget_cases_linux_verified_separate_helper_only"
   ],
   "pending": [
-    "logical_budget_results_backup"
+    "pending_budget_linux_CI"
   ],
   "blocked": [
     "actual_MXC_ingress",
@@ -91,8 +91,8 @@
     "screenshotSaved": true,
     "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
-  "lastOwnerSession": "ili7VyPmppBALkEX",
-  "checkpointCommit": "72d37b5a2945f05cb0fbf4bf3da94409977a35f8",
+  "lastOwnerSession": "oGsZGEuxVnzePWPk",
+  "checkpointCommit": "752a1059d8865502fff47db4318f252c72961639",
   "investigationTask": "bZcgUyvsP90GFDUL",
   "sdkProcessFeasibility": {
     "status": "conditional_candidate_not_established",
@@ -288,6 +288,24 @@
     "containersCreated": 0,
     "privateNamespaceAbsent": true,
     "readOnlyCleanupNoSignals": true,
-    "screenshotSaved": true
+    "screenshotSaved": true,
+    "resultsCommit": "752a1059d8865502fff47db4318f252c72961639"
+  },
+  "pendingBudget": {
+    "status": "source_candidate_pending_independent_review",
+    "expectedTests": 6,
+    "runtimeProof": false,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "partialPendingBytes": 131072,
+    "fullPendingBytes": 262144,
+    "readOnlyProjection": true,
+    "sourcePolicyPins": 44,
+    "priorFilesUnchanged": 923,
+    "implementationTask": "LKuGiIawEevwXyUA",
+    "reviewTask": "bZtE1kRz6IgwfwNj",
+    "actualSDKIntegration": false,
+    "nativeFilesystemQuota": false,
+    "sourceReview": "PASS_source_only"
   }
 }
