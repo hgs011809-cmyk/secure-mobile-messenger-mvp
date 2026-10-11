@@ -1,0 +1,136 @@
+name: Matrix composition with cleanup candidate (synthetic only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experimental/auth-bridge/**'
+      - 'experimental/matrix-cleanup-candidate/**'
+      - 'experimental/matrix-client/**'
+      - '.github/workflows/matrix-candidate-composed-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: matrix-candidate-composed-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  composed:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BASE_IMAGE: matrixdotorg/synapse:v1.162.0@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Auth broker, bounded SDK ingress and pin regression tests
+        run: |
+          if ! node --test experimental/auth-bridge/*.spec.mjs > /dev/null 2>&1; then echo 'auth_ingress_regressions=FAILED; details_suppressed'; exit 1; fi
+          echo 'auth_ingress_regressions=PASSED'
+      - name: Install pinned browser dependencies
+        working-directory: experimental/matrix-client
+        run: npm ci --ignore-scripts --no-audit --no-fund --loglevel=error > /dev/null 2>&1
+      - name: Fail-closed client regression tests
+        working-directory: experimental/matrix-client
+        run: |
+          if ! npm test > /dev/null 2>&1; then echo 'client_failclosed_regressions=FAILED; details_suppressed'; exit 1; fi
+          echo 'client_failclosed_regressions=PASSED'
+      - name: Build private synthetic browser harness
+        working-directory: experimental/matrix-client
+        run: |
+          if ! npm run build > /dev/null 2>&1; then echo 'synthetic_browser_build=FAILED; details_suppressed'; exit 1; fi
+          echo 'synthetic_browser_build=PASSED'
+      - name: Install synthetic Chromium
+        working-directory: experimental/matrix-client
+        run: npx playwright install --with-deps chromium > /dev/null 2>&1
+      - name: Extract and transform exact public source
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/candidate-build"
+          if ! docker pull "$BASE_IMAGE" > /dev/null 2>&1; then
+            echo 'Pinned base pull failed; no runtime result.'
+            exit 1
+          fi
+          docker run --rm --name candidate-composition-source-extraction --label aside.synthetic-candidate-composition=true --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 256m --cpus 1 -e PYTHONDONTWRITEBYTECODE=1 --entrypoint python "$BASE_IMAGE" -c 'import pathlib,synapse,sys;sys.stdout.write((pathlib.Path(synapse.__file__).parent/"storage/databases/main/censor_events.py").read_text())' > "$RUNNER_TEMP/candidate-build/original.py" 2>/dev/null
+          export SYNAPSE_CENSOR_SOURCE="$RUNNER_TEMP/candidate-build/original.py"
+          if ! node --test experimental/matrix-cleanup-candidate/source-policy.spec.mjs > /dev/null 2>&1; then
+            echo 'source_guards=FAILED; details_suppressed'; exit 1
+          fi
+          echo 'source_guards=PASSED; details_suppressed'
+          cd experimental/matrix-cleanup-candidate
+          if ! node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";import {prepareCandidate,BASE_IMAGE} from "./source-policy.mjs";const t=process.env.RUNNER_TEMP+"/candidate-build/";writeFileSync(t+"candidate.py",prepareCandidate(readFileSync(t+"original.py","utf8"),{enabled:true,scope:"github-actions-synthetic",baseImage:BASE_IMAGE}));' > /dev/null 2>&1; then
+            echo 'source_transform_gate=FAILED; details_suppressed'; exit 1
+          fi
+          echo 'source_transform_gate=PASSED'
+      - name: Build isolated non-published candidate image
+        run: |
+          set -euo pipefail
+          cp experimental/matrix-cleanup-candidate/Candidate.Dockerfile "$RUNNER_TEMP/candidate-build/Dockerfile"
+          if ! docker build --pull=false --network=none -t matrix-cleanup-candidate:ci "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1; then
+            echo 'Pinned candidate build failed; no runtime result.'
+            exit 1
+          fi
+      - name: Prepare unpublished bounded backend and native veto
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          export CI_UID="$(id -u)" CI_GID="$(id -g)"
+          echo "CI_UID=$CI_UID" >> "$GITHUB_ENV"
+          echo "CI_GID=$CI_GID" >> "$GITHUB_ENV"
+          if ! python3 configure.py > /dev/null 2>&1; then echo 'fixture_config=FAILED; details_suppressed'; exit 1; fi
+          if ! node --input-type=module -e "import{appendFile}from'node:fs/promises';await appendFile('runtime/homeserver.yaml','\nsession_lifetime: 10m\n');" > /dev/null 2>&1; then echo 'fixture_lease_config=FAILED; details_suppressed'; exit 1; fi
+          if ! node ../../../../experimental/auth-bridge/prepare-policy.mjs > /dev/null 2>&1; then echo 'native_policy_setup=FAILED; details_suppressed'; exit 1; fi
+          if ! candidate_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci 2>/dev/null)"; then echo 'candidate_image_lookup=FAILED'; exit 1; fi
+          printf 'services:\n  synapse:\n    image: %s\n    pull_policy: never\n' "$candidate_image" > runtime/candidate-compose.yaml
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml -f runtime/candidate-compose.yaml config --quiet > /dev/null 2>&1
+          docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml -f runtime/candidate-compose.yaml up -d --pull never > /dev/null 2>&1
+      - name: Verify installed candidate source before policy/SDK runtime
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set -euo pipefail
+          expected_image="$(docker image inspect --format '{{.Id}}' matrix-cleanup-candidate:ci 2>/dev/null)"
+          container_id="$(docker compose -f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml -f runtime/candidate-compose.yaml ps -q synapse 2>/dev/null)"
+          actual_image="$(docker inspect --format '{{.Image}}' "$container_id" 2>/dev/null)"
+          if [ "$actual_image" != "$expected_image" ]; then echo 'actual_container_image_gate=FAILED'; exit 1; fi
+          echo 'actual_container_image_gate=PASSED'
+          expected="$(sha256sum "$RUNNER_TEMP/candidate-build/candidate.py" | cut -d' ' -f1)"
+          actual="$(docker compose -f compose.yaml exec -T synapse python -c 'import hashlib,pathlib,synapse;print(hashlib.sha256((pathlib.Path(synapse.__file__).parent/"storage/databases/main/censor_events.py").read_bytes()).hexdigest())' 2>/dev/null)"
+          if [ "$actual" != "$expected" ]; then echo 'installed_candidate_gate=FAILED'; exit 1; fi
+          echo 'installed_candidate_gate=PASSED; production_integration=false'
+      - name: Native device veto unit tests
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          if ! docker compose -f compose.yaml exec -T synapse python -m unittest discover -s /gate -p '*_test.py' > /dev/null 2>&1; then echo 'native_device_veto_tests=FAILED; details_suppressed'; exit 1; fi
+          echo 'native_device_veto_tests=PASSED'
+      - name: P256 broker to ingress to actual Rust SAS and cold restore
+        timeout-minutes: 11
+        working-directory: experimental/matrix-client
+        run: |
+          set -euo pipefail
+          node serve.mjs > /dev/null 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 50); do curl -fsS http://127.0.0.1:19461/live.html > /dev/null 2>&1 && break; sleep .1; done
+          if ! node composed-ci.mjs 2>/dev/null; then echo 'composed_runtime_gate=FAILED; details_suppressed'; exit 1; fi
+          echo 'composed_runtime_gate=PASSED'
+      - name: Verify removal of synthetic runtime and private files
+        if: always()
+        working-directory: infra/ncp/matrix-lab/ci
+        run: |
+          set +e
+          export CI_UID="${CI_UID:-$(id -u)}" CI_GID="${CI_GID:-$(id -g)}"
+          failed=0
+          docker rm -f candidate-composition-source-extraction > /dev/null 2>&1 || true
+          compose_args=(-f compose.yaml -f ../../../../experimental/auth-bridge/limits.yaml)
+          if [ -f runtime/candidate-compose.yaml ]; then compose_args+=(-f runtime/candidate-compose.yaml); fi
+          docker compose "${compose_args[@]}" down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1 || failed=1
+          rm -rf -- runtime "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1 || failed=1
+          if [ -e runtime ] || [ -e "$RUNNER_TEMP/candidate-build" ]; then failed=1; fi
+          remaining="$(docker ps -aq --filter label=com.docker.compose.project=matrix-server-integration 2>/dev/null)" || failed=1
+          if [ -n "$remaining" ]; then failed=1; fi
+          helper="$(docker ps -aq --filter label=aside.synthetic-candidate-composition=true 2>/dev/null)" || failed=1
+          if [ -n "$helper" ]; then failed=1; fi
+          if [ "$failed" -ne 0 ]; then echo 'candidate_composition_cleanup_verified=false; details_suppressed'; exit 1; fi
+          echo 'candidate_composition_cleanup_verified=true; private_files_absent=true; fixture_containers_absent=true'
