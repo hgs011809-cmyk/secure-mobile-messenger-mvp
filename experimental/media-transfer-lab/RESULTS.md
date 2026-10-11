@@ -1,0 +1,11 @@
+# Synthetic ciphertext transport results
+
+Local Windows Node v22.23.0: 21 tests, 19 passed, 0 failed, 2 Linux-only mode/symlink tests skipped. The pathname test runner could not resolve the permitted file path; successful execution loaded the exact module/test contents through data URLs using built-in modules, without expanding filesystem permissions. Linux CI must independently run the unchanged files normally.
+
+64 MiB complete-file AES-256-CTR synthetic ciphertext, 256 KiB chunks: receiver reconstruction after 32 chunks recovered 8 MiB committed data, remaining chunks completed, trusted whole-file SHA256 matched. Largest processed payload 256 KiB; this is NOT a measured RSS/heap or browser bound. Key/IV and plaintext are never persisted or logged. Best-effort buffer clearing is not proof of memory erasure.
+
+Passed local mechanics: invalid geometry, out-of-order holes, idempotent retries/conflict denial, caller buffer mutation isolation, partial pending write recovery, advisory checkpoint tampering, manifest substitution rejection, stored corruption/truncation, revoked/changed binding, deadline expiry, tombstone-before-erasure/non-resurrection, bounded outstanding chunk queue. Each test removes and checks absence of its disposable fixture.
+
+LIMITS: no actual network disconnect, OS crash/power-loss, browser restart, Matrix media/SDK encryption integration, real lease/device cryptography, multi-instance transaction/locking, global quota, complete filesystem adversary/hardlink/ACL guarantees, public download, endpoint media deletion, backups/WAL/physical deletion, Android, upload speed or production capacity. An authorization callback and independently trusted manifest are fixture assumptions, not authentication proofs. Atomic rename plus file fsync is not directory fsync/power-loss durability. Current ingress remains unchanged and denies media. Parser 2 GiB cap is not a product guarantee.
+
+Unchanged SDK request-policy regression: local 18/18 passed. Plaintext media/file/call/MatrixRTC and TURN routes remain denied. Valid opaque encrypted room envelope remains allowed; policy cannot classify the decrypted contents. This is a request-policy unit test, NOT response filtering or composition. Voice state tests separately passed20/20. Combined local 57 pass, 2 Linux-only skip, 0 fail.
