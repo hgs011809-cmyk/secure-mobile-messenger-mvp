@@ -6,4 +6,4 @@ Local Node22:8 network cases passed after explicitly waiting for server-side soc
 
 The8 MiB fixture is fully buffered for test generation; it does not establish streaming encryption or memory/RSS bounds. Parser-payload counter is not total memory. Capability is test-only over loopback HTTP, not user authentication or production TLS/E2EE. Callback binding and root ownership remain fixture assumptions. Source/API quotas, epoch ABA, physical deletion, OS crash, backups, browser/Android, public ingress and product throughput remain unverified.
 
-Initial6 network failures and nested/VM loader failures are preserved in RUNTIME_NOTES.md. No failure was treated as a success because HTTP replies were200. Linux74-case verification of final combined source is pending.
+Initial6 network failures and nested/VM loader failures are preserved in RUNTIME_NOTES.md. No failure was treated as a success because HTTP replies were200. Final combined Linux74/74 passed in run38140155348/338c84f; independently inspected aggregates and private cleanup. New standalone tone HTML is not covered by this CI.

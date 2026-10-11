@@ -1,6 +1,6 @@
 # Final local checkpoint
 
-Corrected combined source:74 registered tests (receiver28,voice20,ingress18,loopback8);72 portable pass,2 Linux-only skip,0 fail. Full direct built-in/data-URL run exited0. Public source hashes and private namespace removal=true saved in ignored last-direct-offline-run.json. Linux74/74 TAP-checked verification pending.
+Corrected combined source:74 registered tests (receiver28,voice20,ingress18,loopback8);72 portable pass,2 Linux-only skip,0 fail. Full direct built-in/data-URL run exited0. Public source hashes and private namespace removal=true saved in ignored last-direct-offline-run.json. Linux final74/74 TAP-checked aggregate and independent private_cleanup=verified inspected in run38140155348/338c84f. See LINUX_VERIFIED.md.
 
 64 MiB file mechanics + actual8 MiB loopback TCP disconnect/retry/reconstruction verified separately; NOT actual Internet/Android/Matrix media or voice call. See NETWORK_RESULTS.md, VOICE_RESULTS.md, SDK_ANALYSIS.md, RUNTIME_NOTES.md and REQUIREMENTS.md. Earlier59 Linux and initial failed74 local runs remain historical, not certification of later source.
 

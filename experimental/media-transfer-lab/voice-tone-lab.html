@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; media-src blob:; base-uri 'none'; form-action 'none'"><title>Same-page synthetic audio transport lab</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:780px;margin:40px auto;padding:0 20px;color:#172332;background:#f6f8fb}main{background:white;padding:28px;border:1px solid #cbd5e1;border-radius:12px}button{font:inherit;padding:10px 18px;background:#163e75;color:white;border:0;border-radius:6px;cursor:pointer}button:disabled{opacity:.6}button:focus-visible{outline:3px solid #c07800;outline-offset:4px}#status{white-space:pre-line;padding:16px;background:#edf3fa;border-radius:6px}h1{font-size:1.65rem}.limits{border-left:4px solid #8c5a00;padding-left:16px}</style></head><body><main><h1>Same-page synthetic audio transport lab</h1><p>Two local RTCPeerConnections exchange a generated tone inside this page. ICE servers: 0. No microphone or camera access. No audible output. Nothing starts until you click.</p><p class="limits">This tests same-page synthetic transport only. It is NOT an actual human call, Matrix encrypted signaling, intended-peer authentication or out-of-band verification, Android compatibility, TURN/internet connectivity, or media end-to-end encryption through an SFU. It does not establish any of those properties.</p><p>This script does not use storage, create profiles, record audio, capture screenshots/traces, or log raw diagnostics. Browser-created state is not audited. No SDP, ICE candidates, fingerprints, IP addresses, or raw errors are displayed. Cleanup means closing test resources only, not physical or profile erasure.</p><button id="start" type="button">Start synthetic tone test</button><p id="status" role="status" aria-live="polite" aria-atomic="true">Result: NOT RUN</p><p>Pass requires received audio RMS &gt; 0.005 and inbound RTP packets &gt; 0. DTLS transport statistics must be supplied and connected. Missing required audio or DTLS statistics cannot pass. Observation deadline: 12 seconds; cleanup verification budget: 2 seconds.</p></main><script>
+'use strict';
+const startButton = document.getElementById('start');
+const statusNode = document.getElementById('status');
+startButton.addEventListener('click', async () => {
+  startButton.disabled = true;
+  statusNode.textContent = 'Result: RUNNING';
+  let sender = null, receiver = null, sendContext = null, receiveContext = null, remoteSink = null;
+  let remoteSinkPlaying = false;
+  let oscillator = null, sendGain = null, sendAnalyser = null, sendSilentGain = null, destination = null, source = null, analyser = null, silentGain = null;
+  const tracks = new Set();
+  const candidatesForSender = [], candidatesForReceiver = [];
+  let stopping = false, cleanupPromise = null, deadlineTimer = null;
+  let candidateFailure = false, remoteTrackSeen = false, audioStatsSeen = false;
+  let rmsVerified = false, senderToneVerified = false, sendContextRunning = false, receiveContextRunning = false, remoteEnergyPositive = false, packets = 0, dtlsSupplied = false, dtlsConnected = false;
+  let outcome = 'FAIL', reason = 'SAFE_INTERNAL_FAILURE';
+  const fixedFailure = code => { const error = new Error(); error.code = code; return error; };
+  const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+  function cleanup() {
+    if (cleanupPromise) return cleanupPromise;
+    stopping = true;
+    cleanupPromise = (async () => {
+      let operationsOK = true;
+      if (sender) { sender.onicecandidate = null; sender.onconnectionstatechange = null; }
+      if (receiver) { receiver.onicecandidate = null; receiver.ontrack = null; }
+      for (const peer of [sender, receiver]) {
+        if (!peer) continue;
+        try { for (const item of peer.getSenders()) if (item.track) tracks.add(item.track); } catch { operationsOK = false; }
+        try { for (const item of peer.getReceivers()) if (item.track) tracks.add(item.track); } catch { operationsOK = false; }
+        try { peer.close(); } catch { operationsOK = false; }
+      }
+      if (oscillator) { try { oscillator.stop(); } catch { operationsOK = false; } }
+      for (const node of [oscillator, sendGain, sendAnalyser, sendSilentGain, destination, source, analyser, silentGain]) {
+        if (node) { try { node.disconnect(); } catch { operationsOK = false; } }
+      }
+      if (remoteSink) { try { remoteSink.pause(); remoteSink.srcObject = null; remoteSink.remove(); } catch { operationsOK = false; } }
+      for (const track of tracks) { try { track.stop(); } catch { operationsOK = false; } }
+      const closings = [sendContext, receiveContext].filter(Boolean).map(context => {
+        try { return context.state === 'closed' ? Promise.resolve() : context.close().catch(() => { operationsOK = false; }); }
+        catch { operationsOK = false; return Promise.resolve(); }
+      });
+      let cleanupTimer;
+      try { await Promise.race([Promise.all(closings), new Promise(resolve => { cleanupTimer = setTimeout(resolve, 2000); })]); }
+      finally { clearTimeout(cleanupTimer); }
+      const peersClosed = [sender, receiver].every(peer => !peer || peer.signalingState === 'closed');
+      const tracksEnded = [...tracks].every(track => track.readyState === 'ended');
+      const contextsClosed = [sendContext, receiveContext].every(context => !context || context.state === 'closed');
+      const sinkStopped = !remoteSink || (remoteSink.paused && remoteSink.srcObject === null);
+      return { peersClosed, tracksEnded, contextsClosed, sinkStopped, verified: operationsOK && peersClosed && tracksEnded && contextsClosed && sinkStopped };
+    })();
+    return cleanupPromise;
+  }
+  async function addCandidate(peer, candidate) {
+    if (stopping) return;
+    try { await peer.addIceCandidate(candidate); } catch { if (!stopping) candidateFailure = true; }
+  }
+  async function run() {
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!window.RTCPeerConnection || !Audio) throw fixedFailure('UNSUPPORTED_BROWSER');
+    sender = new RTCPeerConnection({iceServers: []});
+    receiver = new RTCPeerConnection({iceServers: []});
+    sendContext = new Audio();
+    receiveContext = new Audio();
+    oscillator = sendContext.createOscillator();
+    oscillator.type = 'sine'; oscillator.frequency.value = 440;
+    sendGain = sendContext.createGain(); sendGain.gain.value = 0.2;
+    destination = sendContext.createMediaStreamDestination();
+    sendAnalyser = sendContext.createAnalyser(); sendAnalyser.fftSize = 2048;
+    sendSilentGain = sendContext.createGain(); sendSilentGain.gain.value = 0;
+    oscillator.connect(sendGain); sendGain.connect(sendAnalyser); sendAnalyser.connect(destination);
+    // Explicit clocked audio sink remains strictly silent; not microphone/output permission bypass.
+    sendAnalyser.connect(sendSilentGain); sendSilentGain.connect(sendContext.destination);
+    for (const track of destination.stream.getTracks()) { tracks.add(track); sender.addTrack(track, destination.stream); }
+    receiver.ontrack = event => {
+      tracks.add(event.track);
+      if (stopping) { event.track.stop(); return; }
+      if (event.track.kind !== 'audio' || remoteTrackSeen) return;
+      remoteTrackSeen = true;
+      try {
+        const receivedStream = new MediaStream([event.track]);
+        // Muted media consumer clocks decoding, without requesting capture or audible output.
+        remoteSink = document.createElement('audio'); remoteSink.muted = true; remoteSink.volume = 0; remoteSink.playsInline = true;
+        remoteSink.srcObject = receivedStream;
+        void remoteSink.play().then(() => { if (!stopping) remoteSinkPlaying = !remoteSink.paused; }).catch(() => { if (!stopping) candidateFailure = true; });
+        source = receiveContext.createMediaStreamSource(receivedStream);
+        analyser = receiveContext.createAnalyser(); analyser.fftSize = 2048;
+        silentGain = receiveContext.createGain(); silentGain.gain.value = 0;
+        source.connect(analyser); analyser.connect(silentGain); silentGain.connect(receiveContext.destination);
+      } catch { candidateFailure = true; }
+    };
+    sender.onicecandidate = event => {
+      if (stopping || !event.candidate) return;
+      if (receiver.remoteDescription) void addCandidate(receiver, event.candidate);
+      else candidatesForReceiver.push(event.candidate);
+    };
+    receiver.onicecandidate = event => {
+      if (stopping || !event.candidate) return;
+      if (sender.remoteDescription) void addCandidate(sender, event.candidate);
+      else candidatesForSender.push(event.candidate);
+    };
+    // Both resume calls are initiated during the explicit user gesture.
+    const resumeSender = sendContext.resume(), resumeReceiver = receiveContext.resume();
+    oscillator.start();
+    await Promise.all([resumeSender, resumeReceiver]);
+    if (stopping) return;
+    const offer = await sender.createOffer(); if (stopping) return;
+    await sender.setLocalDescription(offer); if (stopping) return;
+    await receiver.setRemoteDescription(offer); if (stopping) return;
+    for (const candidate of candidatesForReceiver.splice(0)) await addCandidate(receiver, candidate);
+    if (stopping) return;
+    const answer = await receiver.createAnswer(); if (stopping) return;
+    await receiver.setLocalDescription(answer); if (stopping) return;
+    await sender.setRemoteDescription(answer); if (stopping) return;
+    for (const candidate of candidatesForSender.splice(0)) await addCandidate(sender, candidate);
+    if (typeof receiver.getStats !== 'function') throw fixedFailure('UNSUPPORTED_AUDIO_STATS');
+    const samples = new Float32Array(2048), sendSamples = new Float32Array(2048);
+    while (!stopping) {
+      if (candidateFailure || sender.connectionState === 'failed' || receiver.connectionState === 'failed') throw fixedFailure('TRANSPORT_FAILED');
+      sendContextRunning = sendContext.state === 'running'; receiveContextRunning = receiveContext.state === 'running';
+      sendAnalyser.getFloatTimeDomainData(sendSamples);
+      let sendSum = 0; for (const value of sendSamples) sendSum += value * value;
+      senderToneVerified = Math.sqrt(sendSum / sendSamples.length) > 0.005;
+      let currentRms = false;
+      if (analyser && receiveContext.state === 'running') {
+        analyser.getFloatTimeDomainData(samples);
+        let sum = 0; for (const value of samples) sum += value * value;
+        currentRms = Math.sqrt(sum / samples.length) > 0.005;
+      }
+      let report;
+      try { report = await receiver.getStats(); } catch { throw fixedFailure('UNSUPPORTED_AUDIO_STATS'); }
+      if (stopping) return;
+      let currentPackets = 0, foundAudio = false, supplied = false, allConnected = true;
+      report.forEach(item => {
+        if (item.type === 'inbound-rtp' && (item.kind === 'audio' || item.mediaType === 'audio') && Number.isFinite(item.packetsReceived)) {
+          foundAudio = true; currentPackets += Math.max(0, item.packetsReceived);
+          remoteEnergyPositive = Number.isFinite(item.totalAudioEnergy) && item.totalAudioEnergy > 0;
+        }
+        if (item.type === 'transport' && typeof item.dtlsState === 'string') {
+          supplied = true; allConnected = allConnected && item.dtlsState === 'connected';
+        }
+      });
+      audioStatsSeen = audioStatsSeen || foundAudio;
+      packets = Math.floor(currentPackets);
+      rmsVerified = currentRms;
+      dtlsSupplied = supplied; dtlsConnected = supplied && allConnected;
+      if (foundAudio && packets > 0 && currentRms && senderToneVerified && sendContextRunning && receiveContextRunning && remoteSinkPlaying && supplied && allConnected) { outcome = 'PASS'; reason = 'SYNTHETIC_TRANSPORT_VERIFIED'; return; }
+      await delay(100);
+    }
+  }
+  const deadline = new Promise((resolve, reject) => {
+    deadlineTimer = setTimeout(() => {
+      void cleanup();
+      reject(fixedFailure(audioStatsSeen ? 'OBSERVATION_TIMEOUT' : 'UNSUPPORTED_OR_MISSING_AUDIO_STATS'));
+    }, 12000);
+  });
+  try { await Promise.race([run(), deadline]); }
+  catch (error) {
+    const allowed = ['UNSUPPORTED_BROWSER', 'UNSUPPORTED_AUDIO_STATS', 'TRANSPORT_FAILED', 'OBSERVATION_TIMEOUT', 'UNSUPPORTED_OR_MISSING_AUDIO_STATS'];
+    reason = error && allowed.includes(error.code) ? error.code : 'SAFE_INTERNAL_FAILURE';
+    outcome = 'FAIL';
+  } finally {
+    clearTimeout(deadlineTimer);
+    const cleaned = await cleanup();
+    if (!cleaned.verified) { outcome = 'FAIL'; reason = 'CLEANUP_NOT_VERIFIED'; }
+    statusNode.textContent = 'Result: ' + outcome + '\nReason: ' + reason +
+      '\nSender context running: ' + sendContextRunning + '\nReceiver context running: ' + receiveContextRunning +
+      '\nSender tone RMS above threshold: ' + senderToneVerified + '\nReceived audio energy positive: ' + remoteEnergyPositive +
+      '\nRemote audio RMS above threshold: ' + rmsVerified +
+      '\nInbound audio stats supported: ' + audioStatsSeen +
+      '\nInbound RTP packets: ' + packets +
+      '\nDTLS state supplied: ' + dtlsSupplied + '\nDTLS connected: ' + dtlsConnected +
+      '\nMuted receiver consumer playing: ' + remoteSinkPlaying +
+      '\nPeers closed: ' + cleaned.peersClosed + '\nTracks ended: ' + cleaned.tracksEnded +
+      '\nAudio contexts closed: ' + cleaned.contextsClosed + '\nMuted media sink stopped: ' + cleaned.sinkStopped + '\nCleanup verified: ' + cleaned.verified;
+    startButton.disabled = false;
+  }
+});
+</script></body></html>
