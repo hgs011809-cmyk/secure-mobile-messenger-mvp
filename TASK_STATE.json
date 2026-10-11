@@ -1,5 +1,5 @@
 {
-  "phase": "persisted_ciphertext_corruption_verified",
+  "phase": "sdk_process_readonly_candidate_reviewed",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "phase3_read_only_feasibility_actual_SDK_receipt_current_two_native_leases_two_active_bindings_to_private_IPC_receiver_no_mock_substitution",
+  "next": "next_routine_bounded_NEW_sdk_process_wrapper_candidate_review_no_core_policy_changes_else_cold_quota_alternative",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -168,6 +168,25 @@
     "suiteChildrenCreated": 0,
     "containersCreated": 0,
     "privateNamespaceAbsent": true,
-    "screenshotSaved": true
+    "screenshotSaved": true,
+    "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
+  },
+  "sdkProcessFeasibility": {
+    "status": "conditional_candidate_not_established",
+    "investigationTask": "bZcgUyvsP90GFDUL",
+    "reviewTask": "5VVQy8NFGcMvOydp",
+    "actualIntegration": false,
+    "newCILaunched": false,
+    "document": "experimental/matrix-client/SDK_PROCESS_FEASIBILITY.md",
+    "updatedAt": "2026-10-11T16:48:34.719Z",
+    "reviewDisposition": "proposal_framing_pass_unimplemented_acceptance_issues",
+    "runtimeTests": 0,
+    "unchangedPriorFingerprints": 155,
+    "acceptanceIssues": [
+      "exact_initial_binding_snapshot_equality",
+      "fresh_real_parent_authority_each_child_callback",
+      "new_wrapper_initialize_denial_latch",
+      "timeout_disconnect_owned_child_exit_before_cleanup"
+    ]
   }
 }

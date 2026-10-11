@@ -8,34 +8,38 @@
   "schedule": "every15minutes13runs_start01:15_end04:15",
   "branch": "lab-matrix-cleanup-followup",
   "ownerSession": null,
-  "status": "phase2_complete",
+  "status": "phase3_readonly_candidate_reviewed",
   "pendingCI": null,
   "baseline": {
     "processRun": "38153855816",
     "checkpoint": "dc8b97a",
     "sdkTransportRun": "38152247874"
   },
-  "next": "phase3_read_only_feasibility_actual_SDK_receipt_current_two_native_leases_two_active_bindings_to_private_IPC_receiver_no_mock_substitution",
+  "next": "next_routine_bounded_NEW_sdk_process_wrapper_candidate_review_no_core_policy_changes_else_cold_quota_alternative",
   "noQuestionsRequested": true,
   "existingPolicyAndCoreImplementationsUnchanged": true,
   "productionAndCloudChanges": false,
   "scope": "synthetic_bounded_new_files_branch_only",
   "previousWindow": null,
-  "updatedAt": "2026-10-11T16:43:52.609Z",
-  "implementationTask": "BCARqP3aYUnSeJBa",
-  "independentReviewTask": "vaiH1ur5fWbRXV4y",
+  "updatedAt": "2026-10-11T16:48:34.736Z",
+  "implementationTask": null,
+  "independentReviewTask": "5VVQy8NFGcMvOydp",
   "completed": [
     "new_six_controlled_pending_fault_cases_linux_verified",
     "independent_cleanup_identity_fix_reviewed",
     "source_policy34_guards_verified",
     "new_six_persisted_ciphertext_corruption_cases_linux_verified",
     "pre_post38_hash_guards_verified",
-    "independent_always_cleanup_verified"
+    "independent_always_cleanup_verified",
+    "read_only_sdk_to_child_design_candidate_independently_reviewed_no_runtime"
   ],
-  "pending": [],
+  "pending": [
+    "branch_document_checkpoint_backup"
+  ],
   "blocked": [
     "actual_MXC_ingress",
-    "production_and_cloud_actions"
+    "production_and_cloud_actions",
+    "sdk_child_integration_claim_until_fresh_authority_binding_latch_lifecycle_runtime_proof"
   ],
   "lastResult": {
     "status": "linux_verified",
@@ -77,8 +81,28 @@
     "suiteChildrenCreated": 0,
     "containersCreated": 0,
     "privateNamespaceAbsent": true,
-    "screenshotSaved": true
+    "screenshotSaved": true,
+    "resultsCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2"
   },
-  "lastOwnerSession": "m1CxIF6ITsVg3GaQ",
-  "checkpointCommit": "fbc3cbb044f676fa92146e702dc84ba2934f08c1"
+  "lastOwnerSession": "UE8Y1upFB6ODcS2l",
+  "checkpointCommit": "366768b77fb36c9d73f05d6e13931f3abea460d2",
+  "investigationTask": "bZcgUyvsP90GFDUL",
+  "sdkProcessFeasibility": {
+    "status": "conditional_candidate_not_established",
+    "investigationTask": "bZcgUyvsP90GFDUL",
+    "reviewTask": "5VVQy8NFGcMvOydp",
+    "actualIntegration": false,
+    "newCILaunched": false,
+    "document": "experimental/matrix-client/SDK_PROCESS_FEASIBILITY.md",
+    "updatedAt": "2026-10-11T16:48:34.719Z",
+    "reviewDisposition": "proposal_framing_pass_unimplemented_acceptance_issues",
+    "runtimeTests": 0,
+    "unchangedPriorFingerprints": 155,
+    "acceptanceIssues": [
+      "exact_initial_binding_snapshot_equality",
+      "fresh_real_parent_authority_each_child_callback",
+      "new_wrapper_initialize_denial_latch",
+      "timeout_disconnect_owned_child_exit_before_cleanup"
+    ]
+  }
 }
