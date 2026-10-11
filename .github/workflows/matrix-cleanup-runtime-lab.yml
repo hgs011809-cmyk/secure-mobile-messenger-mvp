@@ -103,6 +103,15 @@ jobs:
         working-directory: infra/ncp/matrix-lab/ci
         run: |
           set +e
-          docker compose -f compose.yaml down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1
-          rm -rf -- runtime "$RUNNER_TEMP/candidate-build"
-          exit 0
+          export CI_UID="${CI_UID:-$(id -u)}" CI_GID="${CI_GID:-$(id -g)}"
+          failed=0
+          docker compose -f compose.yaml down --volumes --remove-orphans --timeout 5 > /dev/null 2>&1 || failed=1
+          rm -rf -- runtime "$RUNNER_TEMP/candidate-build" > /dev/null 2>&1 || failed=1
+          if [ -e runtime ] || [ -e "$RUNNER_TEMP/candidate-build" ]; then failed=1; fi
+          remaining="$(docker ps -aq --filter label=com.docker.compose.project=matrix-server-integration 2>/dev/null)" || failed=1
+          if [ -n "$remaining" ]; then failed=1; fi
+          if [ "$failed" -ne 0 ]; then
+            echo 'fixture_cleanup_verified=false; private details suppressed'
+            exit 1
+          fi
+          echo 'fixture_cleanup_verified=true; private_files_absent=true; fixture_containers_absent=true'
