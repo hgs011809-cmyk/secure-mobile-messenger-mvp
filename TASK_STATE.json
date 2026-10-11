@@ -1,5 +1,5 @@
 {
-  "phase": "authenticated_transport_synthetic_verified",
+  "phase": "receiver_real_process_idle_boundaries_verified",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -61,5 +61,34 @@
     "physicalErasure"
   ],
   "next": "checkpoint_stop_no_autochain",
-  "resultsCommit": "f3f084c"
+  "resultsCommit": "f3f084c",
+  "previousPhase": "authenticated_transport_synthetic_verified",
+  "processRestart": {
+    "status": "linux_verified",
+    "run": "38153855816",
+    "job": "114512655737",
+    "sourceCommit": "03c9cf8",
+    "workflowCommit": "8efa5f8",
+    "pass": 4,
+    "fail": 0,
+    "cancelled": 0,
+    "skip": 0,
+    "fixtureBytes": 8388608,
+    "chunkBytes": 262144,
+    "sourcePolicyGuards": 31,
+    "authorization": "mock_fixture_only",
+    "clock": "mock",
+    "freshDifferentPIDAndPriorExit": true,
+    "cleanExit": true,
+    "SIGKILLBoundary": "acknowledged_idle_not_midwrite",
+    "parentRemainsAlive": true,
+    "keyRecovery": "parent_RAM_reinjection_only",
+    "sourceCiphercachePreserved": true,
+    "independentCleanupVerified": true,
+    "forcedCleanupCount": 0,
+    "screenshotSaved": true,
+    "productionChanges": false,
+    "localWindowsSyntaxHelper": "unresponsive_terminated_no_pass_claim",
+    "resultsCommit": "15ff7ad"
+  }
 }
