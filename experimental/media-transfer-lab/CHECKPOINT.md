@@ -21,3 +21,6 @@ New source9892ac9443bf106bf686f6eef0676b30fb477468; exactly5 POSIX-only tests, L
 
 ## Bounded handoff milestone complete
 Linux new5=5/5,0fail/skip;38148000046,workflowe89e750,source9892ac9. Source/reference/license guards and private cleanup inspected. One bounded CI run, no second run/autochain. Logical ciphertext retention only,24MiB ceiling on8MiB fixture,not crash/physical/RSS proof. Windows eligible50=25pass/25skip/0fail,new5allskip. Independent code/workflow read-only reviews complete. Priorstockcleanup/timeouts unchanged. Specificvalidation/approval required for blocked integration/operations.
+
+## ActualSDK descriptor source verified separately
+38149969509/sourceccff0bd/workflowb48dbd2:6actualSDKgates +12unitfixturesLinux;one boundedrun,14source/policyguards andindependentcleanupinspected.4KiBfixture descriptor from genuineSDK/RustE2EEevent;peerkey/roomchecks+predecryptcompletehash+exactnegativeerrors. NOTauthwiringforoldstream/receiver/handoff,NOTmediaupload/fetch/browserstream/Android/humanOOB/atomicauthority/physicalerase. Existing boundariesunchanged,noautochain.
