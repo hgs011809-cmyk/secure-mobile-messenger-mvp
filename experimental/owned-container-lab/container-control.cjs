@@ -13,14 +13,32 @@ const MODES = ['graceful', 'linger'];
 // Diagnostics exist only in CLI mode; exported validation remains a pure data contract.
 const STAGES = new Set(['rootcheck', 'runempty', 'imageinspect', 'image_env_admission', 'intentspersisted', 'create', 'IDpersisted', 'created_security_admission', 'recordpersisted', 'start', 'gracefulwait', 'lingerready', 'probe', 'stop', 'cleanup_load', 'cleanup_stop', 'cleanup_remove', 'cleanup_absence', 'cleanup_residual', 'cleanup_rootremove']);
 const GATES = new Set(['root', 'image_env', 'saved_record', 'absence', 'docker_cli', 'identity_config', 'env', 'namespace_config', 'bounds', 'tmpfs', 'host_mounts', 'ports', 'image_volumes', 'mounts', 'network_map', 'image_identity', 'create_id', 'created_state', 'workload_output', 'workload_state', 'persistence', 'private_file', 'cleanup_residual', 'root_absence', 'cli_args', 'intent']);
+// Fixed public Docker schema names only. Unknown diff keys project to the literal 'other'.
+// NetworkSettings is a container-inspect object, not Config/HostConfig; its shape has a separate observation.
+const CONFIG_FIELDS = new Set(['Hostname', 'Domainname', 'User', 'AttachStdin', 'AttachStdout', 'AttachStderr', 'ExposedPorts', 'Tty', 'OpenStdin', 'StdinOnce', 'Env', 'Cmd', 'Healthcheck', 'ArgsEscaped', 'Image', 'Volumes', 'WorkingDir', 'Entrypoint', 'NetworkDisabled', 'MacAddress', 'OnBuild', 'Labels', 'StopSignal', 'StopTimeout', 'Shell']);
+const HOST_FIELDS = new Set(['Binds', 'ContainerIDFile', 'LogConfig', 'NetworkMode', 'PortBindings', 'RestartPolicy', 'AutoRemove', 'VolumeDriver', 'VolumesFrom', 'ConsoleSize', 'Annotations', 'CapAdd', 'CapDrop', 'CgroupnsMode', 'Dns', 'DnsOptions', 'DnsSearch', 'ExtraHosts', 'GroupAdd', 'IpcMode', 'Cgroup', 'Links', 'OomScoreAdj', 'PidMode', 'Privileged', 'PublishAllPorts', 'ReadonlyRootfs', 'SecurityOpt', 'StorageOpt', 'Tmpfs', 'UTSMode', 'UsernsMode', 'ShmSize', 'Sysctls', 'Runtime', 'Isolation', 'CpuShares', 'Memory', 'NanoCpus', 'CgroupParent', 'BlkioWeight', 'BlkioWeightDevice', 'BlkioDeviceReadBps', 'BlkioDeviceWriteBps', 'BlkioDeviceReadIOps', 'BlkioDeviceWriteIOps', 'CpuPeriod', 'CpuQuota', 'CpuRealtimePeriod', 'CpuRealtimeRuntime', 'CpusetCpus', 'CpusetMems', 'Devices', 'DeviceCgroupRules', 'DeviceRequests', 'MemoryReservation', 'MemorySwap', 'MemorySwappiness', 'OomKillDisable', 'PidsLimit', 'Ulimits', 'CpuCount', 'CpuPercent', 'IOMaximumIOps', 'IOMaximumBandwidth', 'Mounts', 'MaskedPaths', 'ReadonlyPaths', 'Init']);
 let diagnostic = null;
+function diffFields(expected, observed, allowlist) {
+  const names = new Set([...Object.keys(expected), ...Object.keys(observed)]);
+  const changed = new Set();
+  for (const name of names) {
+    if (Object.hasOwn(expected, name) !== Object.hasOwn(observed, name) || !equal(expected[name], observed[name])) changed.add(allowlist.has(name) ? name : 'other');
+  }
+  return [...changed].sort(); // At most allowlist.size + 1; no input object/array is modified.
+}
+function projectFields(value, allowlist) {
+  if (!Array.isArray(value)) return [];
+  const projected = new Set();
+  for (const name of value) projected.add(typeof name === 'string' && allowlist.has(name) ? name : 'other');
+  return [...projected].sort();
+}
 function context(stage, gate) {
   if (diagnostic && STAGES.has(stage) && GATES.has(gate)) { diagnostic.stage = stage; diagnostic.gate = gate; }
 }
 function gate(code) { if (diagnostic && GATES.has(code)) diagnostic.gate = code; }
 function failureProjection() {
   const count = key => Number.isInteger(diagnostic?.[key]) && diagnostic[key] >= 0 && diagnostic[key] <= 2 ? diagnostic[key] : 0;
-  return { status: 'failed', reason: 'containment_unverified', stage: STAGES.has(diagnostic?.stage) ? diagnostic.stage : 'rootcheck', gate: GATES.has(diagnostic?.gate) ? diagnostic.gate : 'root', createdCount: count('createdCount'), startedCount: count('startedCount'), completedCount: count('completedCount'), networkMapObservation: ['empty', 'none_only', 'other', 'missing'].includes(diagnostic?.networkMapObservation) ? diagnostic.networkMapObservation : 'missing', imageEnvExpectedKeys: diagnostic?.imageEnvExpectedKeys === true };
+  return { status: 'failed', reason: 'containment_unverified', stage: STAGES.has(diagnostic?.stage) ? diagnostic.stage : 'rootcheck', gate: GATES.has(diagnostic?.gate) ? diagnostic.gate : 'root', createdCount: count('createdCount'), startedCount: count('startedCount'), completedCount: count('completedCount'), networkMapObservation: ['empty', 'none_only', 'other', 'missing'].includes(diagnostic?.networkMapObservation) ? diagnostic.networkMapObservation : 'missing', imageEnvExpectedKeys: diagnostic?.imageEnvExpectedKeys === true, configComparison: ['not_observed', 'equal', 'different'].includes(diagnostic?.configComparison) ? diagnostic.configComparison : 'not_observed', hostConfigComparison: ['not_observed', 'equal', 'different'].includes(diagnostic?.hostConfigComparison) ? diagnostic.hostConfigComparison : 'not_observed', stateShape: ['not_observed', 'valid', 'invalid'].includes(diagnostic?.stateShape) ? diagnostic.stateShape : 'not_observed', changedConfigFields: projectFields(diagnostic?.changedConfigFields, CONFIG_FIELDS), changedHostConfigFields: projectFields(diagnostic?.changedHostConfigFields, HOST_FIELDS) };
 }
 const reject = code => { if (code) gate(code); throw new Error('containment_unverified'); };
 function keys(value, expected) {
@@ -96,6 +114,10 @@ function security(s, i) {
 }
 // Pure contract: throws on absent/unknown/mismatched evidence. Export has no side effects.
 function validateRecord(record, observed, intent, exactId) {
+  if (diagnostic) {
+    diagnostic.configComparison = 'not_observed'; diagnostic.hostConfigComparison = 'not_observed'; diagnostic.stateShape = 'not_observed';
+    diagnostic.changedConfigFields = []; diagnostic.changedHostConfigFields = [];
+  }
   validateIntent(intent);
   gate('saved_record');
   keys(record, ['version', 'id', 'intent', 'image', 'config', 'securityConfig']);
@@ -104,8 +126,19 @@ function validateRecord(record, observed, intent, exactId) {
   security(observed, intent);
   security({ ...observed, Image: record.image, Config: record.config, HostConfig: record.securityConfig }, intent);
   gate('saved_record');
-  if (!equal(record.config, observed.Config) || !equal(record.securityConfig, observed.HostConfig)) reject();
-  if (!observed.State || typeof observed.State.Running !== 'boolean' || !Number.isInteger(observed.State.ExitCode)) reject();
+  // Observe before either full equality or state rejection, without changing acceptance.
+  const validState = !!observed.State && typeof observed.State.Running === 'boolean' && Number.isInteger(observed.State.ExitCode);
+  const configEqual = equal(record.config, observed.Config);
+  const hostConfigEqual = equal(record.securityConfig, observed.HostConfig);
+  if (diagnostic) {
+    diagnostic.stateShape = validState ? 'valid' : 'invalid';
+    diagnostic.configComparison = configEqual ? 'equal' : 'different';
+    diagnostic.hostConfigComparison = hostConfigEqual ? 'equal' : 'different';
+    diagnostic.changedConfigFields = diffFields(record.config, observed.Config, CONFIG_FIELDS);
+    diagnostic.changedHostConfigFields = diffFields(record.securityConfig, observed.HostConfig, HOST_FIELDS);
+  }
+  if (!configEqual || !hostConfigEqual) reject();
+  if (!validState) reject();
   return true;
 }
 module.exports = { validateRecord };
@@ -346,6 +379,11 @@ async function cleanup(root) {
     diagnostic.stage = firstFailure.stage; diagnostic.gate = firstFailure.gate;
     diagnostic.networkMapObservation = firstFailure.networkMapObservation;
     diagnostic.imageEnvExpectedKeys = firstFailure.imageEnvExpectedKeys;
+    diagnostic.configComparison = firstFailure.configComparison;
+    diagnostic.hostConfigComparison = firstFailure.hostConfigComparison;
+    diagnostic.stateShape = firstFailure.stateShape;
+    diagnostic.changedConfigFields = [...firstFailure.changedConfigFields];
+    diagnostic.changedHostConfigFields = [...firstFailure.changedHostConfigFields];
     reject();
   }
   // Root removal only after exact-ID absence and residual scan proof.
@@ -357,7 +395,7 @@ async function cleanup(root) {
   console.log(JSON.stringify({ status: 'cleanup_verified', containersAbsent: true, privateRootAbsent: true }));
 }
 async function main() {
-  diagnostic = { stage: 'rootcheck', gate: 'cli_args', createdCount: 0, startedCount: 0, completedCount: 0, networkMapObservation: 'missing', imageEnvExpectedKeys: false };
+  diagnostic = { stage: 'rootcheck', gate: 'cli_args', createdCount: 0, startedCount: 0, completedCount: 0, networkMapObservation: 'missing', imageEnvExpectedKeys: false, configComparison: 'not_observed', hostConfigComparison: 'not_observed', stateShape: 'not_observed', changedConfigFields: [], changedHostConfigFields: [] };
   if (process.argv.length !== 3 || !['--run', '--cleanup'].includes(process.argv[2])) reject();
   context('rootcheck', 'root');
   const root = await rootCheck();

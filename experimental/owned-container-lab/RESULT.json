@@ -39,9 +39,48 @@
       "acknowledgedStartedCount": "unknown",
       "completedLifecycleCases": "unknown",
       "rawDiagnosticsPublished": false
+    },
+    {
+      "run": "38176756354",
+      "job": "114580660018",
+      "commit": "aaa1928747358301cc63d5a19f0d617863fd04c7",
+      "status": "failed",
+      "jobDuration": "41s",
+      "contracts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "publicImageBuild": "verified",
+      "runtime": {
+        "status": "failed_unverified",
+        "stage": "gracefulwait",
+        "gate": "saved_record",
+        "acknowledgedCreatedCount": 1,
+        "acknowledgedStartedCount": 1,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true
+      },
+      "cleanup": {
+        "status": "failed_unverified",
+        "stage": "cleanup_stop",
+        "gate": "saved_record",
+        "acknowledgedCreatedCount": 0,
+        "acknowledgedStartedCount": 0,
+        "completedProofCount": 0,
+        "countScope": "current_invocation_only_not_historical_resource_count",
+        "networkMapObservation": "none_only",
+        "imageEnvExpectedKeys": true
+      },
+      "cause": "not_yet_identified",
+      "rawDiagnosticsPublished": false
     }
   ],
-  "current": "sanitized_diagnostic_instrumentation_pending",
+  "current": "one_bounded_field_shape_diagnostic_pending_no_admission_relaxation",
   "limits": [
     "not_actual_SDK_integration",
     "not_MXC_or_Internet_transfer",
@@ -49,5 +88,10 @@
     "not_physical_erasure",
     "not_hard_runner_loss",
     "not_production_readiness"
-  ]
+  ],
+  "publicDockerSourceReview": {
+    "task": "aiCGPxAcFKeIGjGg",
+    "result": "create-time_defaults_evidenced_no_universal_start_rewrite_established",
+    "actualRunnerDiffVerified": false
+  }
 }
