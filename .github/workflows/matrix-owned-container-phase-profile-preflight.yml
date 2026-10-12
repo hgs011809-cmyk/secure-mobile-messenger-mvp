@@ -1,4 +1,5 @@
 name: Read-only exact runtime profile and phase source checks
+run-name: Resume saved native compile check without container execution
 on:
   workflow_dispatch:
   push:

@@ -1,5 +1,5 @@
 {
-  "phase": "USER_REQUESTED_SAVE_AND_STOP",
+  "phase": "RESUMED_NO_CONTAINER_NATIVE_COMPILE_CHECK",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Wait for explicit user resume; no automatic CI/runtime/research. Pending native write-result fix static-reviewed but uncompiled; source/profile/build gates incomplete; SDK blocked.",
+  "next": "User resumed saved checkpoint; run only reviewed no-container compile/pure-tests/metadata CI first. Nativehelper/lifecycle/profile/build gates still blocked; SDK unauthorized.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -690,5 +690,6 @@
       "containersStarted": 0
     }
   },
-  "paused": true
+  "paused": false,
+  "resumeRequestedAt": "2026-10-12T07:16:52.449Z"
 }
