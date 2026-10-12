@@ -155,3 +155,6 @@ Userapprovednewphasecontractdesign/implementation/independentreview/isolatedCI; 
 
 ## Reboot recovery: phase-code checkpoint
 Existing11filespreserved; localpurekernel90/90+worker10/10+controller160/160+metadata20/20,syntax4PASS, independent3componentstaticreviewsPASS. NativeCnotcompiled/nohelper/actualworker/Dockerruntime. Fullruntimeprofileintentionallymissingblockscreate; parentpinnedCsource/compile/SHAexportpipeline needsreview. ReadonlyCI38184483084 PASS Docker28.0.4/v2/systemd/OOMunsupported/created0/started0. NewphaseSTATUS.md recordslimits; oldstrict5failedfixtureunchangedblocked; SDK/prod/NCP/main untouched.
+
+## Separate NO-CONTAINER compile/profile failure preserved
+Codebackup28f3a62cab06152dc6719640eaa74338739b580f confirmed. Readonlyworkflow59a8cff481c821de6e0276f84955668c459f85b8/run38186645877: sourcepins51PASS, native_compileFAILED at0s, exactcompilerreasonunknown/rawsuppressed. NOhelper/worker/containers/fullruntimeprofile/CIpurecount acceptance. ThisisNOToldstrictlifecycle6; existing5failuresunchanged. DoNOTweakenWerror/syscalls/security/deadlines. Parentpreparesboundedcompilerline/classdiagnostics andindependentsoftwaremetadata despitecompilefailure; jobmustretainexit1/noacceptanceoncompilefailure. Pendingindependentreview beforeanyrerun.

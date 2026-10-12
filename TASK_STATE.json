@@ -1,5 +1,5 @@
 {
-  "phase": "new_phase_contract_local_pure_static_pass_runtime_profile_missing",
+  "phase": "new_phase_readonly_native_compile_failed_blocked_before_runtime",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Back up new code without runtime; no-container full runtime-profile/compile CI then independent pipeline/source review",
+  "next": "Preserve failed no-container compile run; bounded compiler line/class diagnostics or exact-source compile fix review before retry; no lifecycle until full gates pass",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -665,6 +665,14 @@
       "metadata": 20
     },
     "independentStaticReviewsPassed": true,
-    "nativeCompiled": false
+    "nativeCompiled": false,
+    "preflightFailure": {
+      "run": "38186645877",
+      "commit": "59a8cff481c821de6e0276f84955668c459f85b8",
+      "gate": "native_compile",
+      "exactCauseUnknown": true,
+      "nativeHelperExecuted": false,
+      "workloadContainersCreated": 0
+    }
   }
 }
