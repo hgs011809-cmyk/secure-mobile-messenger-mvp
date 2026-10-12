@@ -24,3 +24,15 @@ Sources (prepend https://raw.githubusercontent.com/microsoft/playwright/606ecd8b
 - packages/playwright-core/src/server/registry/oopDownloadBrowserMain.ts
 - packages/utils/hostPlatform.ts
 - packages/utils/third_party/extractZip.ts
+
+
+## 2026-10-12 follow-up: marker and ZIP dependency source
+Session jp80z29HgkhBBB4I. Prior document backed up e961406 [skip ci], fresh directory UI confirmation. Protected56 mismatch0, accepted profile absent; no CI/install/build/helper/worker/container.
+
+At the same exact Playwright commit, registry/index.ts L1034-1064: global PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS bypass exists but is NOT authorized for our replacement; executables without a directory return; DEPENDENCIES_VALIDATED stat.mtime age less than30days skips validation. This method does not bind marker content/version/hash and even a future mtime passes its age comparison. Otherwise _validateHostRequirements must succeed, then an EMPTY marker is written with write errors caught. This is installer bookkeeping, not our package/archive integrity admission.
+
+Root package.json L165 and package-lock.json L9667-9678 pin yauzl3.4.0, npm integrity sha512-jIH9yLR9wqr0wOS0TpBvo/g/2UgZH5qePVbjgRliiF0BYvOZyaBknKsF+x9Iht0O6sqgnB93rCICdOZFecJuDw== and Node>=12. This repository dependency pin alone does not establish published Playwright bundle byte correspondence. Readonly https://registry.npmjs.org/yauzl/3.4.0 declares gitHead f5798e15204ffbb9a428b00217e4659684a41b0f and matching npm integrity; tarball NOT retrieved/verified.
+
+Direct source-only inspection https://raw.githubusercontent.com/thejoshwolfe/yauzl/f5798e15204ffbb9a428b00217e4659684a41b0f/index.js: L73-74 default validateEntrySizes=true/strictFileNames=false; L864-882 normalizes backslashes when non-strict and validates against absolute/drive and '..' entry paths; L610-618 uses declared uncompressed-size assertion for deflate. These narrow observations do NOT establish safe link targets, collision rejection, finite aggregate caps or comprehensive ZIP safety. Yauzl-specific source observations are not independently reviewed yet; marker/repository-pin review KNF4rceSixsFIjK1 PASS document-only. No ZIP safety or bundle provenance acceptance.
+
+Next: finish bounded ZIP inventory/staging implementation review with explicit size/count/expanded-byte/collision/link caps and separately authenticate Debian key/Release/Packages chain. Do not continue generic proposal docs or run upstream installer. All browser hashes/trees and authenticated package closure remain absent; original Dockerfile unchanged.
