@@ -1,5 +1,5 @@
 {
-  "phase": "new_phase_contract_explicitly_approved_readonly_preflight_ready",
+  "phase": "new_phase_contract_local_pure_static_pass_runtime_profile_missing",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Run readonly no-container exactengineversion preflight; finish no-privilege liveownership design review before implementation",
+  "next": "Back up new code without runtime; no-container full runtime-profile/compile CI then independent pipeline/source review",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -657,6 +657,14 @@
     "SDKAuthorized": false,
     "preflightOnly": true,
     "kernelProofAccepted": false,
-    "runtimeProofAccepted": false
+    "runtimeProofAccepted": false,
+    "localPureTests": {
+      "kernel": 90,
+      "worker": 10,
+      "controller": 160,
+      "metadata": 20
+    },
+    "independentStaticReviewsPassed": true,
+    "nativeCompiled": false
   }
 }

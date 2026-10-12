@@ -152,3 +152,6 @@ Run38181608392/job114595176353/ba4bd60cd962a7e9d0f52379a14e45c313717fbe:Linuxcon
 
 ## NEW separate phase contract explicitly approved
 Userapprovednewphasecontractdesign/implementation/independentreview/isolatedCI; oldstrictfixture5failurespreservedblocked. Newfolderowned-container-phase-lab. No SDK/production/NCP/engineprovision/privilegegrant. First readonly no-container engineversion preflight, staticPASS/puredecoder23/23; no kernel/runtimeproof. Designrequiresprestartimmutablecomplete2snapshots,durablephases, retainedproc/cgroupFDs, live exactcgroup/kernelcorrelation, explicitafterexitlimitsandtrustedhost/daemonboundary. Unknownpermissionsfailclosed, no sudo/capsfallback.
+
+## Reboot recovery: phase-code checkpoint
+Existing11filespreserved; localpurekernel90/90+worker10/10+controller160/160+metadata20/20,syntax4PASS, independent3componentstaticreviewsPASS. NativeCnotcompiled/nohelper/actualworker/Dockerruntime. Fullruntimeprofileintentionallymissingblockscreate; parentpinnedCsource/compile/SHAexportpipeline needsreview. ReadonlyCI38184483084 PASS Docker28.0.4/v2/systemd/OOMunsupported/created0/started0. NewphaseSTATUS.md recordslimits; oldstrict5failedfixtureunchangedblocked; SDK/prod/NCP/main untouched.
