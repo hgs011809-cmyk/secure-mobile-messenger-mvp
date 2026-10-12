@@ -1,5 +1,5 @@
 {
-  "phase": "NO_CONTAINER_BUILD_DIGEST_EXPORT_READY_FOR_CI",
+  "phase": "NATIVE_BUILD_GATE_VERIFIED_LIFECYCLE_BLOCKED",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Verify reviewed NO-CONTAINER compile/digest-export CI; preserve all failures. Candidate/profile/base/lifecycle/cleanup acceptance remains gated; no SDK integration.",
+  "next": "Prepare/review pinned base image and future lifecycle parent pipeline; accepted profile remains absent, no helper/container/lifecycle or SDK execution until all exact gates pass.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -707,9 +707,26 @@
       "sourcePins": 56,
       "oldProtectedPinsUnchanged": 38,
       "productionCLIOnly": true,
-      "actualCompileExportCI": false,
+      "actualCompileExportCI": true,
       "profileAccepted": false,
-      "helperExecuted": false
+      "helperExecuted": false,
+      "success": {
+        "run": "38218708450",
+        "job": "/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38218708450/job/114709471167",
+        "commit": "fc6f3d4fb97f2bfda995e10333c9f1583ba05605",
+        "sourcePinsVerified": 56,
+        "oldProtectedPinsUnchanged": 38,
+        "nativeCompile": true,
+        "originalPurePass": 280,
+        "buildIntegrityPurePass": 30,
+        "sourceLiteralVerified": true,
+        "binaryDigestExport": true,
+        "nativeHelperExecuted": false,
+        "workloadContainersCreated": 0,
+        "temporaryBinaryRuntimeReady": false,
+        "profileAccepted": false,
+        "SDKIntegration": false
+      }
     }
   },
   "paused": false,

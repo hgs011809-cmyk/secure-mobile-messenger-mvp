@@ -168,3 +168,6 @@ Stoppedsourceinvestigator final: narrowruncsource-supportONLY; profileacceptance
 Userrequestedresumenow. Saved51sourcepinsverified/old38unchanged. ResumeONLY existingapprovedlabscope; nextNOcontainercompile/pure280/metadata check ofsavedwrite-resultfix, no helperexecution/lifecycle/SDK acceptance. Priorfailure2 andoldstrictfivefailurespreserved.
 
 Nativecompile checkpoint38217074965 PASS source51/pure280, nohelper. Build-integritymodule30puresPASS/directNode; Node--test discoveryfailedbeforetests recorded. ExportVM25/projectorVM20PASS; module/candidate/workflowstaticPASS. NewNOcontainercompile/exportCIsource56prepared; acceptedprofileABSENT/noLifecycle/noSDK.
+
+## Current resumed checkpoint verified
+ReadonlyCI38218708450/fc6f3d4 PASS source56/old38unchanged/Ccompiletrue/pure280+30 separate/sourceLiteral+binaryDigestExporttrue; nativehelper/workerfalse/containers0/temporarybinarynotruntime-ready. Candidate-schema/staticPASSbutunaccepted; acceptedprofileABSENT. Futurepinnedbase/image/lifecyclepipeline/kernel/cleanup gatespending; SDKblocked. Prior2readonlycompilefailuresandold5strictfailurespreserved.

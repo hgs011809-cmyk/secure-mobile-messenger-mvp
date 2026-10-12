@@ -5,8 +5,11 @@
   "backupCommit": "43f3acbc9348fab05f3e55cc7f5cec73bcb714ad",
   "skipCI": true,
   "noAutomaticResume": true,
-  "lastPreflightRun": "38187584404",
-  "nativeFixUncompiled": true,
+  "lastPreflightRun": "38218708450",
+  "nativeFixUncompiled": false,
   "SDKBlocked": true,
-  "resumeRequestedAt": "2026-10-12T07:16:52.449Z"
+  "resumeRequestedAt": "2026-10-12T07:16:52.449Z",
+  "currentMilestone": "readonly_native_build_digest_gate_verified",
+  "lifecycleBlocked": true,
+  "nativeHelperExecuted": false
 }
