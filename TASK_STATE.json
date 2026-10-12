@@ -1,5 +1,5 @@
 {
-  "phase": "new_phase_readonly_native_compile_failed_blocked_before_runtime",
+  "phase": "USER_REQUESTED_SAVE_AND_STOP",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Preserve failed no-container compile run; bounded compiler line/class diagnostics or exact-source compile fix review before retry; no lifecycle until full gates pass",
+  "next": "Wait for explicit user resume; no automatic CI/runtime/research. Pending native write-result fix static-reviewed but uncompiled; source/profile/build gates incomplete; SDK blocked.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -673,6 +673,22 @@
       "exactCauseUnknown": true,
       "nativeHelperExecuted": false,
       "workloadContainersCreated": 0
+    },
+    "preflightFailure2": {
+      "run": "38187584404",
+      "commit": "9e23c3ecda01a93e4336ef51d6d4506f03b0a047",
+      "sourcePins": 51,
+      "purePassed": 280,
+      "nativeCompile": false,
+      "diagnostic": {
+        "line": 71,
+        "column": 16,
+        "severity": "error",
+        "warning": "unused"
+      },
+      "minimalFix": "write_result_checked_static_review_PASS_NOT_COMPILED",
+      "containersStarted": 0
     }
-  }
+  },
+  "paused": true
 }

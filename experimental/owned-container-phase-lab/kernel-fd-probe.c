@@ -68,7 +68,11 @@ static int blocked(void) {
     char b[160];
     (void)snprintf(b, sizeof b, "{\"version\":1,\"op\":\"blocked\",\"gate\":\"%s\"}\n", gate);
     if (remaining_ms()) (void)send_text(b);
-    else (void)write(STDOUT_FILENO, b, strlen(b)); /* bounded, nonblocking best effort */
+    else { /* bounded, nonblocking best effort; remain blocked on error/partial write */
+        size_t n = strlen(b);
+        ssize_t sent = write(STDOUT_FILENO, b, n);
+        if (sent < 0 || (size_t)sent != n) return 1;
+    }
     return 1;
 }
 static int decimal(const char *s, uint64_t *out) {

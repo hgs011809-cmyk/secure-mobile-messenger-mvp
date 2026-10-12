@@ -27,3 +27,13 @@ Next: backupthiscode checkpointwithout runtime; bounded no-containerCI compile/p
 ## Evidence limits
 
 Trusted isolatedCIhost/daemon/runtime/image/compiler boundary; environment flags notCIauthentication. RetainedFD consistencywindow is neither atomic norcontinuousadversarialhostproof. Workerreportednamespace/mount evidence is not independentlyhostreadprotectednamespace evidence. Only two mainchildren kernelwitnessed; notallbrowserdescendants. Afterexit no livekernelrevalidation. No physicalerasure/hardrunnerloss/GB-RSS/realusers/Android/Internet/MXC/media/SDK/production claim.
+
+## USER REQUESTED STOP: checkpoint, no further execution
+
+Readonlypreflight2 run38187584404 / commit9e23c3ecda01a93e4336ef51d6d4506f03b0a047 FAILED asrequired: sourcepins51PASS, pure4suites280/280PASS, native_compile=false. Compileraggregate line71 col16 error/unused matchedignoredwrite-result fallback. Minimalpatchconsumeswrite result/rejectserrororpartial andstillreturnsfailure; independentstaticPASS ONLY, NOTcompiled/retested. -Werror/syscalls/deadlines/securityunchanged.
+
+ObservedmetadataONLY: Docker28.0.4/Git6430e49/API1.48/cgroup2/systemd/defaultRuntime runc; runc1.5.1/Gitv1.5.1-0-g8f2685a4; containerdv2.3.6/Gitee2735368117d2eb259779949d5e75cdafec9761; OOMdisableCapabilityfalse. No helper/worker/container execution, ownership/limits/cleanup/lifecycle proof or SDKintegration. Newlifecycleaccepted0; oldstrictfivefailuresunchanged. accepted-engine-profile.json remainsABSENT.
+
+Partialpublicsource review only: runc v1.5.1 tag resolves8f2685a471d3347a686ad3909783d8aafc6bb208; containerd v2.3.6 resolves ee2735368117d2eb259779949d5e75cdafec9761; Apache2; source-pair support reported. Exactresource/path andinstalledbuild/provenance review INCOMPLETE, no profile acceptance.
+
+UseraskedSAVEANDSTOP. No additionalCI/compiler/helper/worker/container/source investigation authorizedwhilepaused. Backupcommitmust[skip ci]. Resumeonlyafteruserrequest: reviewcheckpoint/pendingCfix, exactsource/runtime/build gates and independentreview before any newreadonlyCI; lifecycle/SDK remainblocked.
