@@ -1,0 +1,13 @@
+'use strict';
+// Public metadata ONLY: no download, redirect following, cookies or payload execution.
+// HEAD cannot prove final availability, archive length/hash/tree or vendor authentication.
+const crypto=require('node:crypto');
+const URLS=Object.freeze([
+ 'https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-linux64.zip',
+ 'https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip',
+ 'https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1013/ffmpeg-linux.zip'
+]);
+const PUBLIC_PATHS=new Set([...URLS.map(x=>new URL(x).pathname),'/chrome-for-testing-public/156.0.8078.4/linux64/chrome-linux64.zip','/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip']);
+function redirectProjection(location,url){if(typeof location!=='string'||location.length>8192)throw Error('HEAD_HEADER');const u=new URL(location,url);if(u.protocol!=='https:'||u.username||u.password||u.pathname.length>2048||/[^\x21-\x7e]/.test(u.pathname))throw Error('HEAD_HEADER');return {origin:u.origin,publicPath:PUBLIC_PATHS.has(u.pathname)?u.pathname:null,pathSha256:crypto.createHash('sha256').update(u.pathname).digest('hex'),queryPresent:!!u.search};}
+async function run(){const started=Date.now();let failures=0;for(const url of URLS){if(Date.now()-started>65000)throw Error('HEAD_DEADLINE');let record;try{const response=await fetch(url,{method:'HEAD',redirect:'manual',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{'Accept':'application/zip'}});const value=response.headers.get('content-length'),location=response.headers.get('location');let length=null,redirect=null;if(value!==null){if(!/^(?:0|[1-9][0-9]{0,15})$/.test(value)||!Number.isSafeInteger(Number(value)))throw Error('HEAD_HEADER');length=Number(value);}if(location)redirect=redirectProjection(location,url);if(response.body)await response.body.cancel();record={kind:'public_archive_head_only',url,status:response.status,reportedLength:length,redirect,archiveVerified:false};if(response.status!==200&&!([301,302,303,307,308].includes(response.status)&&redirect))failures++;}catch(e){failures++;const code=e.cause?.code;record={kind:'public_archive_head_only',url,status:null,errorClass:e.name==='TimeoutError'?'timeout':code==='ENOTFOUND'?'dns_unavailable':'unverified',archiveVerified:false};}console.log(JSON.stringify(record));}console.log(JSON.stringify({kind:'head_summary',requests:URLS.length,failures,downloadedArchives:0,followedRedirects:0}));if(failures)process.exitCode=1;}
+module.exports=Object.freeze({URLS,run,redirectProjection});if(require.main===module)run().catch(()=>{console.log('{"kind":"head_summary","status":"failed","archiveVerified":false}');process.exitCode=1;});
