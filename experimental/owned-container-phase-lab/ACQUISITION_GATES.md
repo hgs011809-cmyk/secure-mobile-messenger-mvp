@@ -1,0 +1,39 @@
+# Acquisition and staging gates, design only
+
+2026-10-12 session I7Efkh2NrWJyHBvp. Local protected56 pins verified, mismatch0; accepted profile absent. This document specifies future reviewed inputs, not an implementation or permission to install/build/run. Existing Dockerfile and all56 protected files unchanged. No new CI/install/build/pull/helper/worker/container.
+
+## Separate acquisition from execution
+
+Acquire data into a new owner-only staging root using exclusive files and finite byte/time/redirect limits. Never run acquired package/browser executables to discover their identity. Admit only separately reviewed HTTPS origins and exact artifact paths; every redirect must satisfy that allowlist, no ambient credentials or cookies. Record initial/final public URL and redirect statuses privately, suppress query credentials and raw errors. Reject unexpected responses, truncation, size overflow or changed URLs. Record length and SHA256 on completed retained regular-file bytes; reject links, multiple links and concurrent changes. A hash from this acquisition is a trusted-acquisition byte pin, not independent vendor authentication.
+
+Freeze the reviewed inventory BEFORE a future build: exact per-artifact URL, expected length/SHA256, architecture, upstream revision, extraction rules and complete intended relative-file manifest. The build must check those literal approved pins, not regenerate expectations from the current download. Empty/unknown/different artifacts block. Network acquisition and network-free build should be distinct reviewed steps; network-free package inputs do not by themselves prove malicious-package safety.
+
+## Browser archive inventory and safe staging
+
+The existing Chromium CLI resolves THREE inputs: chromium1248, chromium-headless-shell1248 and ffmpeg1013 on Linux x64. All three digests remain absent. Preserve the existing set unless an explicit source-based replacement is reviewed; do not silently omit FFmpeg/headless/fonts.
+
+Before extraction, enumerate the full archive with a separately pinned/reviewed parser. Reject absolute/drive/UNC paths, traversal, backslash ambiguities, NUL/control characters, duplicate normalized destinations, case/path collisions, special files, unsafe links, unsupported metadata, excessive entries/decompressed bytes/compression ratio and directory-file conflicts. Exact finite caps must be selected and independently reviewed before implementation, not invented as observed requirements. Chromium may contain legitimate symlinks: do not blanket accept them or assume none; inventory their literal targets and constrain resolution inside the staging root. Missing approved inventory blocks extraction.
+
+Extract only to a new empty root, without following preexisting links, granting privileges or preserving owner/setuid/setgid/capability/xattr payload. Reject extraction escapes/races/partial writes. Verify the complete extracted tree, types, relative paths, permitted modes, lengths and hashes against the frozen reviewed manifest. Executable paths, Playwright browser-root naming and installation marker placement require exact pinned-source review before implementation. Only verified extraction may receive a completion marker, if the source requires one; a marker never substitutes for full byte validation. Failed staging must not be used or renamed into the build context. Never adopt Playwright's marker as vendor authentication.
+
+## Debian authenticated closure
+
+First inventory the base image's preinstalled dpkg package name/version/architecture and keyring bytes via a separately reviewed non-workload build-input path. The manifest/config already verified do NOT provide that installed-package inventory. No image pull or inspection process is performed by this document.
+
+For Debian and Debian-security dated snapshot candidates, freeze suite/component/architecture and an independently approved Debian signing-key fingerprint/keyring digest. Verify InRelease or Release+Release.gpg, signer and applicable validity policy. Signed-but-stale metadata is not automatically current; if historical snapshot validity requires an exception, review that precise historical policy separately without trusted=yes or signature bypass. Reject unknown signer, failed signature, wrong suite/architecture or unresolved validity handling.
+
+Authenticate Packages index exact path, length and SHA256 from the signed Release. Authenticate every selected deb's exact name/version/architecture/filename/length/SHA256 from that Packages index. Solve dependencies, alternatives, Provides and version constraints against the exact base inventory; freeze the selected transitive closure and reject unlisted resolution/downloads or archive substitution. The previous32 package names are top-level only, not a closure. Pin solver/tool inputs and installation order where behavior depends on them.
+
+Deb maintainer scripts and triggers are executable code, unlike an ignore-scripts npm step. A future reviewed build must explicitly inventory/accept their execution under the trusted build boundary, without new privileges/host access; an offline deb set is not a script-free install. Package signatures authenticate distribution metadata, not semantics or safety. Build remains blocked until the authenticated closure and installer behavior are independently reviewed.
+
+## Parent workflow remains separate
+
+Future pipeline must preserve old38 unchanged and exact reviewed new source/context pins, compile reviewed C with -std=c11 -O2 -Wall -Wextra -Werror, and export literal reviewed-source digest plus verified just-built ELF digest in its own controlled namespace. Pin workflow actions/toolchain inputs separately; current readonly workflow's version tags are not immutable action provenance. No accepted profile until exact source/profile/parent build pipeline independent review passes. No helper/container before all gates; today at most one separately reviewed lifecycle attempt, no CI starts after23:45 KST, hard authorization ends23:59.
+
+Next bounded work: inspect pinned Playwright extraction/marker paths; establish data-only archive inventory and authenticated Debian key/Release/Packages chain, then independently review an implementation. Unknown inputs remain blocked, never a relaxation. Existing readonly CI280+30 and two compile failures remain separate; old strict five lifecycle failures unchanged; SDK/production outside scope. Trusted-host/compiler/retained-FD/noncontinuous/postexit limits still apply.
+
+## Pinned-source layout follow-up, no archive validation
+
+Read-only investigator xHNVEHD0sIP2L919 plus parent direct source check: registry/index.ts at Playwright commit606ecd8b34bac100db32561b6278ffd76e5eb3cd lines64-99 defines relative Linux x64 executables chrome-linux64/chrome, chrome-headless-shell-linux64/chrome-headless-shell and ffmpeg-linux. Lines462-476 compose the browser directory as browserDirectoryPrefix with hyphens replaced by underscores, then '-' plus revision (platform revisionOverride may alter prefix/revision, so review the exact selected Linux descriptor first). For ordinary non-overridden entries this means chromium-1248, chromium_headless_shell-1248, ffmpeg-1013 under registryDirectory, NOT name/revision nested directories. Investigator shorthand name/revision paths were corrected against the literal source before adoption.
+
+index.ts line1317 returns browserDirectory/INSTALLATION_COMPLETE. browserFetcher marker-existence behavior is investigator-reported source evidence only; creation order/extraction/chmod in the subprocess still needs exact follow-up review. No archive byte/layout verification, executable run or installer execution performed. Source URL: https://raw.githubusercontent.com/microsoft/playwright/606ecd8b34bac100db32561b6278ffd76e5eb3cd/packages/playwright-core/src/server/registry/index.ts .
