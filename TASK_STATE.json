@@ -1,5 +1,5 @@
 {
-  "phase": "RESUMED_NO_CONTAINER_NATIVE_COMPILE_CHECK",
+  "phase": "NO_CONTAINER_BUILD_DIGEST_EXPORT_READY_FOR_CI",
   "branch": "lab-matrix-cleanup-followup",
   "run": "38152247874",
   "job": "114507916337",
@@ -60,7 +60,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "User resumed saved checkpoint; run only reviewed no-container compile/pure-tests/metadata CI first. Nativehelper/lifecycle/profile/build gates still blocked; SDK unauthorized.",
+  "next": "Verify reviewed NO-CONTAINER compile/digest-export CI; preserve all failures. Candidate/profile/base/lifecycle/cleanup acceptance remains gated; no SDK integration.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -665,7 +665,7 @@
       "metadata": 20
     },
     "independentStaticReviewsPassed": true,
-    "nativeCompiled": false,
+    "nativeCompiled": true,
     "preflightFailure": {
       "run": "38186645877",
       "commit": "59a8cff481c821de6e0276f84955668c459f85b8",
@@ -688,6 +688,28 @@
       },
       "minimalFix": "write_result_checked_static_review_PASS_NOT_COMPILED",
       "containersStarted": 0
+    },
+    "successfulReadonlyPreflight": {
+      "run": "38217074965",
+      "job": "/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38217074965/job/114704199826",
+      "commit": "7444dd988ec96ce76bfea584b4e0ebce50333fa0",
+      "nativeCompile": true,
+      "purePassed": 280,
+      "nativeHelperExecuted": false,
+      "workloadContainersCreated": 0,
+      "profileAccepted": false
+    },
+    "buildIntegrityGate": {
+      "staticReviewsPassed": true,
+      "localSyntheticPassed": 30,
+      "exportVMChecks": 25,
+      "priorDiagnosticVMChecks": 20,
+      "sourcePins": 56,
+      "oldProtectedPinsUnchanged": 38,
+      "productionCLIOnly": true,
+      "actualCompileExportCI": false,
+      "profileAccepted": false,
+      "helperExecuted": false
     }
   },
   "paused": false,

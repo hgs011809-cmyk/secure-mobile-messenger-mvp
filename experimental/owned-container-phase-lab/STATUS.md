@@ -37,3 +37,13 @@ ObservedmetadataONLY: Docker28.0.4/Git6430e49/API1.48/cgroup2/systemd/defaultRun
 Partialpublicsource review only: runc v1.5.1 tag resolves8f2685a471d3347a686ad3909783d8aafc6bb208; containerd v2.3.6 resolves ee2735368117d2eb259779949d5e75cdafec9761; Apache2; source-pair support reported. Exactresource/path andinstalledbuild/provenance review INCOMPLETE, no profile acceptance.
 
 UseraskedSAVEANDSTOP. No additionalCI/compiler/helper/worker/container/source investigation authorizedwhilepaused. Backupcommitmust[skip ci]. Resumeonlyafteruserrequest: reviewcheckpoint/pendingCfix, exactsource/runtime/build gates and independentreview before any newreadonlyCI; lifecycle/SDK remainblocked.
+
+## Explicit resume: readonly native compile PASS
+
+Run38217074965 / commit7444dd988ec96ce76bfea584b4e0ebce50333fa0 passed compile -std=c11 -O2 -Wall -Wextra -Werror andpure4suites280/280; readonlysoftwaremetadataunchanged. Savedwrite-resultfix nowhascompilerproof ONLY. Nativehelper/workerexecutionfalse, containers0, ownership/limits/lifecycle/cleanup/SDKproofNONE. Both earliernewreadonlyfailures andoldstrictfivefailures preserved.
+
+engine-profile-candidate.json is anUNACCEPTED17field candidate: observed11softwarefields plus6PREDECLAREDlayout/CPUexpectations, notactualkernel/path evidence. accepted-engine-profile.json staysABSENT. Pidsrequire128 throughoutcontract/controller/kernel, no reductionto64. Parent source/build digest-export gates beingprepared separately; no lifecycle yet.
+
+## Build-integrity/export gate prepared
+
+Two new modules and30synthetic tests, localdirect30/30; firstNode--test discoveryfailed beforetests, retainednotpass. ControlledCLI module independentstaticPASS; candidate-schema/framingPASS; parent56pin compile/exportworkflowstaticPASS. SyntheticexportVM25/25 andpriorprojector20/20, noactualenvwrite/compiler/helper/container. FutureCIexportsONLYreviewedliteralCsourceSHA+just-builtELFbyteSHA aftersuccess; no binaryauth/semantic/malicioushost proof. NO-CONTAINERCIverificationpending; acceptedprofileabsent/lifecycle0/SDKblocked.

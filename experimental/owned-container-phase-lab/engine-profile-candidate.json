@@ -1,0 +1,19 @@
+{
+  "exactServerVersion": "28.0.4",
+  "exactServerGitCommit": "6430e49",
+  "apiVersion": "1.48",
+  "cgroupVersion": "2",
+  "cgroupDriver": "systemd",
+  "defaultRuntime": "runc",
+  "runcVersion": "1.5.1",
+  "runcGitCommit": "v1.5.1-0-g8f2685a4",
+  "containerdVersion": "v2.3.6",
+  "containerdGitCommit": "ee2735368117d2eb259779949d5e75cdafec9761",
+  "hostCgroupPathTemplate": "/system.slice/docker-{id}.scope",
+  "hostCgroupMountRoot": "/",
+  "hostCgroupMountPoint": "/sys/fs/cgroup",
+  "expectedCpuQuota": "100000",
+  "expectedCpuPeriod": "100000",
+  "expectedCpuBurst": "0",
+  "oomDisableCapability": false
+}
