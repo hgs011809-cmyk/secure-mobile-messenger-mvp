@@ -111,7 +111,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "THIS finite CI-only deliverable completed: ONE origin GET/2302701 raw bytes/SHA/header2/artifact URL. Finish accepted root backups and exact NEWCI ownnonce release only. NO retry/rerun/manualdispatch/secondorigin/localfallback/newtask. Three observed old-policy header reasons remain; contentCRC/vendor/fullpolicy/SDK/containers/groups/GPG remain unestablished or unauthorized. Legacy top-level evidence fields are historical, use ffmpegRawCIActualResult; never sum counts across runs.",
+  "next": "Finite CI data-only deliverable COMPLETE, exact CI nonce released13:52:38KST/allownedCLI+reviewers resolved. This final release audit is the last Root2 backup, accepted commit SHA recorded outside its own self-referential contents. No reacquire/CI/origin/retry/rerun/fallback/download/unpack/newtask. Header declarations/observedSHA are not vendor/contentCRC/fulloldpolicy/SDK admission; 3 old-policy header reasons remain.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -1228,7 +1228,7 @@
     "backupCommit": "c147dc133d1b1a7c8ad98c4ec37c1d60fb2dfa1d"
   },
   "currentOwnerSafetyCheckpoint": {
-    "at": "2026-10-13T04:49:39.240Z",
+    "at": "2026-10-13T04:52:38.440Z",
     "sessionId": "IcUJ8UMoJUKXJWiB",
     "stopBy": "2026-10-13T03:00:00.000Z",
     "noNewCIAfter": "2026-10-13T02:45:00.000Z",
@@ -1240,7 +1240,7 @@
     "scope": "source/pure/MOCK only; actual finalHEAD already completed separately",
     "actualAcquisitionOrGPGOrGroupsAuthorized": false,
     "physicalErasureOrPriorDescendantCleanupProven": false,
-    "status": "finite_CI_deliverable_COMPLETE_safe_local_checkpoint_remote_root_pending_exact_CI_lock_HELD",
+    "status": "FINITE_CI_COMPLETE_exact_CI_lock_RELEASED_all_prior_owned_work_resolved_no_new_tasks",
     "additional5SourcePinsMatch": true,
     "continuousDevelopmentActive": true,
     "lockRelease": "atomic_NEW_CI_scope_nonce_held",
@@ -1248,10 +1248,11 @@
     "lockAcquiredAt": "2026-10-13T03:38:35.480Z",
     "historicalLocalScopeLockReleasedAt": "2026-10-13T03:32:37.425Z",
     "currentEvidencePointer": "ffmpegRawCIActualResult",
-    "exactCIScopeLockHeld": true,
+    "exactCIScopeLockHeld": false,
     "sourceLiteral76LocallyUnchanged": true,
     "workflowSHA256": "b44d358f9fc84c32f56870cef0c8397579c0454bf7cf18e5c71e3073cc5409dd",
-    "noNewTasks": true
+    "noNewTasks": true,
+    "lockReleasedAt": "2026-10-13T04:52:38.440Z"
   },
   "noonFinalHandoff": {
     "at": "2026-10-13T02:25:05.659Z",
@@ -1534,7 +1535,7 @@
     "CIStarted": true,
     "pendingOwnedExecutionIds": [],
     "pendingReviewers": [],
-    "exactNewCIScopeLockHeld": true,
+    "exactNewCIScopeLockHeld": false,
     "CICompleted": true
   },
   "ffmpegRawCIWholeWorkflowReview": {
@@ -1771,7 +1772,7 @@
   },
   "ffmpegRawCIFinalHandoff": {
     "at": "2026-10-13T04:49:39.240Z",
-    "status": "finite_deliverable_complete_safe_local_checkpoint_remote_root_pending_before_exact_lock_release",
+    "status": "finite_CI_deliverable_COMPLETE_exact_NEW_CI_nonce_RELEASED_no_new_tasks",
     "previousTopPhase": "NOON_ARCHIVE_STAGING_NO_CONTAINER_CI_REVIEWED_READY",
     "currentEvidencePointer": "ffmpegRawCIActualResult",
     "legacyTopLevelRunFieldsRemainHistorical": true,
@@ -1782,7 +1783,21 @@
     "workflowCommitClickConsumed": true,
     "noTransportDownloadedOrUnpackedByMain": true,
     "noNewTaskOrScopeExtensionAuthorized": true,
-    "rootBackup": "pending",
-    "exactCIScopeLockHeld": true
+    "rootBackup": "0439f7c119e5fab532c2d8672c7b14ce837b075d",
+    "exactCIScopeLockHeld": false,
+    "rootBackupAcceptedBeforeRelease": true,
+    "exactCIScopeLockReleasedAt": "2026-10-13T04:52:38.440Z",
+    "releaseAudit": {
+      "exactSessionAndNonceRechecked": true,
+      "onlyTodayWorkLockUnlinked": true,
+      "absentImmediatelyAfterRelease": true,
+      "noOtherLockProcessContainerOrRootDeletion": true,
+      "noPhysicalEraseOrPriorOSDescendantProof": true,
+      "finalizerCompletionStillRequiresToolExit": false,
+      "finalizerToolExitObserved": 0
+    },
+    "finalReleaseRootBackup": "THIS_FINAL_RELEASE_AUDIT_COMMIT_SHA_RECORDED_EXTERNALLY_AFTER_ACCEPTANCE",
+    "allOwnedCommandsAndReviewersResolved": true,
+    "finalReleaseRootBackupStatus": "final_release_audit_prepared_for_last_skip_ci_backup_no_more_task_work"
   }
 }
