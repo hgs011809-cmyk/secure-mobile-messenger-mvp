@@ -238,3 +238,9 @@ Followup6filebackup accepted58aa1144f1d330cc8215a97434cce13328170d86 [skip ci], 
 - Test-only VM disables filesystem recheck and uses fake child/fs/timers. Assert mapped fd configuration/no sink inheritance configuration, complete/partial/chunk/prefix bytes, stdout+stderr+status caps/errors, exit/close mismatches, cancellation callbacks and late-close unknown classification. Fake fs does not impose caps.
 - No real child/proc/network/sink writes, crypto/auth, fd inheritance, hardtimers, termination or cleanup evidence. Current source SHA23553942463ea6b97fea53fb349d23645761475f3d71dae1de270b5a907326a9.
 - Reviewed childIO MOCK33 source backup accepted45b4f9700718f3678d2e7ca59cc1adcfb4e1f2ea [skip ci].
+
+## FFmpeg byte assembly PURE candidate 2026-10-13T01:53:38.480Z
+- No fetch/defaultnetwork/fs/process/ZIP parser/timer. Caller-supplied opaque bytes only; exact priorHEAD claim not GET validation or authority. Fixed2302701byte total/262144chunkbytes/4096chunks; intrinsic typedarray slots/copy, proxy/sharedbacking rejected. Invalid/short/oversized operations block, no reopening.
+- Parent35purePASS + AFmbL4A1OXqkzMQI independently35PASS exit0/limitedsourcePASS. Returned Buffer is mutable COPY; SHA describes assembly snapshot, must rehash before subsequent use. No actual archive/ZIPcompatibility/vendorauth/temporal/transportcancel/physicalerase claims. Existing ZIP16MiB/browsercaps unchanged.
+- SourceSHA33b171beb7a7f4eacd5c365f3305a29862c74cb689dd4c0626ac25a7d2a95b76; specSHA9539a2d0ee76ea80fea83c61cac593fd57b81e0697fbeaae6e7ac49e65fc7a8e. Latest rootbackup precedingcandidate9443c0d; newbackup pending.
+- Byteassembly source2backup acceptedb69cbee8b3a7a94259d0149e37dafff5406c1346 [skip ci]. Root2backup now pending; no moreCI/network planned.

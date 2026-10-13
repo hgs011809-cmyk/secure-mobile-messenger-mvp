@@ -1146,5 +1146,33 @@
     "realTimerDeadlineEvidence": false,
     "terminationOrCleanupEvidence": false,
     "backupCommit": "45b4f9700718f3678d2e7ca59cc1adcfb4e1f2ea"
+  },
+  "ffmpegByteAssemblyCandidate": {
+    "at": "2026-10-13T01:53:38.480Z",
+    "files": {
+      "ffmpeg-byte-assembly-candidate.cjs": "33b171beb7a7f4eacd5c365f3305a29862c74cb689dd4c0626ac25a7d2a95b76",
+      "ffmpeg-byte-assembly-candidate.spec.cjs": "9539a2d0ee76ea80fea83c61cac593fd57b81e0697fbeaae6e7ac49e65fc7a8e"
+    },
+    "directPureChecks": 35,
+    "independentPureChecks": 35,
+    "failed": 0,
+    "exitCode": 0,
+    "review": "AFmbL4A1OXqkzMQI limited source PASS and independent35PASS",
+    "captureBytesCap": 2302701,
+    "chunkBytesCap": 262144,
+    "chunkCountCap": 4096,
+    "metadataClaimOnly": true,
+    "wireResponseValidated": false,
+    "acquisitionAuthorityEstablished": false,
+    "realArchives": 0,
+    "networkRequests": 0,
+    "realChildren": 0,
+    "filesystemSinkWrites": 0,
+    "zipCompatibilityEstablished": false,
+    "vendorAuthenticated": false,
+    "temporalOrCleanupEvidence": false,
+    "mutableCopyReturned": true,
+    "consumerMustRehashBeforeUse": true,
+    "backupCommit": "b69cbee8b3a7a94259d0149e37dafff5406c1346"
   }
 }
