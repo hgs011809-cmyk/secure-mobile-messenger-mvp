@@ -1,0 +1,143 @@
+name: Public final-target HEAD metadata only
+run-name: Pinned public HEAD metadata without group signals
+on:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths: ['.github/workflows/matrix-final-public-head.yml']
+permissions:
+  contents: read
+jobs:
+  public-final-head:
+    if: github.ref == 'refs/heads/lab-matrix-cleanup-followup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Pinned metadata only, direct-owned-command budgets and bounded projection
+        shell: bash
+        run: |
+          # NO setsid/procfs/group signaling/gpgv/helper/worker/container/acquisition.
+          # GNU timeout --foreground targets only its directly created command.
+          # TERM70/conditionalKILL5 is a signal policy, NOT guaranteed completion.
+          # Nonzero/cancel/incomplete output BLOCKED; retained diagnostics not cleanup.
+          set -euo pipefail
+          umask 077
+          NODE="$(command -v node)"
+          root="$(mktemp -d "$RUNNER_TEMP/final-head.XXXXXX")"
+          clean() { /usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 LC_ALL=C.UTF-8 HOME="$root" "$@"; }
+          clean "$NODE" - "$root" "$RUNNER_TEMP" <<'SOURCE'
+          const f=require('node:fs'),c=require('node:crypto'),p=require('node:path');
+          if(Date.now()<Date.parse('2026-10-12T16:24:37.876Z')||Date.now()>=Date.parse('2026-10-13T02:45:00.000Z'))throw Error('APPROVAL_WINDOW_CLOSED');
+          if(process.version!=='v22.23.3'||process.platform!=='linux'||process.arch!=='x64'||typeof process.getuid!=='function')throw Error('RUNTIME');
+          const pins={
+            "experimental/matrix-client/descriptor-hooks.inc.mjs": "141c222b64b02e336950aa9dd8acb5cfca757a3b351d4aebcb10d8b0c5514554",
+            "experimental/matrix-client/descriptor-driver.inc.mjs": "92c18995a76d507f5d056428b9087954e06a9027bbc3083ca933517370585ae8",
+            "experimental/matrix-client/descriptor-fixture.inc.mjs": "9358cd1dc9c2b4bdcb997aa246d4324749f4bfd1e80c457037041c7d14fe4582",
+            "experimental/matrix-client/descriptor-browser.html": "f6b4418a21eb653bfc4e7893dea90f3cae10a2e6cbd8c66cb9f6cb6f1a8936c9",
+            "experimental/matrix-client/descriptor-build.mjs": "84729488b5adc137e4b131fe469609b18cd449ddf3ba374afbb6ff5307f6942e",
+            "experimental/matrix-client/descriptor-composed-ci.mjs": "402ef61d8d7f52e121d3a4409bffadb079f4291424631126c65346f049ce51fc",
+            "experimental/matrix-client/descriptor-receipt.mjs": "44e5f862245629caf83f080430c47cfd9a77cac148a6f5f6d70cce9e10a84fb4",
+            "experimental/matrix-client/descriptor-receipt.spec.mjs": "7a8505bf52983671fcfbc086ce226c1289b82f45e1916d042ff99a3705c51b18",
+            "experimental/media-transfer-lab/attachment-stream.mjs": "1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6",
+            "experimental/matrix-client/conversation.mjs": "5703ee41c6de769d65427621ec1d771a58a492e145c7a66cf3ff5648724cbb98",
+            "experimental/matrix-client/client.mjs": "f9f29e0b6ba52f297003673bc1a6f481bb29d9f6cc6c37a9842b12f9c3acc5d5",
+            "experimental/auth-bridge/sdk-binding.mjs": "e505214ec1020d676a310da283f5d3387c48086dbf507e3f8fedbbd2dd281503",
+            "experimental/auth-bridge/sdk-policy.mjs": "e6b9bf86b45cb38d8829e9ac35c7f1534783bf9b9077ddad862681261db3a4d3",
+            "experimental/auth-bridge/sdk-ingress.mjs": "d2c415e09cc10662ba84984e719ff277b6a6f0eae537bcda58d93b6a18b1a735",
+            "experimental/matrix-client/transport-pipeline.mjs": "07cafe5952aaf48839810b881674a44d2778111dc5c9e36e33f7a33dd2e6656d",
+            "experimental/matrix-client/transport-pipeline.spec.mjs": "fc6f3e1e144a121748118c10ac7fa20a95aa47dc5cded58eeedfd939bdfd3094",
+            "experimental/matrix-client/transport-hooks.inc.mjs": "bf201dea666c5d1111a0ab3d10df6468b5934d5c97050735983a837b8d682876",
+            "experimental/matrix-client/transport-browser.html": "8dd69fccc470ff1ed08c53ec4fd06e819db650878ef8757b085d32dee093ea18",
+            "experimental/matrix-client/transport-build.mjs": "1f25714516cb8341279fb7f779fee26a4b3ce7fc20237011e3ed2156d4806059",
+            "experimental/matrix-client/transport-prefix.inc.mjs": "7666a81d76d8a16dfd0ad6c161de73d94a9ee74cb39ee7d0f05be1cd2e8a2c39",
+            "experimental/matrix-client/transport-driver.inc.mjs": "af04cb26658fa228581f84754349cf76a5d5f07c55eb59cabc0e02ffb0569422",
+            "experimental/matrix-client/transport-revoke.inc.mjs": "b1a81c2f1726f1689da309b61e42d5348d6a053909a114d828333692c1712183",
+            "experimental/matrix-client/transport-composed-ci.mjs": "f13f7b42278e8448e4ed97e056473ca01c59afa21785456b3eb3a84d3d1dab88",
+            "experimental/media-transfer-lab/receiver.mjs": "deb1110aa3d43cfbd9cad917f577412812fc922579e523d328bab101ade71842",
+            "experimental/auth-bridge/broker.mjs": "837b7a35d36b75552c220afb835444f7c994a771bde16336c28117ef69907916",
+            "experimental/auth-bridge/lifecycle.mjs": "19df008875b8cb2569bb79dbfc3ab3ec0ec83051578cd31656371114e0e05512",
+            "experimental/auth-bridge/store.mjs": "1daf59dc1710b902280fa3eee16cdfd74e5ea1511ad12614ea08d875a0607c89",
+            "experimental/auth-bridge/synapse-lab-issuer.mjs": "69e469d64675edbdf7695a0aab7012b1c7adb80684ab62617ec584c36f315277",
+            "experimental/media-transfer-lab/process-restart-worker.mjs": "68e724111aeecff964f586a498b8248972421e0647e19007b9aa5c284e03130f",
+            "experimental/media-transfer-lab/process-restart.spec.mjs": "3fb97f356325cc48975a798722dfff13ae20599dc2ad373f04178e3fc6568992",
+            "experimental/media-transfer-lab/process-restart-cleanup.cjs": "14878ea6b21231f06c6c485ecf466ba623ae45866836c1a41ef3466e16f9e36d",
+            "experimental/owned-container-lab/container-worker.mjs": "9e138248e6782fb38faeab61874c0293ad31bcc4b445efd21c0906dc869710b0",
+            "experimental/owned-container-lab/container-control.cjs": "26074c7ec19bdb5104ea54dc677dc4f2418f749894dedbbcc54a0e76f974473f",
+            "experimental/owned-container-lab/container-control.spec.cjs": "4ab92d9a4df98329da08591e4748e62811a4d423226b874ab9461333726fb8a6",
+            "experimental/owned-container-lab/Dockerfile": "d7496b9073db715ad6c0f3894bdc12abb0a01a1c2e651991a2402a2160835db7",
+            "experimental/owned-container-lab/CONTAINMENT.md": "92609edcc600324047c2a10b5d1c728894c1259eeecdcdf94e7997b5ce7e3a70",
+            "experimental/matrix-client/package.json": "33f10febea5c27104d4fdadef2b52a8819aa784a25047ccf4afec7f3f42cc0cc",
+            "experimental/matrix-client/package-lock.json": "af8f94989d03eb33cd42ff8e4ee04f935248405b606137eff249ede0136efbba",
+            "experimental/owned-container-phase-lab/AUTHORIZATION.md": "f7709dc92deef6dcdabafcac4278b3e8f475107afa1592e56444739c1801b470",
+            "experimental/owned-container-phase-lab/CONTRACT_API.md": "a9524b41d7788f515f46425629d36399e8ce325ea06dc17a9a193ab3cc598349",
+            "experimental/owned-container-phase-lab/STATUS.md": "b30ea93bcb797ed1b2bff3476bd58c66a78e138f5f6d1fd46b4c9c13ac1e492e",
+            "experimental/owned-container-phase-lab/kernel-fd-probe.c": "43d849edbac58a6836565e011ad030a70b2082e5a0c8a525f6d42a674d711d30",
+            "experimental/owned-container-phase-lab/kernel-contract.cjs": "2376eba51d120a1a1b093b39438b18063d37089773a4abb82b047095e214709b",
+            "experimental/owned-container-phase-lab/kernel-contract.spec.cjs": "61fa9c738d24382a8aa80d186550d0741c29694f9a8e0b7663a790cacfaf9658",
+            "experimental/owned-container-phase-lab/phase-worker.mjs": "fbc461bb5bbc2cf845b812e252b23f2d56dbd7ca97908f266dfd305cbab1bfc4",
+            "experimental/owned-container-phase-lab/phase-worker-contract.mjs": "95d424c671f5d0d453061ee3f3c5e09ac88a99ac8ffa44b6ffd8715c01dab980",
+            "experimental/owned-container-phase-lab/phase-worker-contract.spec.cjs": "d896274ef73177b1c833693b1c987ebcbd281925fb5fe9b89d24c044a039af20",
+            "experimental/owned-container-phase-lab/phase-control.cjs": "cd038dc770e5cef2a19205fa8227e11e365cf4f5cc098fbacf1069fcfe460b3f",
+            "experimental/owned-container-phase-lab/phase-control.spec.cjs": "ff71b7748591a4c0b7191bee8d6b4ae0a1bb54915cd4de416d590ceb7e46fe8c",
+            "experimental/owned-container-phase-lab/runtime-profile-preflight.cjs": "0e1c6fe1e8e64fbf510d407b924fa8f22a8c7f5c2190675f282eaaa379ea597d",
+            "experimental/owned-container-phase-lab/runtime-profile-preflight.spec.cjs": "c890d8b2d327231d7d6d7b2b81f20b6323f659f530a6ffeac61fc6c946997d17",
+            "experimental/owned-container-phase-lab/native-build-provenance.cjs": "6121427d5768495202c0a65cfd3647ae38f567844083b4125dc14f8875f9ae64",
+            "experimental/owned-container-phase-lab/native-build-provenance.spec.cjs": "8a77f16f57fd346aa0c7c175174257a7e589d45577f5022c3b5e931817c515bc",
+            "experimental/owned-container-phase-lab/Dockerfile": "63c0ff305f296e16adc239ea42ea25d44adfdce4dfe05f967ab981459e2caba5",
+            "experimental/owned-container-phase-lab/engine-profile-candidate.json": "365a98050bf8275ba1c9703c322f55d9a4fa31d926e1a6f2010284bf6b97d291",
+            "experimental/owned-container-phase-lab/BUILD_PROFILE_GATES.md": "afd61d5d303d34c1ce01612e3a762abf715d6001e0ffbd5441b652064417df84",
+            "experimental/owned-container-phase-lab/archive-inventory.cjs": "8887f2bbc2c3657f077f86d7afcfbe6a18badc6dd1fabd656284e356bf70ed7d",
+            "experimental/owned-container-phase-lab/archive-inventory.spec.cjs": "981b2beefcc8982af55064f5425bb12fdaef56048581542a20f10c34521a400d",
+            "experimental/owned-container-phase-lab/zip-byte-inventory.cjs": "a1a829ae07b81737b08c45e656502ebcc9b304a0a49c6f274bfd2c63b8498eea",
+            "experimental/owned-container-phase-lab/zip-byte-inventory.spec.cjs": "983aa9f0e1a03e31bc747bd9705c2ffdcc180726ac91b60422e7a9634e4c32c1",
+            "experimental/owned-container-phase-lab/zip-safe-staging.cjs": "8292ad0d98c2fba260983ad48dffa64d815af27df56cbcb2841d8c23384870aa",
+            "experimental/owned-container-phase-lab/zip-safe-staging.spec.cjs": "eebbdac31adfc36439b23431eb7f09033d83f38d410dd1a898ada978184441b4",
+            "experimental/owned-container-phase-lab/public-archive-head.cjs": "4c09a16e09a0e6d8654746a2beee893deec5ddec51dd6a44287252547cff39a4",
+            "experimental/owned-container-phase-lab/final-public-archive-head.cjs": "28f5363e3753f4e704f10e05b6fdfeb7721404e0c118dc22854a19136e66683b",
+            "experimental/owned-container-phase-lab/final-public-archive-head.spec.cjs": "fac10c4fecb29f6924ddca7dc99d229f278bb8623f35ca6762ec20ae8b6c579d"
+          };
+          for(const [name,wanted] of Object.entries(pins)){const a=f.lstatSync(name);if(!a.isFile()||a.isSymbolicLink()||a.size<1||a.size>2097152)throw Error('SOURCE');const data=f.readFileSync(name),b=f.lstatSync(name);if(a.dev!==b.dev||a.ino!==b.ino||a.size!==b.size||a.mtimeMs!==b.mtimeMs||a.ctimeMs!==b.ctimeMs||c.createHash('sha256').update(data).digest('hex')!==wanted)throw Error('SOURCE');}
+          if(f.existsSync('experimental/owned-container-phase-lab/accepted-engine-profile.json'))throw Error('PROFILE_PRESENT');
+          const root=process.argv[2],temp=process.argv[3],s=f.lstatSync(root,{bigint:true});
+          if(!root.startsWith(temp+'/final-head.')||!/^final-head\.[A-Za-z0-9]{6}$/.test(p.basename(root))||f.realpathSync(root)!==root||!s.isDirectory()||s.isSymbolicLink()||s.uid!==BigInt(process.getuid())||(Number(s.mode)&4095)!==448)throw Error('ROOT');
+          for(const tool of ['/usr/bin/timeout','/usr/bin/env']){const a=f.lstatSync(tool);if(!a.isFile()||a.isSymbolicLink()||a.uid!==0||a.nlink!==1||(a.mode&18)||(a.mode&3072)||!(a.mode&73)||a.size>16777216)throw Error('TOOL');}
+          f.writeFileSync(root+'/root-identity.json',JSON.stringify({root,temp,dev:s.dev.toString(),ino:s.ino.toString(),uid:Number(s.uid),mode:Number(s.mode)&4095})+'\n',{flag:'wx',mode:384});
+          console.log('runtime_gate=pass; node=v22.23.3; platform=linux; arch=x64; source_pins=65; prior_pins=63; protected_pins=56; original_pins=38; final_head_pins=2; verified=true');
+          SOURCE
+          if ! clean /usr/bin/timeout --version | head -n 1 | grep -Fx 'timeout (GNU coreutils) 9.4' >/dev/null; then echo 'metadata_status=blocked; reason=trusted_timeout_version'; exit 1; fi
+          set -o noclobber
+          exec {pureout}>"$root/pure.out"
+          exec {pureerr}>"$root/pure.err"
+          exec {headout}>"$root/head.out"
+          exec {headerr}>"$root/head.err"
+          set +o noclobber
+          if clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 15s "$NODE" experimental/owned-container-phase-lab/final-public-archive-head.spec.cjs 1>&"$pureout" 2>&"$pureerr"; then pure_status=0; else pure_status=$?; fi
+          exec {pureout}>&-
+          exec {pureerr}>&-
+          if [ "$pure_status" -ne 0 ]; then echo 'metadata_status=blocked; reason=pure_owned_command_nonzero; diagnostics_retained=true; closure_unknown_on_timeout=true'; exit 1; fi
+          clean "$NODE" - "$root" <<'PURE_GATE'
+          const f=require('node:fs'),c=require('node:crypto'),p=require('node:path');const root=process.argv[2];
+          function read(name,cap,empty=false){const fd=f.openSync(root+'/'+name,f.constants.O_RDONLY|f.constants.O_NOFOLLOW);try{const a=f.fstatSync(fd,{bigint:true});if(!a.isFile()||a.uid!==BigInt(process.getuid())||a.nlink!==1n||(Number(a.mode)&4095)!==384||a.size>BigInt(cap)||(!empty&&a.size<1n))throw Error('FILE');const buf=Buffer.alloc(Number(a.size));let n=0;while(n<buf.length){const k=f.readSync(fd,buf,n,buf.length-n,n);if(!k)throw Error('SHORT');n+=k;}const extra=Buffer.alloc(1);if(f.readSync(fd,extra,0,1,n)!==0)throw Error('EXTRA');const b=f.fstatSync(fd,{bigint:true});for(const k of ['dev','ino','uid','mode','nlink','size','mtimeNs','ctimeNs'])if(a[k]!==b[k])throw Error('CHANGED');return buf;}finally{f.closeSync(fd);}}
+          const identity=JSON.parse(read('root-identity.json',4096)),s=f.lstatSync(root,{bigint:true});if(identity.root!==root||!root.startsWith(identity.temp+'/final-head.')||!/^final-head\.[A-Za-z0-9]{6}$/.test(p.basename(root))||!s.isDirectory()||s.isSymbolicLink()||s.dev.toString()!==identity.dev||s.ino.toString()!==identity.ino||s.uid!==BigInt(process.getuid())||(Number(s.mode)&4095)!==448)throw Error('ROOT');
+          const pure=read('pure.out',16384).toString('utf8').trimEnd().split('\n'),spec=JSON.parse(pure[pure.length-1]);if(spec.kind!=='observed_final_target_head_pure_spec'||spec.passed!==61||spec.failed!==0||spec.total!==61||spec.realChildren!==0||spec.networkRequests!==0||spec.archiveBytesAcquired!==0||spec.cryptographicEvidence!==false||read('pure.err',16384,true).length!==0)throw Error('PURE');
+          if(Date.now()<Date.parse('2026-10-12T16:24:37.876Z')||Date.now()>=Date.parse('2026-10-13T02:45:00.000Z'))throw Error('APPROVAL_WINDOW_CLOSED');
+          console.log('pure_pre_head_gate=pass; pure_checks=61; real_head_not_started_at_gate=true');
+          PURE_GATE
+          if clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 70s "$NODE" experimental/owned-container-phase-lab/final-public-archive-head.cjs 1>&"$headout" 2>&"$headerr"; then head_status=0; else head_status=$?; fi
+          exec {headout}>&-
+          exec {headerr}>&-
+          if [ "$head_status" -ne 0 ]; then echo 'metadata_status=blocked; reason=head_owned_command_nonzero; diagnostics_retained=true; closure_unknown_on_timeout=true'; exit 1; fi
+          clean "$NODE" - "$root" <<'POST'
+          const f=require('node:fs'),c=require('node:crypto'),p=require('node:path');const root=process.argv[2];
+          function read(name,cap,empty=false){const fd=f.openSync(root+'/'+name,f.constants.O_RDONLY|f.constants.O_NOFOLLOW);try{const a=f.fstatSync(fd,{bigint:true});if(!a.isFile()||a.uid!==BigInt(process.getuid())||a.nlink!==1n||(Number(a.mode)&4095)!==384||a.size>BigInt(cap)||(!empty&&a.size<1n))throw Error('FILE');const buf=Buffer.alloc(Number(a.size));let n=0;while(n<buf.length){const k=f.readSync(fd,buf,n,buf.length-n,n);if(!k)throw Error('SHORT');n+=k;}const extra=Buffer.alloc(1);if(f.readSync(fd,extra,0,1,n)!==0)throw Error('EXTRA');const b=f.fstatSync(fd,{bigint:true});for(const k of ['dev','ino','uid','mode','nlink','size','mtimeNs','ctimeNs'])if(a[k]!==b[k])throw Error('CHANGED');return buf;}finally{f.closeSync(fd);}}
+          const identity=JSON.parse(read('root-identity.json',4096)),s=f.lstatSync(root,{bigint:true});if(identity.root!==root||!root.startsWith(identity.temp+'/final-head.')||!/^final-head\.[A-Za-z0-9]{6}$/.test(p.basename(root))||!s.isDirectory()||s.isSymbolicLink()||s.dev.toString()!==identity.dev||s.ino.toString()!==identity.ino||s.uid!==BigInt(process.getuid())||(Number(s.mode)&4095)!==448)throw Error('ROOT');
+          const pure=read('pure.out',16384).toString('utf8').trimEnd().split('\n'),spec=JSON.parse(pure[pure.length-1]);if(spec.kind!=='observed_final_target_head_pure_spec'||spec.passed!==61||spec.failed!==0||spec.total!==61||spec.realChildren!==0||spec.networkRequests!==0||spec.archiveBytesAcquired!==0||spec.cryptographicEvidence!==false||read('pure.err',16384,true).length!==0)throw Error('PURE');
+          const out=read('head.out',16384),err=read('head.err',16384,true);if(err.length!==0)throw Error('STDERR');const lines=out.toString('utf8').split('\n');if(lines.pop()!==''||lines.length!==4||lines.some(x=>!x))throw Error('OUTPUT');const rows=lines.map(x=>JSON.parse(x));
+          const expected=[['chromium','https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-linux64.zip'],['headless','https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip'],['ffmpeg','https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/ffmpeg/1013/ffmpeg-linux.zip']];const origins=new Set(['https://storage.googleapis.com','https://playwright.download.prss.microsoft.com','https://cdn.playwright.dev']);const known=new Set([...expected.map(x=>x[1]),'https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-linux64.zip','https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip','https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1013/ffmpeg-linux.zip']);
+          const keys=['kind','artifact','exactPublicURL','status','declaredRepresentationLength','identityRepresentation','redirect','metadataResponseAccepted','archiveBytesAcquired','archiveVerified','vendorAuthenticated'];
+          rows.slice(0,3).forEach((x,i)=>{if(Object.keys(x).length!==keys.length||Object.keys(x).some(k=>!keys.includes(k))||x.kind!=='observed_final_target_head_only'||x.artifact!==expected[i][0]||x.exactPublicURL!==expected[i][1]||!Number.isInteger(x.status)||!(x.status===200||[301,302,303,307,308].includes(x.status))||!(x.declaredRepresentationLength===null||(Number.isSafeInteger(x.declaredRepresentationLength)&&x.declaredRepresentationLength>=0))||typeof x.identityRepresentation!=='boolean'||x.metadataResponseAccepted!==true||x.archiveBytesAcquired!==0||x.archiveVerified!==false||x.vendorAuthenticated!==false)throw Error('ROW');if(x.redirect!==null){const d=x.redirect,allowed=['origin','originSha256','publicPath','pathSha256','queryPresent','fragmentPresent'];if(Object.keys(d).length!==6||Object.keys(d).some(k=>!allowed.includes(k))||!(d.origin===null||origins.has(d.origin))||!/^[a-f0-9]{64}$/.test(d.originSha256)||!/^[a-f0-9]{64}$/.test(d.pathSha256)||typeof d.queryPresent!=='boolean'||typeof d.fragmentPresent!=='boolean'||!(d.publicPath===null||(typeof d.publicPath==='string'&&known.has(d.origin+d.publicPath))))throw Error('REDIRECT');}else if(x.status!==200)throw Error('REDIRECT_REQUIRED');});
+          const summary=rows[3],sk=['kind','configuredTargets','requestAttempts','failures','followedRedirects','archiveBytesAcquired','archiveVerified','vendorAuthenticated'];if(Object.keys(summary).length!==8||Object.keys(summary).some(k=>!sk.includes(k))||summary.kind!=='observed_final_target_head_summary'||summary.configuredTargets!==3||summary.requestAttempts!==3||summary.failures!==0||summary.followedRedirects!==0||summary.archiveBytesAcquired!==0||summary.archiveVerified!==false||summary.vendorAuthenticated!==false)throw Error('SUMMARY');
+          console.log('final_head_pure=61; pure_network_requests=0; actual_head_request_attempts=3; downloaded_archives=0; followed_redirects=0; phase_helper_executed=false; worker_executed=false; source_container_operations=0; group_signals=false; privilege_expansion=false');for(const x of rows)console.log(JSON.stringify(x));console.log('private_diagnostics=retained; root_deletion_not_attempted=true; physical_erasure_claim=false; direct_command_exit_observed=true; descendant_cleanup_claim=false; guaranteed_wallclock_termination=false');
+          POST
