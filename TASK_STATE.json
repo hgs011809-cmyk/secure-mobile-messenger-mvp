@@ -1050,7 +1050,7 @@
     }
   },
   "publicFinalHeadOnlyPlan": {
-    "at": "2026-10-13T01:23:28.573Z",
+    "at": "2026-10-13T01:33:03.849Z",
     "workflow": ".github/workflows/matrix-final-public-head.yml",
     "sha256": "a2c4f6b8eeed68732b1d741183a3331baea72d7f33231bb095dba65862082175",
     "review": "vgJDBDevXG9L8RH1 static whole-wrapper PASS plus exact-two-date-guard limited PASS at finalSHAa2c4f6b8eeed68732b1d741183a3331baea72d7f33231bb095dba65862082175; no actualruntime/CI yet",
@@ -1072,11 +1072,79 @@
     "archiveAcquisition": false,
     "archiveAuthentication": false,
     "trigger": "ONE workflow-only push; no dispatch/rerun",
-    "triggered": false,
+    "triggered": true,
     "requestAttempts": 0,
     "signalPolicy": "GNU9.4 --foreground TERM70/conditionalKILL5 direct-owned Node only; no guaranteed completion/descendant cleanup",
     "outputPolicy": "exclusive600 files, post-read cap16KiB, strict4row projection; diagnostics retained not erased",
     "cutoff": "2026-10-13T11:45:00+09:00",
-    "noFutureDay": true
+    "noFutureDay": true,
+    "triggerCommit": "81f3ae0ebcb18a869e170e91e2718c1e89bc4733",
+    "runId": "38332270308",
+    "runUrl": "https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38332270308",
+    "result": "success",
+    "evidence": "Expanded actual job lines126-133, not status/command echo alone",
+    "actualRuntime": "Node22.23.3/Linux/x64",
+    "actualSourcePins": 65,
+    "actualPurePreHeadGate": 61,
+    "actualHeadRequests": 3,
+    "actualResponses": [
+      {
+        "artifact": "chromium",
+        "status": 200,
+        "declaredRepresentationLength": 200345244,
+        "identityRepresentation": true,
+        "redirect": null
+      },
+      {
+        "artifact": "headless",
+        "status": 200,
+        "declaredRepresentationLength": 125797539,
+        "identityRepresentation": true,
+        "redirect": null
+      },
+      {
+        "artifact": "ffmpeg",
+        "status": 200,
+        "declaredRepresentationLength": 2302701,
+        "identityRepresentation": true,
+        "redirect": null
+      }
+    ],
+    "followedRedirects": 0,
+    "archiveBytesAcquired": 0,
+    "archiveVerified": false,
+    "vendorAuthenticated": false,
+    "directCommandExitObserved": true,
+    "diagnosticsRetained": true,
+    "rootDeletionAttempted": false,
+    "physicalErasure": false,
+    "descendantCleanupClaim": false,
+    "guaranteedWallclockTermination": false,
+    "phaseHelperExecuted": false,
+    "workerExecuted": false,
+    "sourceContainerOperations": 0,
+    "privilegeExpansion": false,
+    "priorRootBackup": "c191f7c6991ca4cb76071876995798c05aec801d",
+    "proofTemporaryPath": "tmp/final-head-ci-38332270308.webp",
+    "checkoutRuntimeWarning": "Platform forced immutablecheckout action Node24; candidateNode22.23.3 separatelyverified",
+    "next": "Safe source/pure child-IO cap/closure mock coverage; no group/trusted-anchor acceptance. Raw archive acquisition remains conditional on existing authority and independent finitecaps/allowlist/direct-wrapper review."
+  },
+  "ubuntuAnchorChildIOMock": {
+    "at": "2026-10-13T01:42:01.369Z",
+    "file": "experimental/owned-container-phase-lab/ubuntu-anchor-child-io.spec.cjs",
+    "sha256": "23553942463ea6b97fea53fb349d23645761475f3d71dae1de270b5a907326a9",
+    "directChecks": 33,
+    "failed": 0,
+    "exitCode": 0,
+    "review": "QHEKh0UsxKYsaZPD limited MOCK correction source PASS; not independently rerun",
+    "realChildren": 0,
+    "realFilesystemSinkWrites": 0,
+    "procfsReads": 0,
+    "networkRequests": 0,
+    "realDescriptorInheritanceEvidence": false,
+    "cryptographicEvidence": false,
+    "realTimerDeadlineEvidence": false,
+    "terminationOrCleanupEvidence": false,
+    "backupCommit": "45b4f9700718f3678d2e7ca59cc1adcfb4e1f2ea"
   }
 }

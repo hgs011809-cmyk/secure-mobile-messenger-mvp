@@ -226,3 +226,15 @@ Followup6filebackup accepted58aa1144f1d330cc8215a97434cce13328170d86 [skip ci], 
 - Exact user originals inspected by parent did not grant group signals; that path remains BLOCKED. Public metadata reads are existing lab preparation, actual not synthetic; synthetic-only applies to workloads and proof claims.
 - New finalHEAD-only workflow65pins (prior63/56/38), exactNode22.23.3, env-i, direct-owned GNUtimeout --foreground only (no group/setsid/proc/gpg/helper),61pure pre-network gate,16KiB bounded output/schema, private retained diagnostics. Whole-wrapper review PASS; tiny today-only Date gate followup pending. NOT TRIGGERED. One intentionalworkflow-onlypush only after finalreview/time/owner recheck; no dispatch/rerun.
 - Final today Date-guard review now limited PASS; whole-wrapper source65pins unchanged. FinalSHAa2c4f6b8eeed68732b1d741183a3331baea72d7f33231bb095dba65862082175. Still no CI trigger.
+
+## Actual final public HEAD 2026-10-13T01:33:03.849Z
+- CI38332270308 /81f3ae0ebcb18a869e170e91e2718c1e89bc4733 success: actual expandedlogs65pins prior63/protected56/original38, exactNode22.23.3 Linuxx64;61pure pre-networkgate;3actualHTTP200 identity representations, no redirects.
+- Declared representation lengths: Chromium200345244;headless125797539;ffmpeg2302701 bytes. These are HEAD declarations, NOT acquiredZIP byte lengths/hashes/trees/authentication. Archivebytes0/nofollow/vendorfalse. Existing16MiBZIPcandidate cap remains synthetic, not silently enlarged to browser sizes.
+- No groups/setsid/proc/gpg/helper/worker/container/privilege changes. Direct owned commands exited; private diagnostics retained/rootdeletionnotattempted, notdurability/physicalerase/descendantcleanup/hardcompletion. CheckoutactionNode24 warning separate from verifiedNode22checks.
+- Preceding root2backupc191f7c; reviewed6backup95f1896. Latest actualHEAD checkpoint local pending nextbackup. Source/pure childIO coverage next; no ordinarymilestonestop. Group/trusted-anchor acceptance stillblocked; rawarchive acquisition not yetapproved/run. StopTODAYnoon/noNewCIafter11:45.
+
+## Child IO MOCK coverage 2026-10-13T01:42:01.369Z
+- Unchanged anchor53613; new ubuntu-anchor-child-io.spec.cjs33/33directPASS exit0. QHEKh0UsxKYsaZPD limited source MOCK correctionPASS, no independent rerun.
+- Test-only VM disables filesystem recheck and uses fake child/fs/timers. Assert mapped fd configuration/no sink inheritance configuration, complete/partial/chunk/prefix bytes, stdout+stderr+status caps/errors, exit/close mismatches, cancellation callbacks and late-close unknown classification. Fake fs does not impose caps.
+- No real child/proc/network/sink writes, crypto/auth, fd inheritance, hardtimers, termination or cleanup evidence. Current source SHA23553942463ea6b97fea53fb349d23645761475f3d71dae1de270b5a907326a9.
+- Reviewed childIO MOCK33 source backup accepted45b4f9700718f3678d2e7ca59cc1adcfb4e1f2ea [skip ci].
