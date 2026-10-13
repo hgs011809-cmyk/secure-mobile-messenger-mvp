@@ -1,5 +1,5 @@
 {
-  "phase": "FINITE_FFMPEG_RAW_CI_DATA_ONLY_COMPLETE_NOT_POLICY_ACCEPTED",
+  "phase": "RAW_PATH_LAYOUT_DIAGNOSTICS_SOURCE_ONLY_REVIEWED",
   "noonArchiveCandidate": {
     "owner": "IcUJ8UMoJUKXJWiB",
     "authorizedUntil": "2026-10-13T12:00:00+09:00",
@@ -111,7 +111,7 @@
     "backup",
     "physicalErasure"
   ],
-  "next": "Finite CI data-only deliverable COMPLETE, exact CI nonce released13:52:38KST/allownedCLI+reviewers resolved. This final release audit is the last Root2 backup, accepted commit SHA recorded outside its own self-referential contents. No reacquire/CI/origin/retry/rerun/fallback/download/unpack/newtask. Header declarations/observedSHA are not vendor/contentCRC/fulloldpolicy/SDK admission; 3 old-policy header reasons remain.",
+  "next": "Evening finite source-only path diagnostics completed: direct42 + independent42 PASS/exit0/sourcePASS, candidate2files d0bf757 accepted [skip ci]. Original76/WFb44 unchanged/profile absent. Finish root2 backup then resolve commands and release only current parent-owned lock. No new runtime/CI/acquisition/decompression/SDK authority; no automatic resume.",
   "resultsCommit": "f3f084c",
   "previousPhase": "receiver_real_process_idle_boundaries_verified",
   "processRestart": {
@@ -1796,8 +1796,35 @@
       "finalizerCompletionStillRequiresToolExit": false,
       "finalizerToolExitObserved": 0
     },
-    "finalReleaseRootBackup": "THIS_FINAL_RELEASE_AUDIT_COMMIT_SHA_RECORDED_EXTERNALLY_AFTER_ACCEPTANCE",
+    "finalReleaseRootBackup": "5128f4c82eef01d9afcec9f921e5efe66ffd5671",
     "allOwnedCommandsAndReviewersResolved": true,
-    "finalReleaseRootBackupStatus": "final_release_audit_prepared_for_last_skip_ci_backup_no_more_task_work"
-  }
+    "finalReleaseRootBackupStatus": "fresh_GUI_accepted_skip_ci_NO_further_commit",
+    "finalAcceptedAt": "2026-10-13T04:55:16.645Z"
+  },
+  "eveningRawPathDiagnostics": {
+    "at": "2026-10-13T09:17:31.308Z",
+    "sourceCandidateOnly": true,
+    "directPure": 42,
+    "directExit": 0,
+    "independentPure": 42,
+    "independentExit": 0,
+    "reviewer": "NxS8Iudoi3FItZ45",
+    "review": "PASS bounded source/spec only",
+    "sourceSHA256": {
+      "ffmpeg-raw-layout-diagnostics.cjs": "53e67a91b1a45c8e53837edb4e2b92dd45c983db45168e06f0e8fde35b608711",
+      "ffmpeg-raw-layout-diagnostics.spec.cjs": "b72e1102123ce0f92c1ff4af658c9d1213b4533c98647024d7005f41f7dc71bc"
+    },
+    "original76PinsAndWorkflowUnchanged": true,
+    "profileAbsent": true,
+    "actualArchivesRead": 0,
+    "networkRequests": 0,
+    "newCI": 0,
+    "decompression": false,
+    "payloadExecuted": false,
+    "policyRelaxed": false,
+    "sourceBackupPending": false,
+    "sourceBackupCommit": "d0bf7574ec9a348e73b6f5ee4b8274d696ef4df9",
+    "rootBackupPending": true
+  },
+  "currentEvidencePointer": "eveningRawPathDiagnostics"
 }
