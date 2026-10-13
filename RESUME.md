@@ -244,3 +244,14 @@ Followup6filebackup accepted58aa1144f1d330cc8215a97434cce13328170d86 [skip ci], 
 - Parent35purePASS + AFmbL4A1OXqkzMQI independently35PASS exit0/limitedsourcePASS. Returned Buffer is mutable COPY; SHA describes assembly snapshot, must rehash before subsequent use. No actual archive/ZIPcompatibility/vendorauth/temporal/transportcancel/physicalerase claims. Existing ZIP16MiB/browsercaps unchanged.
 - SourceSHA33b171beb7a7f4eacd5c365f3305a29862c74cb689dd4c0626ac25a7d2a95b76; specSHA9539a2d0ee76ea80fea83c61cac593fd57b81e0697fbeaae6e7ac49e65fc7a8e. Latest rootbackup precedingcandidate9443c0d; newbackup pending.
 - Byteassembly source2backup acceptedb69cbee8b3a7a94259d0149e37dafff5406c1346 [skip ci]. Root2backup now pending; no moreCI/network planned.
+
+## ZIP mutation PURE property 2026-10-13T02:09:44.495Z
+- Two tiny syntheticZIPs stored219bytes/deflate221bytes; re-pinned eachmutatedSHA:3520singlebit mutations=3514fixedERROR rejections +6equivalentsemantics accepted. Parent in-memory instrumentedacceptedmethod8/offset95/bits2-7; source reviewnVdpphlDCrAJZ1tl PASS +independentpaddingdecode EOB atbit194/200,6terminalpaddingbits. No directspecindependentrerun (shellcd denied). No generalZIP/realarchive/auth/exploit/staging proof. SHA1694ad1f3793a1e6077b3689bf8e24980497c3fdf8f549631f1e931302e328e5.
+- New assembly->ZIP composition5directpurePASS exit0 using manufactured2302701byte storedZIP/synthetic.bin root420 (NOTrealFFmpeg tree). Coversmutablecopy tamper/originalsnapshot pin, freshpin+consistentCRC stillfailsoriginalcontents, alteredmode andfrozeninventorylatermutation. ReadonlyreviewwjDp69Hq9oMuUw2B RUNNING; noPASSclaim yet.
+- wjDp69Hq9oMuUw2B now limited source compositionPASS, no independent rerun. CRC-consistent alteration reaches contentSHA mismatch; permitted493 modeclaim failsarchive420. All CLI/reviewers resolved; source2/root2backup pending.
+- Reviewed mutationspec+compositionspec backup acceptedc147dc133d1b1a7c8ad98c4ec37c1d60fb2dfa1d [skip ci]; root2nextbackup contains sourcecommit and allcurrent limited evidence. No moreHEAD/network/CI planned.
+
+## Governing next-step boundary 2026-10-13T02:16:12.276Z
+- Local65 sourcebytepins and HEADworkflowSHAa2c4f6 match, accepted-engine-profile absent. Localbyte match notruntime/admission/hostilehost proof.
+- Remaining window TODAYnoon source/pure/MOCK only; no realarchives/GPG/trustedanchor/groups/helpers/workers/containers/build/payload. No moreHEAD needed andno newCIafter11:45. Explicit futureauthority/window+review needed for any later runtime, never inferredfrom metadata/status/source/pures.
+- Old broaderproject blocked/phase fields retained as historical projectscope; new currentOwnerSafetyCheckpoint and updated next carry thisowner execution boundary.
