@@ -1,0 +1,173 @@
+# ONE finite CI-only RAW exception; do not dispatch/rerun/retrigger.
+name: ONE finite FFmpeg RAW data inspection
+run-name: ONE approved raw FFmpeg capture, no unpack or admission
+on:
+  push:
+    branches: [lab-matrix-cleanup-followup]
+    paths: ['.github/workflows/matrix-ffmpeg-raw-data-once.yml']
+permissions:
+  contents: read
+jobs:
+  raw-data-once:
+    if: github.event_name == 'push' && github.run_attempt == 1 && github.ref == 'refs/heads/lab-matrix-cleanup-followup' && github.actor == 'hgs011809-cmyk' && github.event.before == '0142c16e653c4b60502c8d0fec5fa1305758451e' && github.event.head_commit.message == 'Run ONE reviewed FFmpeg RAW CI data attempt'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      EXPECTED_PREREQUISITE_SHA: '0142c16e653c4b60502c8d0fec5fa1305758451e'
+      EXPECTED_AUTH_SHA256: 'b5058a3bd121c2378f8f6527df1b474b1ad31ca2dc6289f863449c501e234cea'
+      EXPECTED_OWNER_NONCE_SHA256: '503b88f622dd98f924922a9d6735aa9f145ebff11a49a8d281adbfa7f25b8741'
+      EXPECTED_DRIVER_SHA256: '69933b0987ba597caa19adb5bd841b25dceeaeb4252ed02df34b31618a362ff8'
+    steps:
+      # Platform JS actions currently use Node24, distinct from data Node22.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: '0142c16e653c4b60502c8d0fec5fa1305758451e'
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+      - name: Source/runtime/pure gates then ONE RAW origin attempt
+        id: capture
+        shell: bash
+        run: |
+          # No setup-node/install, setsid/procfs/group calls, GPG, project helpers,
+          # containers, payload execution, decompression or entry materialization.
+          # GNU --foreground signals ONLY its directly created command.
+          # Timers/job policy are best-effort, NOT hard termination/erase proof.
+          set -euo pipefail
+          umask 077
+          NODE="$(command -v node)"
+          control="$(mktemp -d "$RUNNER_TEMP/ffmpeg-raw-control.XXXXXX")"
+          clean() { /usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 LC_ALL=C.UTF-8 HOME="$control" GITHUB_ACTIONS=true GITHUB_EVENT_NAME="$GITHUB_EVENT_NAME" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_REPOSITORY="$GITHUB_REPOSITORY" GITHUB_REF="$GITHUB_REF" GITHUB_ACTOR="$GITHUB_ACTOR" GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" EXPECTED_PREREQUISITE_SHA="$EXPECTED_PREREQUISITE_SHA" EXPECTED_AUTH_SHA256="$EXPECTED_AUTH_SHA256" EXPECTED_OWNER_NONCE_SHA256="$EXPECTED_OWNER_NONCE_SHA256" EXPECTED_DRIVER_SHA256="$EXPECTED_DRIVER_SHA256" CAPTURE_STDOUT_FILE="${CAPTURE_STDOUT_FILE:-}" CAPTURE_STDERR_FILE="${CAPTURE_STDERR_FILE:-}" CAPTURE_PROCESS_EXIT_CODE="${CAPTURE_PROCESS_EXIT_CODE:-99}" "$@"; }
+          clean "$NODE" - "$control" "$RUNNER_TEMP" <<'SOURCE_GATE'
+          const f=require('node:fs'),c=require('node:crypto'),p=require('node:path');
+          if(process.version!=='v22.23.3'||process.platform!=='linux'||process.arch!=='x64'||typeof process.getuid!=='function')throw Error('EXACT_PREINSTALLED_NODE_REQUIRED');
+          const pins={
+            "experimental/matrix-client/descriptor-hooks.inc.mjs": "141c222b64b02e336950aa9dd8acb5cfca757a3b351d4aebcb10d8b0c5514554",
+            "experimental/matrix-client/descriptor-driver.inc.mjs": "92c18995a76d507f5d056428b9087954e06a9027bbc3083ca933517370585ae8",
+            "experimental/matrix-client/descriptor-fixture.inc.mjs": "9358cd1dc9c2b4bdcb997aa246d4324749f4bfd1e80c457037041c7d14fe4582",
+            "experimental/matrix-client/descriptor-browser.html": "f6b4418a21eb653bfc4e7893dea90f3cae10a2e6cbd8c66cb9f6cb6f1a8936c9",
+            "experimental/matrix-client/descriptor-build.mjs": "84729488b5adc137e4b131fe469609b18cd449ddf3ba374afbb6ff5307f6942e",
+            "experimental/matrix-client/descriptor-composed-ci.mjs": "402ef61d8d7f52e121d3a4409bffadb079f4291424631126c65346f049ce51fc",
+            "experimental/matrix-client/descriptor-receipt.mjs": "44e5f862245629caf83f080430c47cfd9a77cac148a6f5f6d70cce9e10a84fb4",
+            "experimental/matrix-client/descriptor-receipt.spec.mjs": "7a8505bf52983671fcfbc086ce226c1289b82f45e1916d042ff99a3705c51b18",
+            "experimental/media-transfer-lab/attachment-stream.mjs": "1c29cfc0c6ba05c0e4614b43e1d18de12b91bc478a119c59f13760295351c2c6",
+            "experimental/matrix-client/conversation.mjs": "5703ee41c6de769d65427621ec1d771a58a492e145c7a66cf3ff5648724cbb98",
+            "experimental/matrix-client/client.mjs": "f9f29e0b6ba52f297003673bc1a6f481bb29d9f6cc6c37a9842b12f9c3acc5d5",
+            "experimental/auth-bridge/sdk-binding.mjs": "e505214ec1020d676a310da283f5d3387c48086dbf507e3f8fedbbd2dd281503",
+            "experimental/auth-bridge/sdk-policy.mjs": "e6b9bf86b45cb38d8829e9ac35c7f1534783bf9b9077ddad862681261db3a4d3",
+            "experimental/auth-bridge/sdk-ingress.mjs": "d2c415e09cc10662ba84984e719ff277b6a6f0eae537bcda58d93b6a18b1a735",
+            "experimental/matrix-client/transport-pipeline.mjs": "07cafe5952aaf48839810b881674a44d2778111dc5c9e36e33f7a33dd2e6656d",
+            "experimental/matrix-client/transport-pipeline.spec.mjs": "fc6f3e1e144a121748118c10ac7fa20a95aa47dc5cded58eeedfd939bdfd3094",
+            "experimental/matrix-client/transport-hooks.inc.mjs": "bf201dea666c5d1111a0ab3d10df6468b5934d5c97050735983a837b8d682876",
+            "experimental/matrix-client/transport-browser.html": "8dd69fccc470ff1ed08c53ec4fd06e819db650878ef8757b085d32dee093ea18",
+            "experimental/matrix-client/transport-build.mjs": "1f25714516cb8341279fb7f779fee26a4b3ce7fc20237011e3ed2156d4806059",
+            "experimental/matrix-client/transport-prefix.inc.mjs": "7666a81d76d8a16dfd0ad6c161de73d94a9ee74cb39ee7d0f05be1cd2e8a2c39",
+            "experimental/matrix-client/transport-driver.inc.mjs": "af04cb26658fa228581f84754349cf76a5d5f07c55eb59cabc0e02ffb0569422",
+            "experimental/matrix-client/transport-revoke.inc.mjs": "b1a81c2f1726f1689da309b61e42d5348d6a053909a114d828333692c1712183",
+            "experimental/matrix-client/transport-composed-ci.mjs": "f13f7b42278e8448e4ed97e056473ca01c59afa21785456b3eb3a84d3d1dab88",
+            "experimental/media-transfer-lab/receiver.mjs": "deb1110aa3d43cfbd9cad917f577412812fc922579e523d328bab101ade71842",
+            "experimental/auth-bridge/broker.mjs": "837b7a35d36b75552c220afb835444f7c994a771bde16336c28117ef69907916",
+            "experimental/auth-bridge/lifecycle.mjs": "19df008875b8cb2569bb79dbfc3ab3ec0ec83051578cd31656371114e0e05512",
+            "experimental/auth-bridge/store.mjs": "1daf59dc1710b902280fa3eee16cdfd74e5ea1511ad12614ea08d875a0607c89",
+            "experimental/auth-bridge/synapse-lab-issuer.mjs": "69e469d64675edbdf7695a0aab7012b1c7adb80684ab62617ec584c36f315277",
+            "experimental/media-transfer-lab/process-restart-worker.mjs": "68e724111aeecff964f586a498b8248972421e0647e19007b9aa5c284e03130f",
+            "experimental/media-transfer-lab/process-restart.spec.mjs": "3fb97f356325cc48975a798722dfff13ae20599dc2ad373f04178e3fc6568992",
+            "experimental/media-transfer-lab/process-restart-cleanup.cjs": "14878ea6b21231f06c6c485ecf466ba623ae45866836c1a41ef3466e16f9e36d",
+            "experimental/owned-container-lab/container-worker.mjs": "9e138248e6782fb38faeab61874c0293ad31bcc4b445efd21c0906dc869710b0",
+            "experimental/owned-container-lab/container-control.cjs": "26074c7ec19bdb5104ea54dc677dc4f2418f749894dedbbcc54a0e76f974473f",
+            "experimental/owned-container-lab/container-control.spec.cjs": "4ab92d9a4df98329da08591e4748e62811a4d423226b874ab9461333726fb8a6",
+            "experimental/owned-container-lab/Dockerfile": "d7496b9073db715ad6c0f3894bdc12abb0a01a1c2e651991a2402a2160835db7",
+            "experimental/owned-container-lab/CONTAINMENT.md": "92609edcc600324047c2a10b5d1c728894c1259eeecdcdf94e7997b5ce7e3a70",
+            "experimental/matrix-client/package.json": "33f10febea5c27104d4fdadef2b52a8819aa784a25047ccf4afec7f3f42cc0cc",
+            "experimental/matrix-client/package-lock.json": "af8f94989d03eb33cd42ff8e4ee04f935248405b606137eff249ede0136efbba",
+            "experimental/owned-container-phase-lab/AUTHORIZATION.md": "f7709dc92deef6dcdabafcac4278b3e8f475107afa1592e56444739c1801b470",
+            "experimental/owned-container-phase-lab/CONTRACT_API.md": "a9524b41d7788f515f46425629d36399e8ce325ea06dc17a9a193ab3cc598349",
+            "experimental/owned-container-phase-lab/STATUS.md": "b30ea93bcb797ed1b2bff3476bd58c66a78e138f5f6d1fd46b4c9c13ac1e492e",
+            "experimental/owned-container-phase-lab/kernel-fd-probe.c": "43d849edbac58a6836565e011ad030a70b2082e5a0c8a525f6d42a674d711d30",
+            "experimental/owned-container-phase-lab/kernel-contract.cjs": "2376eba51d120a1a1b093b39438b18063d37089773a4abb82b047095e214709b",
+            "experimental/owned-container-phase-lab/kernel-contract.spec.cjs": "61fa9c738d24382a8aa80d186550d0741c29694f9a8e0b7663a790cacfaf9658",
+            "experimental/owned-container-phase-lab/phase-worker.mjs": "fbc461bb5bbc2cf845b812e252b23f2d56dbd7ca97908f266dfd305cbab1bfc4",
+            "experimental/owned-container-phase-lab/phase-worker-contract.mjs": "95d424c671f5d0d453061ee3f3c5e09ac88a99ac8ffa44b6ffd8715c01dab980",
+            "experimental/owned-container-phase-lab/phase-worker-contract.spec.cjs": "d896274ef73177b1c833693b1c987ebcbd281925fb5fe9b89d24c044a039af20",
+            "experimental/owned-container-phase-lab/phase-control.cjs": "cd038dc770e5cef2a19205fa8227e11e365cf4f5cc098fbacf1069fcfe460b3f",
+            "experimental/owned-container-phase-lab/phase-control.spec.cjs": "ff71b7748591a4c0b7191bee8d6b4ae0a1bb54915cd4de416d590ceb7e46fe8c",
+            "experimental/owned-container-phase-lab/runtime-profile-preflight.cjs": "0e1c6fe1e8e64fbf510d407b924fa8f22a8c7f5c2190675f282eaaa379ea597d",
+            "experimental/owned-container-phase-lab/runtime-profile-preflight.spec.cjs": "c890d8b2d327231d7d6d7b2b81f20b6323f659f530a6ffeac61fc6c946997d17",
+            "experimental/owned-container-phase-lab/native-build-provenance.cjs": "6121427d5768495202c0a65cfd3647ae38f567844083b4125dc14f8875f9ae64",
+            "experimental/owned-container-phase-lab/native-build-provenance.spec.cjs": "8a77f16f57fd346aa0c7c175174257a7e589d45577f5022c3b5e931817c515bc",
+            "experimental/owned-container-phase-lab/Dockerfile": "63c0ff305f296e16adc239ea42ea25d44adfdce4dfe05f967ab981459e2caba5",
+            "experimental/owned-container-phase-lab/engine-profile-candidate.json": "365a98050bf8275ba1c9703c322f55d9a4fa31d926e1a6f2010284bf6b97d291",
+            "experimental/owned-container-phase-lab/BUILD_PROFILE_GATES.md": "afd61d5d303d34c1ce01612e3a762abf715d6001e0ffbd5441b652064417df84",
+            "experimental/owned-container-phase-lab/archive-inventory.cjs": "8887f2bbc2c3657f077f86d7afcfbe6a18badc6dd1fabd656284e356bf70ed7d",
+            "experimental/owned-container-phase-lab/archive-inventory.spec.cjs": "981b2beefcc8982af55064f5425bb12fdaef56048581542a20f10c34521a400d",
+            "experimental/owned-container-phase-lab/zip-byte-inventory.cjs": "a1a829ae07b81737b08c45e656502ebcc9b304a0a49c6f274bfd2c63b8498eea",
+            "experimental/owned-container-phase-lab/zip-byte-inventory.spec.cjs": "983aa9f0e1a03e31bc747bd9705c2ffdcc180726ac91b60422e7a9634e4c32c1",
+            "experimental/owned-container-phase-lab/zip-safe-staging.cjs": "8292ad0d98c2fba260983ad48dffa64d815af27df56cbcb2841d8c23384870aa",
+            "experimental/owned-container-phase-lab/zip-safe-staging.spec.cjs": "eebbdac31adfc36439b23431eb7f09033d83f38d410dd1a898ada978184441b4",
+            "experimental/owned-container-phase-lab/public-archive-head.cjs": "4c09a16e09a0e6d8654746a2beee893deec5ddec51dd6a44287252547cff39a4",
+            "experimental/owned-container-phase-lab/final-public-archive-head.cjs": "28f5363e3753f4e704f10e05b6fdfeb7721404e0c118dc22854a19136e66683b",
+            "experimental/owned-container-phase-lab/final-public-archive-head.spec.cjs": "fac10c4fecb29f6924ddca7dc99d229f278bb8623f35ca6762ec20ae8b6c579d",
+            "experimental/owned-container-phase-lab/ubuntu-anchor-child-io.spec.cjs": "23553942463ea6b97fea53fb349d23645761475f3d71dae1de270b5a907326a9",
+            "experimental/owned-container-phase-lab/ffmpeg-byte-assembly-candidate.cjs": "33b171beb7a7f4eacd5c365f3305a29862c74cb689dd4c0626ac25a7d2a95b76",
+            "experimental/owned-container-phase-lab/ffmpeg-byte-assembly-candidate.spec.cjs": "9539a2d0ee76ea80fea83c61cac593fd57b81e0697fbeaae6e7ac49e65fc7a8e",
+            "experimental/owned-container-phase-lab/zip-byte-mutation.spec.cjs": "1694ad1f3793a1e6077b3689bf8e24980497c3fdf8f549631f1e931302e328e5",
+            "experimental/owned-container-phase-lab/ffmpeg-assembly-zip-composition.spec.cjs": "97f767c22099cd6d06cd645a05bfa71d2302e4fe8f3ce3f943d1eabb4ba66aa0",
+            "experimental/owned-container-phase-lab/ffmpeg-raw-acquire-once.cjs": "f2e0d368672668a2f1136b684866d6654225a70fe50ca71c58d73ebf479e1ed7",
+            "experimental/owned-container-phase-lab/ffmpeg-raw-acquire-once.spec.cjs": "b65b9b494e901faf41a8e95680226a11b8323c78b28d3888417d33a3a65ca8fe",
+            "experimental/owned-container-phase-lab/ffmpeg-raw-zip-metadata.cjs": "1dee2acf0046ac59f75801a895e2c82926b616ef0ce93d6bc5797bc848558f06",
+            "experimental/owned-container-phase-lab/ffmpeg-raw-zip-metadata.spec.cjs": "7a159bbb9efdcc2370bb9474e081443e2137e0dc3330100c39d430f250723d96",
+            "experimental/owned-container-phase-lab/ffmpeg-raw-ci-once.cjs": "69933b0987ba597caa19adb5bd841b25dceeaeb4252ed02df34b31618a362ff8",
+            "experimental/owned-container-phase-lab/ffmpeg-raw-ci-once.spec.cjs": "36f93d85926a7e136e010a53f5750fb21b538276adb7bf8aed50b1ab290306a9"
+          };
+          for(const [name,wanted]of Object.entries(pins)){const a=f.lstatSync(name);if(!a.isFile()||a.isSymbolicLink()||a.size<1||a.size>2097152)throw Error('SOURCE');const data=f.readFileSync(name),b=f.lstatSync(name);if(a.dev!==b.dev||a.ino!==b.ino||a.size!==b.size||a.mtimeMs!==b.mtimeMs||a.ctimeMs!==b.ctimeMs||c.createHash('sha256').update(data).digest('hex')!==wanted)throw Error('SOURCE');}
+          if(f.existsSync('experimental/owned-container-phase-lab/accepted-engine-profile.json'))throw Error('PROFILE_PRESENT');
+          if(c.createHash('sha256').update(f.readFileSync('.github/workflows/matrix-final-public-head.yml')).digest('hex')!=='a2c4f6b8eeed68732b1d741183a3331baea72d7f33231bb095dba65862082175')throw Error('PRIOR_WORKFLOW_CHANGED');
+          const root=process.argv[2],temp=process.argv[3],s=f.lstatSync(root,{bigint:true});if(!root.startsWith(temp+'/ffmpeg-raw-control.')||!/^ffmpeg-raw-control\.[A-Za-z0-9]{6}$/.test(p.basename(root))||f.realpathSync(root)!==root||!s.isDirectory()||s.isSymbolicLink()||s.uid!==BigInt(process.getuid())||(Number(s.mode)&4095)!==448)throw Error('CONTROL_ROOT');
+          for(const tool of ['/usr/bin/timeout','/usr/bin/env']){const a=f.lstatSync(tool);if(!a.isFile()||a.isSymbolicLink()||a.uid!==0||a.nlink!==1||(a.mode&18)||(a.mode&3072)||!(a.mode&73)||a.size>16777216)throw Error('TOOL');}
+          const state=JSON.parse(f.readFileSync('TASK_STATE.json')),event=JSON.parse(f.readFileSync(process.env.GITHUB_EVENT_PATH)),adapter=require('./experimental/owned-container-phase-lab/ffmpeg-raw-ci-once.cjs');adapter.gateCI(process.env,{version:process.version,platform:process.platform,arch:process.arch},state.ffmpegRawCIAuthorization,state.ffmpegRawCIComponentReview,event.head_commit?.message);adapter.validatePushEvent(event,process.env);
+          if(f.readFileSync('.git/HEAD','utf8').trim()!==process.env.EXPECTED_PREREQUISITE_SHA)throw Error('IMMUTABLE_CHECKOUT');
+          f.writeFileSync(root+'/root-identity.json',JSON.stringify({dev:s.dev.toString(),ino:s.ino.toString(),uid:Number(s.uid),mode:Number(s.mode)&4095})+'\n',{flag:'wx',mode:384});
+          console.log('source_gate=pass; source_pins=76; prior65=unchanged; protected56=unchanged; original38=unchanged; accepted_profile=absent; node=v22.23.3/linux/x64; real_origin_GET_started=false');
+          SOURCE_GATE
+          if ! clean /usr/bin/timeout --version | head -n 1 | grep -Fx 'timeout (GNU coreutils) 9.4' >/dev/null; then echo 'raw_status=blocked; reason=trusted_foreground_timeout_version'; exit 1; fi
+          set -o noclobber
+          clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 60s "$NODE" experimental/owned-container-phase-lab/ffmpeg-raw-acquire-once.spec.cjs >"$control/acq.out" 2>"$control/acq.err"
+          clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 60s "$NODE" experimental/owned-container-phase-lab/ffmpeg-raw-zip-metadata.spec.cjs >"$control/raw.out" 2>"$control/raw.err"
+          clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 60s "$NODE" experimental/owned-container-phase-lab/ffmpeg-raw-ci-once.spec.cjs >"$control/ci.out" 2>"$control/ci.err"
+          clean "$NODE" - "$control" <<'PURE_GATE'
+          const f=require('node:fs');const root=process.argv[2],identity=JSON.parse(f.readFileSync(root+'/root-identity.json')),s=f.lstatSync(root,{bigint:true});if(!s.isDirectory()||s.isSymbolicLink()||s.dev.toString()!==identity.dev||s.ino.toString()!==identity.ino||s.uid!==BigInt(process.getuid())||(Number(s.mode)&4095)!==448)throw Error('CONTROL_ROOT');
+          function read(n,empty=false){const fd=f.openSync(root+'/'+n,f.constants.O_RDONLY|f.constants.O_NOFOLLOW);try{const a=f.fstatSync(fd,{bigint:true});if(!a.isFile()||a.uid!==BigInt(process.getuid())||a.nlink!==1n||(Number(a.mode)&4095)!==384||a.size>16384n||(!empty&&a.size<1n))throw Error('FILE');const b=Buffer.alloc(Number(a.size));let p=0;while(p<b.length){const k=f.readSync(fd,b,p,b.length-p,p);if(!k)throw Error('SHORT');p+=k;}return b;}finally{f.closeSync(fd);}}
+          const expected=[['acq','ffmpeg_raw_acquire_mock_spec',48],['raw','ffmpeg_raw_zip_header_pure_spec',40],['ci','ffmpeg_CI_raw_adapter_pure_mock_spec',72]];for(const [n,kind,count]of expected){const lines=read(n+'.out').toString('utf8').trimEnd().split('\n'),r=JSON.parse(lines[lines.length-1]);if(r.kind!==kind||r.passed!==count||r.failed!==0||r.decompression!==false||read(n+'.err',true).length)throw Error('PURE');if(n==='acq'&&(r.realGET!==0||r.realSockets!==0||r.realArtifactWrites!==0||r.realChildren!==0))throw Error('MOCK');if(n==='raw'&&(r.networkRequests!==0||r.filesystemSinkWrites!==0||r.realArchives!==0))throw Error('RAW');if(n==='ci'&&(r.originRequests!==0||r.realArtifacts!==0||r.realFDs!==0||r.realChildren!==0||r.artifactTransportUnpacked!==false))throw Error('CI_PURE');}
+          console.log('pre_GET_synthetic_gate=pass; distinct_checks=160; transport_MOCK48+rawPURE40+CI_PURE_MOCK72; real_origin_GET_started=false');
+          PURE_GATE
+          CAPTURE_STDOUT_FILE="$control/capture.out"
+          CAPTURE_STDERR_FILE="$control/capture.err"
+          if clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 35s "$NODE" experimental/owned-container-phase-lab/ffmpeg-raw-ci-once.cjs --acquire-ci-once >"$CAPTURE_STDOUT_FILE" 2>"$CAPTURE_STDERR_FILE"; then capture_status=0; else capture_status=$?; fi
+          CAPTURE_PROCESS_EXIT_CODE="$capture_status"
+          eligible=false
+          if clean /usr/bin/timeout --foreground --signal=TERM --kill-after=5s 20s "$NODE" experimental/owned-container-phase-lab/ffmpeg-raw-ci-once.cjs --verify-captured >"$control/pair.out" 2>"$control/pair.err"; then eligible=true; fi
+          clean "$NODE" - "$control" "$capture_status" "$eligible" <<'PROJECT'
+          const f=require('node:fs');const root=process.argv[2],code=process.argv[3],eligible=process.argv[4];function read(n,cap,empty=false){const fd=f.openSync(root+'/'+n,f.constants.O_RDONLY|f.constants.O_NOFOLLOW);try{const a=f.fstatSync(fd,{bigint:true});if(!a.isFile()||a.uid!==BigInt(process.getuid())||a.nlink!==1n||(Number(a.mode)&4095)!==384||a.size>BigInt(cap)||(!empty&&a.size<1n))throw Error('FILE');return f.readFileSync(fd);}finally{f.closeSync(fd);}}
+          try{const b=read('capture.out',1048576),text=b.toString('utf8');if(!text.endsWith('\n')||text.indexOf('\n')!==text.length-1)throw Error('PROJECTION');const r=JSON.parse(text);if(!['actual_CI_ffmpeg_raw_data_only','CI_ffmpeg_raw_blocked'].includes(r.kind))throw Error('KIND');console.log(JSON.stringify(r));}catch{console.log(JSON.stringify({kind:'CI_raw_projection_incomplete',captureExitCode:code,rawBytesAndCleanupUnknown:true}));}
+          if(eligible==='true'){const t=read('pair.out',16384),r=JSON.parse(t);if(r.kind!=='verified_raw_artifact_pair_only'||r.rawArchiveBytes!==2302701||r.vendorAuthenticated!==false||r.SDKOrBuildAdmitted!==false||read('pair.err',16384,true).length)throw Error('PAIR');console.log(JSON.stringify(r));}
+          console.log('direct_capture_exit='+code+'; artifact_pair_eligible='+eligible+'; diagnostics_retained_private=true; source_directory_deletion_not_attempted=true; no_hard_wallclock_or_physical_erase_or_descendant_cleanup_claim=true');
+          PROJECT
+          printf 'artifact_pair_eligible=%s\n' "$eligible" >> "$GITHUB_OUTPUT"
+          printf 'capture_status=%s\n' "$capture_status" >> "$GITHUB_OUTPUT"
+          if [ "$capture_status" -ne 0 ] || [ "$eligible" != true ]; then exit 1; fi
+      # Stores opaque raw ZIP + JSON in a ZIP transport at level0. Never unpacked.
+      # Artifact digest != raw archive digest; retention is not exact-erasure proof.
+      - name: Retain EXACT verified raw file and header sidecar, no unpack
+        if: always() && steps.capture.outputs.artifact_pair_eligible == 'true'
+        id: raw_artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ffmpeg-1013-raw-data-observations
+          path: |
+            ffmpeg-raw-data-ci-once/ffmpeg-linux-1013-observed.zip
+            ffmpeg-raw-data-ci-once/ffmpeg-linux-1013-raw-observations.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+          include-hidden-files: false
