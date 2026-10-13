@@ -1826,5 +1826,90 @@
     "sourceBackupCommit": "d0bf7574ec9a348e73b6f5ee4b8274d696ef4df9",
     "rootBackupPending": true
   },
-  "currentEvidencePointer": "eveningRawPathDiagnostics"
+  "currentEvidencePointer": "eveningRawPathDiagnostics",
+  "continuousSourceOnlyFollowup": {
+    "capturedAt": "2026-10-13T10:02:55.930Z",
+    "status": "in_progress_fresh_CI_entry_source_preparation_only",
+    "userContinuationRequested": true,
+    "conservativeStopAtKST": "2026-10-13T23:59:00+09:00",
+    "automaticNextDayExtension": false,
+    "branch": "lab-matrix-cleanup-followup",
+    "originalSourcePins": 76,
+    "originalWorkflowUnchanged": true,
+    "priorLayoutDiagnosticsUnchanged": true,
+    "acceptedEngineProfileAbsent": true,
+    "sourceSHA256": {
+      "experimental/owned-container-phase-lab/zip-extra-fields-diagnostics.cjs": "f94a39ecaf29005018df8756d9a26e7b02a569b92dca9c01cb33748c293b0003",
+      "experimental/owned-container-phase-lab/zip-extra-fields-diagnostics.spec.cjs": "ac4262e2a692082bb286f9414c77d4872c1453d737cd426ef63b239d3b4e92dc",
+      "experimental/owned-container-phase-lab/foreground-probe-transcript.cjs": "555782c2d43030519d75461fe9b6c3b6b4953350f24fa34cba58b2fb07e202b8",
+      "experimental/owned-container-phase-lab/foreground-probe-transcript.spec.cjs": "41c578c2936750afde3fb96be3783ca55dcf19c23cdf78b037922667fdb94e93",
+      "experimental/owned-container-phase-lab/raw-header-diagnostics-composition.cjs": "38811c71c8cf7784469743e1d4dbefe48e9bacc75e1854590d09e7e0b4f6c91e",
+      "experimental/owned-container-phase-lab/raw-header-diagnostics-composition.spec.cjs": "e4e7cb12ec4701b8b6427047ab11894c8300e8b514cc37b313043f78add90168"
+    },
+    "zipExtraFields": {
+      "directPurePassed": 26,
+      "directExit": 0,
+      "independentPurePassed": 26,
+      "independentExit": 0,
+      "independentSourceReview": "PASS"
+    },
+    "foregroundTranscript": {
+      "directTmpPurePassed": 33,
+      "directWorkspacePurePassed": 33,
+      "directExits": 0,
+      "independentPurePassed": 33,
+      "independentExit": 0,
+      "independentSourceReview": "PASS",
+      "earlierWrongInterface29NotCredited": true,
+      "earlier28SupersededBy33": true
+    },
+    "scope": "pure manufactured fixtures and source review only; no runner implementation or integration",
+    "newCIRuns": 0,
+    "realGPGExecutions": 0,
+    "containers": 0,
+    "helpers": 0,
+    "payloadExecutions": 0,
+    "actualArchiveReplay": false,
+    "extraction": false,
+    "decompression": false,
+    "savedFFmpegArtifactRead": false,
+    "admission": {
+      "vendorAuthenticated": false,
+      "trustedSigner": false,
+      "freshnessChecked": false,
+      "fullChainAccepted": false,
+      "buildAccepted": false,
+      "SDKIntegrated": false,
+      "resourceClosureEstablished": false
+    },
+    "nextBoundary": "Direct foreground GPGV alternative has no approved executable retention/runner path. Original Node child caps cannot be assumed to survive removing child(). No CI/GPG/runtime permission supplied by continued source work.",
+    "workLockOwned": true,
+    "workLockReleased": false,
+    "sourceBackupCommit": "d545f5c0c78bf8d7c26f784bc4195fab6351ba7e",
+    "nextSourcePhase": {
+      "worker": "mdwFRANeMDV9huOx",
+      "scope": "TMP-only new one-attempt combined raw-header CI entry candidate; actual approval absent",
+      "oldCIApprovalConsumedNotReusable": true,
+      "newCIApproved": false,
+      "newOriginGETApproved": false,
+      "newWorkflowCreated": false,
+      "actualAcquisition": false
+    },
+    "experimentNetworkRequests": 0,
+    "composition": {
+      "directTMPPassed": 22,
+      "directWorkspacePassed": 22,
+      "independentPassed": 22,
+      "exitCodes": 0,
+      "sourceReview": "PASS",
+      "sourceBackupCommit": "e91d62d09a4c7384cb8fca6714adfd39c9c126ca",
+      "initial14SupersededBy22": true,
+      "exactFieldBoundary": 4096,
+      "fieldBoundaryPlusOneRejected": 4097,
+      "exactExtraByteBoundary": 262144,
+      "extraByteBoundaryPlusOneRejected": 262145,
+      "worstObservedDiagnostics": 8188,
+      "diagnostic8192RejectionNotIndependentlyExercised": true
+    }
+  }
 }
