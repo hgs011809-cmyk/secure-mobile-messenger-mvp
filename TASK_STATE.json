@@ -1,5 +1,5 @@
 {
-  "phase": "NOON_ARCHIVE_STAGING_NO_CONTAINER_CI_REVIEWED_READY", 
+  "phase": "NOON_ARCHIVE_STAGING_NO_CONTAINER_CI_REVIEWED_READY",
   "noonArchiveCandidate": {
     "owner": "IcUJ8UMoJUKXJWiB",
     "authorizedUntil": "2026-10-13T12:00:00+09:00",
@@ -915,5 +915,168 @@
     "coordinationRecovery": "Aborted original lock preserved and administrative handoff audited; no age-based deletion/PID signals/container cleanup claim",
     "continuousWorker": true,
     "requireYieldedCLIExecutionSession": true
+  },
+  "archiveLinuxByteStagingPreflight20261013": {
+    "recordedAt": "2026-10-12T22:54:53.958Z",
+    "ownerSession": "IcUJ8UMoJUKXJWiB",
+    "runId": "38318999013",
+    "runUrl": "https://github.com/hgs011809-cmyk/secure-mobile-messenger-mvp/actions/runs/38318999013",
+    "triggerCommit": "26dae52718acadb7c1baff5f4747733d60881ef7",
+    "workflowSha256": "1c144f68d706e05c480dd85bcb5a9918276da2fb708de8c9bb3f6d951cd042f1",
+    "acceptedResult": "success",
+    "evidence": "Expanded actual job output, not command echo or status alone",
+    "runtime": {
+      "node": "v22.23.3",
+      "platform": "linux",
+      "arch": "x64",
+      "checkoutRuntimeWarning": "GitHub forced immutable checkout action from Node20 to Node24; candidate checks separately gated Node22.23.3"
+    },
+    "pins": {
+      "total": 63,
+      "protected": 56,
+      "originalProtected": 38,
+      "verified": true
+    },
+    "tests": {
+      "archiveJsonPure": 145,
+      "zipBytePure": 108,
+      "stagingPure": 22,
+      "pureTotal": 275,
+      "linuxStagingRuntime": 13,
+      "linuxRuntimeNotExecuted": 0,
+      "syntheticOnly": true
+    },
+    "head": {
+      "requests": 3,
+      "failures": 0,
+      "statuses": [
+        307,
+        307,
+        307
+      ],
+      "reportedRedirectResponseLengths": [
+        0,
+        0,
+        0
+      ],
+      "followedRedirects": 0,
+      "downloadedArchives": 0,
+      "archiveVerification": false,
+      "vendorAuthentication": false,
+      "actualArchiveSizesObserved": false,
+      "observedRedirectTargets": [
+        "https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-linux64.zip",
+        "https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip",
+        "https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/ffmpeg/1013/ffmpeg-linux.zip"
+      ]
+    },
+    "cleanup": {
+      "ownedPrivatePathAbsent": true,
+      "physicalErasure": false,
+      "globalHostContainerClaim": false
+    },
+    "payloadExecuted": false,
+    "sourceContainerOperations": 0,
+    "helperExecuted": false,
+    "workerExecuted": false,
+    "acceptedEngineProfilePresent": false,
+    "sourceOnlyUbuntuAnchor": {
+      "hashes": {
+        "ubuntu-anchor-preflight.cjs": "53613a5b07d813969438f9f5beb57863642c30f7c103142a9060f3ae270c08cb",
+        "ubuntu-anchor-preflight.spec.cjs": "f823dbf904eecfe815b43b67534d2b3c704513cc6fd086020589d2d3b4de9b0a"
+      },
+      "pureTests": 100,
+      "realChildren": 0,
+      "networkRequests": 0,
+      "cryptographicEvidence": false,
+      "review": "Z25lKiKUMiEK803W source-only correction limited PASS; parent qualified timer comments as best-effort only",
+      "runtimeUnknown": true,
+      "ubuntuAuthorityApproved": false,
+      "freshnessAccepted": false,
+      "externalOwnedProcessMonitorRequired": true
+    },
+    "backups": {
+      "firstFive": "c550ee8b64ab2739e7eda9862731c5844f02f6b2",
+      "followupSix": "58aa1144f1d330cc8215a97434cce13328170d86",
+      "priorRootCheckpoint": "57e1c60c705a8c53a43859d8d526a62b448dc123"
+    },
+    "authorization": {
+      "noNewCIAfter": "2026-10-13T11:45:00+09:00",
+      "stopAt": "2026-10-13T12:00:00+09:00",
+      "noAutomaticExtension": true
+    },
+    "next": "Reviewed bounded final-target HEAD and separately reviewed Ubuntu anchor prerequisite with external owned-process budget. No browser acquisition, helper, container, signer/freshness or Debian chain acceptance."
+  },
+  "reviewedPrerequisiteCandidates20261013": {
+    "at": "2026-10-13T01:06:44.343Z",
+    "hashes": {
+      "ubuntu-anchor-preflight.cjs": "53613a5b07d813969438f9f5beb57863642c30f7c103142a9060f3ae270c08cb",
+      "ubuntu-anchor-preflight.spec.cjs": "f823dbf904eecfe815b43b67534d2b3c704513cc6fd086020589d2d3b4de9b0a",
+      "final-public-archive-head.cjs": "28f5363e3753f4e704f10e05b6fdfeb7721404e0c118dc22854a19136e66683b",
+      "final-public-archive-head.spec.cjs": "fac10c4fecb29f6924ddca7dc99d229f278bb8623f35ca6762ec20ae8b6c579d",
+      "owned-signal-budget-admission.cjs": "a6bbef3e4117eb2abd232dd8c7ead9067dc14555fa4cb29f6fc5d3ff5f31215c",
+      "owned-signal-budget-admission.spec.cjs": "13b9a6c99b5d5dda6e2f5c2e3336b8d2949a1dc9b342907ed4ed5101794c49e9"
+    },
+    "ubuntuPure": 100,
+    "finalHeadPure": 61,
+    "signalAdmissionPure": 62,
+    "realChildren": 0,
+    "procfsRuntimeReads": 0,
+    "networkRequests": 0,
+    "cryptographicEvidence": false,
+    "monitorRuntime": false,
+    "reviews": {
+      "ubuntu": "Z25lKiKUMiEK803W limited source-only PASS",
+      "finalHead": "RMLNiex4zL4M4EU3 limited correction source-only PASS",
+      "signalAdmission": "DSTZNG6ADHilgfGI scoped source-only PASS",
+      "signalDesign": "bH4NUpOw9dtSMxuF bounded design PASS, NOT permission or runtime"
+    },
+    "groupBudgetAndRealSignatureRuntime": {
+      "status": "blocked",
+      "reason": "No explicit group-signal authority in exact user originals inspected by parent. Procfs/source PASS is not permission. Trusted-anchor acceptance remains unapproved. Synthetic-only describes workloads/proof boundary, not public metadata itself."
+    },
+    "next": "Backup reviewed6 candidatefiles + root checkpoints [skip ci]. Continue safe source/pure work. No actualmonitor/gpg/acquisition/group signals/newCI yet.",
+    "pendingOwnedExecSessionIds": [],
+    "actualPriorLinuxCI": "38318999013:275pure+13Linux, separate from later61+62pure",
+    "noNewCIAfter": "2026-10-13T11:45:00+09:00",
+    "stopAt": "2026-10-13T12:00:00+09:00",
+    "backup": {
+      "commit": "95f1896570ce38da9c7ebd82a45c7bf662c80c5f",
+      "files": 6,
+      "additions": 587,
+      "parent": "26dae52718acadb7c1baff5f4747733d60881ef7",
+      "skipCI": true,
+      "acceptedUI": true
+    }
+  },
+  "publicFinalHeadOnlyPlan": {
+    "at": "2026-10-13T01:23:28.573Z",
+    "workflow": ".github/workflows/matrix-final-public-head.yml",
+    "sha256": "a2c4f6b8eeed68732b1d741183a3331baea72d7f33231bb095dba65862082175",
+    "review": "vgJDBDevXG9L8RH1 static whole-wrapper PASS plus exact-two-date-guard limited PASS at finalSHAa2c4f6b8eeed68732b1d741183a3331baea72d7f33231bb095dba65862082175; no actualruntime/CI yet",
+    "pins": 65,
+    "priorPins": 63,
+    "protectedPins": 56,
+    "originalPins": 38,
+    "exactRuntime": "Node22.23.3/linux/x64",
+    "purePreNetwork": 61,
+    "publicMetadataIsActualNotSynthetic": true,
+    "directOwnedCommandBudgetOnly": true,
+    "groupSignals": false,
+    "setsid": false,
+    "procfs": false,
+    "gpgv": false,
+    "phaseHelper": false,
+    "worker": false,
+    "container": false,
+    "archiveAcquisition": false,
+    "archiveAuthentication": false,
+    "trigger": "ONE workflow-only push; no dispatch/rerun",
+    "triggered": false,
+    "requestAttempts": 0,
+    "signalPolicy": "GNU9.4 --foreground TERM70/conditionalKILL5 direct-owned Node only; no guaranteed completion/descendant cleanup",
+    "outputPolicy": "exclusive600 files, post-read cap16KiB, strict4row projection; diagnostics retained not erased",
+    "cutoff": "2026-10-13T11:45:00+09:00",
+    "noFutureDay": true
   }
 }
